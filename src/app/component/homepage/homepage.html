@@ -1,0 +1,246 @@
+<div class="hero-container">
+
+  <!-- Custom Cursor -->
+  <div
+    class="custom-cursor"
+    [style.left.px]="mousePos.x"
+    [style.top.px]="mousePos.y"
+    [class.cursor-hover]="cursorVariant === 'hover'"
+  >
+    <div class="cursor-dot"></div>
+  </div>
+
+  <!-- Particle Canvas -->
+  <canvas #canvasElement class="particle-canvas"></canvas>
+
+  <!-- Grain texture overlay -->
+  <div class="grain-overlay">
+    <div class="grain-texture"></div>
+  </div>
+
+  <!-- Floating gradient orbs -->
+  <div class="gradient-orb orb-1"></div>
+  <div class="gradient-orb orb-2"></div>
+
+  <!-- Navigation -->
+  <nav class="nav-bar">
+
+    <div
+      class="logo"
+      (mouseenter)="setCursorVariant('hover')"
+      (mouseleave)="setCursorVariant('default')"
+    >
+      <span class="logo-letter">A</span>
+      <span class="logo-letter">A</span>
+    </div>
+
+    <div class="social-icons">
+
+      @for (social of socialIcons; track $index) {
+
+        <button
+          class="social-btn"
+          (mouseenter)="setCursorVariant('hover')"
+          (mouseleave)="setCursorVariant('default')"
+        >
+
+          @if (social.icon === 'github') {
+            <span><img width="94" height="94" src="https://img.icons8.com/3d-fluency/94/github.png" alt="github"/></span>
+          }
+
+          @if (social.icon === 'linkedin') {
+            <span><img width="94" height="94" src="https://img.icons8.com/3d-fluency/94/linkedin--v2.png" alt="linkedin--v2"/></span>
+          }
+
+          @if (social.icon === 'x') {
+            <span><img width="48" height="48" src="https://img.icons8.com/fluency/48/twitterx--v1.png" alt="twitterx--v1"/></span>
+          }
+          @if (social.icon === 'insta') {
+            <span><img width="30" height="30" src="https://img.icons8.com/ios-glyphs/30/instagram-circle.png" alt="instagram-circle"/></span>
+          }
+         
+        </button>
+
+      }
+
+    </div>
+
+  </nav>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <div class="content-wrapper">
+
+      <!-- Intro Text -->
+      <div class="intro-text">
+        <p class="greeting">
+          <span class="letter" style="animation-delay: 0.1s">H</span>
+          <span class="letter" style="animation-delay: 0.15s">i</span>
+          <span class="letter" style="animation-delay: 0.2s"> </span>
+          <span class="letter" style="animation-delay: 0.25s">t</span>
+          <span class="letter" style="animation-delay: 0.3s">h</span>
+          <span class="letter" style="animation-delay: 0.35s">e</span>
+          <span class="letter" style="animation-delay: 0.4s">r</span>
+          <span class="letter" style="animation-delay: 0.45s">e</span>
+          <span class="letter" style="animation-delay: 0.5s">,</span>
+          <span class="letter ml-2" style="animation-delay: 0.55s">I</span>
+          <span class="letter" style="animation-delay: 0.6s"> </span>
+          <span class="letter" style="animation-delay: 0.65s">a</span>
+          <span class="letter" style="animation-delay: 0.7s">m</span>
+        </p>
+      </div>
+
+      <!-- Giant 3D Name -->
+      <div
+        #nameElement
+        class="name-container"
+        (mouseenter)="setCursorVariant('hover')"
+        (mouseleave)="setCursorVariant('default')"
+      >
+
+        <h1 class="giant-name">
+
+          <div
+            class="glitch-text name-first"
+            data-text="ABINASH"
+            (mouseenter)="scrambleText($event, 'ABINASH')"
+          >
+            ABINASH
+          </div>
+
+          <div
+            class="glitch-text name-last"
+            data-text="ANAND"
+            (mouseenter)="scrambleText($event, 'ANAND')"
+          >
+            ANAND
+          </div>
+
+        </h1>
+
+      </div>
+
+      <!-- Subtitle -->
+      <div class="subtitle-section">
+
+        <h2 class="subtitle">
+          <span class="subtitle-word" style="animation-delay: 0.8s">Software</span>
+          <span class="subtitle-word" style="animation-delay: 0.9s">Engineer</span>
+          <span class="subtitle-word accent" style="animation-delay: 1s">×</span>
+          <span class="subtitle-word" style="animation-delay: 1.1s">Creative</span>
+          <span class="subtitle-word" style="animation-delay: 1.2s">Developer</span>
+        </h2>
+
+        <p class="description" style="animation-delay: 1.4s">
+          Building scalable <span class="highlight">Angular applications</span> and
+          event-driven backend systems that push the boundaries of web experiences.
+        </p>
+
+      </div>
+
+      <!-- Skills -->
+      <div class="skills-grid" style="animation-delay: 1.6s">
+
+        @for (skill of skills; track $index; let i = $index) {
+
+          <div
+            class="skill-card"
+            [style.animation-delay]="getSkillDelay(i)"
+            (mouseenter)="setCursorVariant('hover')"
+            (mouseleave)="setCursorVariant('default')"
+          >
+
+            <div class="skill-bg"></div>
+
+            <p class="skill-text">{{ skill }}</p>
+
+            <div class="skill-glow"></div>
+
+          </div>
+
+        }
+
+      </div>
+<div class="cta-buttons" style="animation-delay: 2.2s">
+
+  <!-- View Work -->
+   <a href="#projects">
+  <button
+    
+    class="btn btn-primary magnetic-btn"
+    (mousemove)="onMagneticMove($event)"
+    (mouseleave)="onMagneticLeave($event)"
+    (mouseenter)="setCursorVariant('hover')"
+  >
+    <span class="btn-text">View My Work</span>
+    <span class="btn-icon">→</span>
+    <div class="btn-gradient"></div>
+  </button>
+</a>
+  <!-- Download CV -->
+  <a href="assets/CV_FRONTEND_ABINASH_ANAND_v1.pdf" class="btn-text" download>
+  <button
+    class="btn btn-secondary magnetic-btn"
+    (mousemove)="onMagneticMove($event)"
+    (mouseleave)="onMagneticLeave($event)"
+    (mouseenter)="setCursorVariant('hover')"
+  >
+    <span class="btn-icon"><img width="30" height="30"
+      src="https://img.icons8.com/ios-glyphs/30/download--v1.png" alt="download--v1"/>
+    </span>Download CV</button>
+  </a>
+
+
+</div>
+      <!-- Stats -->
+      <div class="stats-section" style="animation-delay: 2.4s">
+
+        @for (stat of stats; track $index) {
+
+          <div
+            class="stat-item"
+            (mouseenter)="setCursorVariant('hover')"
+            (mouseleave)="setCursorVariant('default')"
+          >
+
+            <div class="stat-number">
+              {{ stat.num }}<span class="stat-suffix">{{ stat.suffix }}</span>
+            </div>
+
+            <div class="stat-label">{{ stat.label }}</div>
+
+          </div>
+
+        }
+
+      </div>
+
+    </div>
+  </div>
+
+  <div class="scroll-indicator">
+    <div class="scroll-text">SCROLL</div>
+    <div class="scroll-line"></div>
+  </div>
+
+
+</div>
+<section class="parallax-section">
+  <app-about></app-about>
+</section>
+
+<section class="parallax-section" >
+  <app-projects></app-projects>
+</section>
+
+<section class="parallax-section">
+  <app-skills></app-skills>
+</section>
+
+<section class="parallax-section">
+  <app-contact></app-contact>
+</section>
+
+<section class="parallax-section">
+  <app-footer></app-footer>
+</section>

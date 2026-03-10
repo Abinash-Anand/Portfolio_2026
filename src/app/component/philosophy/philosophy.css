@@ -1,0 +1,15 @@
+.philosophy-section{
+border-top:1px solid rgba(255,255,255,0.08);
+position:relative;
+z-index:5;
+}
+
+.philosophy-section p{
+opacity:0.85;
+transition:all 0.25s ease;
+}
+
+.philosophy-section p:hover{
+opacity:1;
+transform:translateX(6px);
+}

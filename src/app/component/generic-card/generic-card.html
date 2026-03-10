@@ -1,0 +1,79 @@
+<section [class]=sectionObject()?.sectionStyles?.container  [id]=sectionObject()?.sectionId>
+
+  <div [class]=sectionObject()?.sectionStyles?.wrapper>
+
+    <!-- LEFT COLUMN (4) -->
+    <div [class] = sectionObject()?.sectionStyles?.leftColumn>
+      <h2 class="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight">{{sectionObject()?.sectionHeading}}</h2>
+
+    </div>
+
+    <!-- RIGHT COLUMN (8) -->
+    <div [class]= sectionObject()?.sectionStyles?.rightColumn>
+      @if(sectionObject()?.sectionHeading === "About Me"){
+      <!-- about section -->
+          <ng-container>
+            <p>{{sectionObject()?.sectionDescription}}</p>
+        </ng-container>
+      }
+      <!-- skills section -->
+    @if(sectionObject()?.cardConfig?.length !== 0 && sectionObject()?.sectionHeading === "Skills"){
+      <ng-container>
+    @for(skills of sectionObject()?.cardConfig; track $index){ 
+      <div class="skills-group">
+        <h3 class="skills-heading">{{skills.cardHeading}}</h3>
+        <div class="skills-grid">
+          @for(skill of skills?.technologyStack; track $index){
+            <div class="skill-item ">{{skill}}</div>
+          }
+        </div>
+      </div>
+    }
+  </ng-container>
+      }
+
+      <ng-container>
+        <app-floating-preview
+        [visible]="previewVisible"
+        [x]="previewX"
+        [y]="previewY"
+        [image]="previewImage">
+        </app-floating-preview>
+      </ng-container>
+
+      <!-- Project -->
+    @if(sectionObject()?.cardConfig?.length !== 0 && sectionObject()?.sectionHeading === "Projects"){
+    <ng-container>
+    <div class="md:col-span-8 space-y-16">
+      @for(project of sectionObject()?.cardConfig; track $index){
+      <div class="project-item"
+          (mouseenter)="showPreview(project.banner)"
+          (mouseleave)="hidePreview()"
+          (mousemove)="movePreview($event)"
+      >
+        <h3 class="text-2xl md:text-3xl font-semibold">{{project?.cardHeading}}</h3>
+       
+         <div class="project-stack">
+            @for(stack of project?.technologyStack; track $index){
+                <span>{{stack}}</span>
+            }
+        </div>
+        <p class="project-desc">
+          {{project.cardDescription}}
+        </p>
+
+        <div class="project-links">
+            @for(link of project?.cardLinks; track $index){
+          <a [href]=link.link>{{link.label}}</a>
+          }
+        </div>
+      </div>
+      }
+    </div>
+    </ng-container>
+    }
+    </div>
+
+  </div>
+
+</section>

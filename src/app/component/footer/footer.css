@@ -1,0 +1,188 @@
+/* =========================
+   MEGA FOOTER
+========================= */
+
+.mega-footer{
+
+background:#000;
+color:white;
+
+/* responsive vertical rhythm */
+
+padding:clamp(80px,15vh,180px) clamp(20px,6vw,40px) 60px;
+
+border-top:1px solid rgba(255,255,255,0.08);
+
+position:relative;
+overflow:hidden;
+
+}
+
+
+/* =========================
+   CONTAINER
+========================= */
+
+.footer-wrapper{
+
+max-width:1400px;
+margin:auto;
+
+display:flex;
+flex-direction:column;
+
+gap:clamp(40px,6vw,80px);
+
+}
+
+
+/* =========================
+   INTRO LABEL
+========================= */
+
+.footer-intro{
+
+font-size:12px;
+
+letter-spacing:0.15em;
+text-transform:uppercase;
+
+color:#9ca3af;
+
+}
+
+
+/* =========================
+   HUGE EMAIL
+========================= */
+
+.footer-mega-email{
+
+font-size:clamp(36px,8vw,120px);
+
+font-weight:700;
+
+line-height:0.95;
+
+text-decoration:none;
+
+color:white;
+
+letter-spacing:-0.02em;
+
+position:relative;
+
+display:inline-block;
+
+max-width:100%;
+
+word-break:break-word;
+
+transition:transform .35s ease;
+
+}
+
+
+/* underline animation */
+
+.footer-mega-email::after{
+
+content:"";
+
+position:absolute;
+
+left:0;
+bottom:-10px;
+
+width:0%;
+height:4px;
+
+background:white;
+
+transition:width .4s ease;
+
+}
+
+.footer-mega-email:hover::after{
+width:100%;
+}
+
+
+/* hover motion */
+
+.footer-mega-email:hover{
+transform:translateY(-6px);
+}
+
+
+/* =========================
+   FOOTER META BAR
+========================= */
+
+.footer-meta{
+
+display:flex;
+
+justify-content:space-between;
+align-items:center;
+
+flex-wrap:wrap;
+
+gap:20px;
+
+font-size:14px;
+
+color:#6b7280;
+
+border-top:1px solid rgba(255,255,255,0.08);
+
+padding-top:25px;
+
+}
+
+
+/* =========================
+   SOCIAL LINKS
+========================= */
+
+.footer-right{
+
+display:flex;
+gap:24px;
+
+flex-wrap:wrap;
+
+}
+
+.footer-right a{
+
+color:#9ca3af;
+text-decoration:none;
+
+transition:color .25s ease;
+
+}
+
+.footer-right a:hover{
+color:white;
+}
+
+
+/* =========================
+   MOBILE IMPROVEMENTS
+========================= */
+
+@media (max-width:768px){
+
+.footer-meta{
+
+flex-direction:column;
+align-items:flex-start;
+
+}
+
+.footer-right{
+gap:18px;
+}
+
+}
