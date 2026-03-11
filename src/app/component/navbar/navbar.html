@@ -1,8 +1,23 @@
-<nav class="flex  fixed top-6 left-0 w-full px-6 z-50">
+<nav class="project-progress  z-50  backdrop-blur">
 
-  <div class="flex items-center gap-8 w-full bg-white/70 backdrop-blur-md 
-              px-8 py-3 rounded-2xl shadow-lg border border-gray-200">
-    <ng-content></ng-content>
+  <div class="max-w-6xl mx-auto px-4 md:px-8 py-8">
+
+    <ul class="progress-wrapper">
+
+      <div class="progress-line"></div>
+
+      @for (section of sections; track section.id) {
+        <li class="cursorEvent" (click)="changeProgressBar(section)">
+          <a class="progress-dot">
+            <span></span>
+          </a>
+
+          <p>{{ section.label }}</p>
+        </li>
+      }
+
+    </ul>
+
   </div>
 
 </nav>

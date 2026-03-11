@@ -17,6 +17,7 @@ export class Projects {
       {
         cardHeading:"ParkRabbit",
         banner:'assets/parkRabbit.png',
+        route:`/project/parkRabbit`,
         technologyStack:["Angular","SpringBoot", "RabbitMQ", "PostgreSQL"],
         cardDescription:`Event-driven parking management platform with asynchronous booking
           processing using RabbitMQ and distributed microservices.`,
@@ -26,6 +27,7 @@ export class Projects {
       {
         cardHeading:"Logistics Dashboard",
         banner:'assets/logisticManagement.png',
+        route:'/project/eber',
         technologyStack:["Angular", "Leaflet Map", 'WebScokets'],
         cardDescription:`Real-time logistics dashboard for vehicle tracking and route monitoring
           with reactive UI updates.`,
@@ -35,6 +37,7 @@ export class Projects {
       {
         cardHeading:"Gett Taxi",
         banner:'assets/taxiBooking.jpg',
+        route:'',
         technologyStack:["Node.js", "Angular", "Postgres", "Docker", "RabbitMQ"],
         cardDescription:`Scalable real-time notification service supporting multiple event
           producers and client subscriptions.`,

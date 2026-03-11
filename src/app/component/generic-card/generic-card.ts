@@ -1,7 +1,7 @@
-import { Component, input, OnInit } from '@angular/core';
+import { Component, inject, input, OnInit,  } from '@angular/core';
 import { Section } from '../../interface/section';
 import { FloatingPreview } from '../floating-preview/floating-preview';
-
+import { Router } from '@angular/router';
 @Component({
   selector: 'app-generic-card',
   imports: [FloatingPreview],
@@ -9,11 +9,12 @@ import { FloatingPreview } from '../floating-preview/floating-preview';
   styleUrl: './generic-card.css',
 })
 export class GenericCard implements OnInit{
+  route = inject(Router)
   sectionObject = input<Section>()
   ngOnInit(): void {
     console.log(this.sectionObject())
   }
-  previewVisible = false;
+previewVisible = false;
 previewX = 0;
 previewY = 0;
 previewImage = '';
@@ -30,5 +31,8 @@ hidePreview(){
 movePreview(event:MouseEvent){
   this.previewX = event.clientX + 20;
   this.previewY = event.clientY + 20;
+}
+openProject(value:any){
+  this.route.navigate([`${value.route}`])
 }
 }

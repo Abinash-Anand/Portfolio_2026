@@ -16,6 +16,7 @@ export class Skills {
     cardConfig:[{
         cardHeading:'Frontend',
         banner:'',
+        route:'',
         technologyStack:[
           'Angular', "TypeScript", "RxJS"
         ],
@@ -26,6 +27,7 @@ export class Skills {
     {
         cardHeading:'Backend',
         banner:'',
+        route:'',
         technologyStack:[
           'Node.js', "Nest.js", "REST", "JWT", "Web Security"
         ],
@@ -36,6 +38,7 @@ export class Skills {
     {
         cardHeading:'Data & Messaging',
         banner:'',
+        route:'',
         technologyStack:[
           'PostgreSQL', "RabbitMQ", "MongoDB"
         ],
@@ -46,6 +49,7 @@ export class Skills {
     {
         cardHeading:'Infrastructure',
         banner:'',
+        route:'',
         technologyStack:[
           'Docker', "Kubernetes"
         ],

@@ -1,8 +1,10 @@
-import { Component } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
+import { Navbar } from '../../navbar/navbar';
+import { RouterOutlet } from '@angular/router';
 
 @Component({
   selector: 'app-project',
-  imports: [],
+  imports: [Navbar, RouterOutlet],
   templateUrl: './project.html',
   styleUrl: './project.css',
 })

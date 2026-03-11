@@ -5,6 +5,7 @@ export interface Section {
     cardConfig:{
         cardHeading:string,
         banner:string
+        route:string,
         technologyStack:string[],
         cardDescription:string,
         cardLinks:{label:string, link:string}[],
