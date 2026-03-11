@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { Section } from '../../interface/section';
 import { GenericCard } from '../generic-card/generic-card';
+import { Project } from './project/project';
 
 @Component({
   selector: 'app-projects',
@@ -9,6 +10,7 @@ import { GenericCard } from '../generic-card/generic-card';
   styleUrl: './projects.css',
 })
 export class Projects {
+  projectSelectedObject:any
   sectionObject: Section = {
     sectionId:"projects",
     sectionHeading:'Projects',
@@ -17,7 +19,7 @@ export class Projects {
       {
         cardHeading:"ParkRabbit",
         banner:'assets/parkRabbit.png',
-        route:`/project/parkRabbit`,
+        route:`/project/ParkRabbit`,
         technologyStack:["Angular","SpringBoot", "RabbitMQ", "PostgreSQL"],
         cardDescription:`Event-driven parking management platform with asynchronous booking
           processing using RabbitMQ and distributed microservices.`,
@@ -52,4 +54,6 @@ export class Projects {
         rightColumn:"md:col-span-8 space-y-16"
     }
   }
+
+  
 }

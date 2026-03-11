@@ -1,4 +1,4 @@
-import { Component, inject, input, OnInit,  } from '@angular/core';
+import { Component, inject, input, OnInit, output,  } from '@angular/core';
 import { Section } from '../../interface/section';
 import { FloatingPreview } from '../floating-preview/floating-preview';
 import { Router } from '@angular/router';
@@ -34,5 +34,6 @@ movePreview(event:MouseEvent){
 }
 openProject(value:any){
   this.route.navigate([`${value.route}`])
+  console.log(value)
 }
 }

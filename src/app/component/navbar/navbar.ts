@@ -1,10 +1,10 @@
-import { Component, inject, input, OnInit } from '@angular/core';
-import { ProgressSection } from '../../interface/progress-section';
+import { Component, inject, OnInit } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from "@angular/router";
+import { ProgressSection } from '../../interface/progress-section';
 
 @Component({
   selector: 'app-navbar',
-  imports: [RouterLink],
+  imports: [],
   templateUrl: './navbar.html',
   styleUrl: './navbar.css',
 })

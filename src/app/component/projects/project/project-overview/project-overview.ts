@@ -1,55 +1,34 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, input } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { ProjectStage } from '../../../../interface/project-stage';
+import { GenericProjectCardComponent } from '../../../generic-project-card-component/generic-project-card-component';
+import { ProjectSection } from '../../../../interface/project-section';
 
 @Component({
   selector: 'app-project-overview',
-  imports: [],
+  imports: [GenericProjectCardComponent],
   templateUrl: './project-overview.html',
   styleUrl: './project-overview.css',
 })
 export class ProjectOverview {
-   route = inject(ActivatedRoute)
-  STAGE_CONTENT: Record<string, ProjectStage> = {
-
-  overview: {
-    title: "Project Overview",
-    description: "High level description of the project",
-    points: [
-      "Problem statement",
-      "Solution idea",
-      "Key features"
-    ]
-  },
-
-  architecture: {
-    title: "System Architecture",
-    description: "How the system components interact",
-    points: [
-      "Frontend Angular",
-      "Backend API",
-      "Database layer"
-    ]
-  },
-
-  techStack: {
-    title: "Tech Stack",
-    description: "Technologies used in the project",
-    points: [
-      "Angular 21",
-      "Node.js",
-      "PostgreSQL"
-    ]
-  }
-
-};
-  stageData!: ProjectStage;
-
-  ngOnInit() {
-
-    const stage = this.route.snapshot.routeConfig?.path;
-
-    this.stageData = this.STAGE_CONTENT[stage!];
+  route = inject(ActivatedRoute)
+  projectCardObject: ProjectSection = {
+    sectionId:"overview",
+    sectionHeading:"",
+    sectionDescription:"",
+    sectionIcon:"",
+    cardConfig:[{
+        cardIcon:"",
+        cardHeading:"",
+        cardDescription:"",
+        cardStyle:"",
+    }],
+    sectionStyles:{
+        containerstyle: '',
+        iconWrapperstyle: '', 
+        iconstyle: '',        
+        titlestyle: '',      
+        descriptionstyle: '',
+    }
 
   }
 }

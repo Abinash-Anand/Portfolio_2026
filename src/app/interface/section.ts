@@ -1,5 +1,5 @@
 export interface Section {
-    sectionId:string
+    sectionId:string,
     sectionHeading:string,
     sectionDescription:string,
     cardConfig:{

@@ -30,7 +30,7 @@ interface MousePosition {
 @Component({
   selector: 'app-homepage',
   standalone: true,
-  imports: [Navbar, About, Projects, Skills, Contact, Footer],
+  imports: [ About, Projects, Skills, Contact, Footer],
   templateUrl: './homepage.html',
   styleUrls: ['./homepage.css']
 })
