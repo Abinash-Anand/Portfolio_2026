@@ -29,7 +29,7 @@ export class Skills {
         banner:'',
         route:'',
         technologyStack:[
-          'Node.js', "Nest.js", "REST", "JWT", "Web Security"
+          'Node.js', "Nest.js", "REST", "OAuth", "Web Sockets", "Web Security"
         ],
         cardDescription:'',
         cardLinks:[],
@@ -60,7 +60,7 @@ export class Skills {
   ],
     sectionStyles:{
         container:'mesh-bg skills-section bg-black text-white',
-        wrapper:'max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-12 px-6 md:px-8 py-32 w-full',
+        wrapper:'max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-12 px-6 md:px-8 py-32 w-full',
         leftColumn:'md:col-span-4',
         rightColumn:'md:col-span-8 space-y-12'
     }

@@ -13,7 +13,7 @@
       @if(sectionObject()?.sectionHeading === "About Me"){
       <!-- about section -->
           <ng-container>
-            <p>{{sectionObject()?.sectionDescription}}</p>
+            <p [innerHTML]=sectionObject()?.sectionDescription></p>
         </ng-container>
       }
       <!-- skills section -->
@@ -46,11 +46,15 @@
     <ng-container>
     <div class="md:col-span-8 space-y-16">
       @for(project of sectionObject()?.cardConfig; track $index){
+
       <div class="project-item"
           (mouseenter)="showPreview(project.banner)"
           (mouseleave)="hidePreview()"
           (mousemove)="movePreview($event)"
-          (click)="openProject(project)"
+          
+      >
+      <div
+        (click)="openProject(project)"
       >
         <h3 class="text-2xl md:text-3xl font-semibold">{{project?.cardHeading}}</h3>
        
@@ -62,12 +66,13 @@
         <p class="project-desc">
           {{project.cardDescription}}
         </p>
-
+</div>
         <div class="project-links">
             @for(link of project?.cardLinks; track $index){
           <a [href]=link.link>{{link.label}}</a>
           }
         </div>
+        
       </div>
       }
     </div>

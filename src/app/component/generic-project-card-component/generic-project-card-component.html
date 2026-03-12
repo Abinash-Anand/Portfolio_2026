@@ -1,46 +1,106 @@
-@if(projectCardObject()?.sectionId === 'overview'){
-<div class="flex mt-6 gap-4">
-  <div class="w-1/2 flex gap-4">
-    <div class="w-1/4 flex items-start">
-      <span>
-        <img src="" alt="icon">
-      </span>
-    </div>
-    <div class="w-3/4">
-      <h3 class="font-semibold">{{projectCardObject()?.sectionHeading}}</h3>
-      <p class="text-gray-400">{{projectCardObject()?.sectionDescription}}</p>
+<div class="sticky top-0 z-50 py-8 bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm mb-12">
+  <div class="flex justify-center items-center relative max-w-5xl mx-auto px-4">
+    
+    <div class="absolute h-[2px] bg-purple-200 w-[90%] top-[7px] z-0"></div>
+
+    <div class="w-full flex justify-between relative z-10">
+      @for (item of projectData; track item.sectionId) {
+        <div (click)="scrollToSection(item.sectionId)" 
+             class="cursor-pointer flex flex-col items-center group bg-transparent">
+          
+          <div [class]="activeSectionId() === item.sectionId 
+                ? 'bg-purple-600 scale-150 ring-4 ring-purple-100' 
+                : 'bg-purple-300 group-hover:bg-purple-400 group-hover:scale-110'" 
+               class="w-3.5 h-3.5 rounded-full transition-all duration-300"></div>
+          
+          <span [class]="activeSectionId() === item.sectionId ? 'text-purple-800 font-bold' : 'text-gray-500'"
+                class="text-[10px] mt-4 uppercase tracking-widest transition-all">
+            {{ formatLabel(item.sectionId) }}
+          </span>
+        </div>
+      }
     </div>
   </div>
 </div>
 
-<div class="flex mt-6 gap-4">
-@for(project of projectCardObject()?.cardConfig; track $index){
-  <div class="w-1/2 flex gap-4">
-    <div class="w-1/4 flex items-start">
-      <span>
-        <img [src]=project.cardIcon alt="icon">
-      </span>
+<div class="max-w-6xl mx-auto space-y-32 pb-32 px-6">
+  
+  @for (section of projectData; track section.sectionId) {
+    
+    <div [id]="section.sectionId" #sectionElement class="scroll-mt-40">
+      
+      <div [class]="section.sectionStyles.containerstyle">
+        
+        <div class="flex flex-col md:flex-row items-start md:items-center gap-5 mb-10">
+          <div [class]="section.sectionStyles.iconWrapperstyle" class="flex items-center justify-center p-4 rounded-2xl bg-purple-50">
+             <i [class]="section.sectionIcon + ' ' + section.sectionStyles.iconstyle + ' text-4xl text-purple-600'"></i>
+          </div>
+          <div>
+             <h2 [class]="section.sectionStyles.titlestyle" class="text-4xl font-extrabold text-gray-900 tracking-tight">
+               {{ section.sectionHeading }}
+             </h2>
+             <p [class]="section.sectionStyles.descriptionstyle" class="text-gray-500 mt-2 text-lg max-w-3xl">
+               {{ section.sectionDescription }}
+             </p>
+          </div>
+        </div>
+
+        <div class="grid gap-6" [ngClass]="{
+          'grid-cols-1 md:grid-cols-2': section.sectionId === 'overview' || section.sectionId === 'event-flow',
+          'grid-cols-1 md:grid-cols-3': section.sectionId === 'tech-stack' || section.sectionId === 'deployment',
+          'grid-cols-1': section.sectionId === 'user-workflow' || section.sectionId === 'repository'
+        }">
+
+          @for (card of section.cardConfig; track $index) {
+            <div [class]="card.cardStyle" class="group relative overflow-hidden rounded-2xl p-8 border border-gray-100 bg-white shadow-sm transition-all hover:shadow-xl hover:-translate-y-1">
+              
+              <div class="flex items-start gap-5">
+                <div class="p-3 bg-purple-50 text-purple-600 rounded-xl group-hover:bg-purple-600 group-hover:text-white transition-colors">
+                  <i [class]="card.cardIcon + ' text-2xl'"></i>
+                </div>
+
+                <div class="flex-1">
+                  <h3 class="font-bold text-gray-900 text-xl mb-3">{{ card.cardHeading }}</h3>
+                  <p class="text-gray-600 text-sm leading-relaxed mb-4">{{ card.cardDescription }}</p>
+
+                  @if (card.details && card.details.length > 0) {
+                    <div class="space-y-3 pt-4 border-t border-gray-100">
+                      @if (card.detailLabel) {
+                        <span class="text-[10px] font-black uppercase tracking-widest text-purple-400">
+                          {{ card.detailLabel }}
+                        </span>
+                      }
+                      <ul class="space-y-2">
+                        @for (detail of card.details; track detail) {
+                          <li class="flex items-start gap-3 text-sm text-gray-600">
+                            <span class="w-1.5 h-1.5 rounded-full bg-purple-400 mt-1.5 shrink-0"></span>
+                            <span>{{ detail }}</span>
+                          </li>
+                        }
+                      </ul>
+                    </div>
+                  }
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+
+        @if (section.rawContent) {
+          <div class="mt-8">
+            <div class="bg-gray-900 rounded-2xl p-6 shadow-xl relative overflow-hidden">
+              <div class="flex gap-2 mb-4">
+                <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                <div class="w-3 h-3 rounded-full bg-green-500"></div>
+              </div>
+              <pre class="font-mono text-sm text-purple-200 whitespace-pre overflow-x-auto">{{ section.rawContent }}</pre>
+            </div>
+          </div>
+        }
+
+      </div>
     </div>
-    <div class="w-3/4">
-      <h3 class="font-semibold">{{project?.cardHeading}}</h3>
-      <p class="text-gray-400">{{project?.cardDescription}}</p>
-    </div>
-  </div>
+    
   }
 </div>
-<div class="flex mt-6 gap-4">
-@for(feature of projectCardObject()?.cardConfig; track $index){
-    <div class="w-1/2 flex gap-4">
-    <div class="w-1/4 flex items-start">
-      <span>
-        <img [src]=feature.cardIcon alt="icon">
-      </span>
-    </div>
-    <div class="w-3/4">
-      <h3 class="font-semibold">{{feature?.cardHeading}}</h3>
-      <p class="text-gray-400">{{feature?.cardDescription}}</p>
-    </div>
-  </div>
-}
-</div>
-}

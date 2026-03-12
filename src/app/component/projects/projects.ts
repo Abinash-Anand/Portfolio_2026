@@ -20,32 +20,21 @@ export class Projects {
         cardHeading:"ParkRabbit",
         banner:'assets/parkRabbit.png',
         route:`/project/ParkRabbit`,
-        technologyStack:["Angular","SpringBoot", "RabbitMQ", "PostgreSQL"],
-        cardDescription:`Event-driven parking management platform with asynchronous booking
-          processing using RabbitMQ and distributed microservices.`,
-        cardLinks:[{label:"github", link:'github'}, {label:"Read more", link:'/project route redirect'} ],
+        technologyStack:["React","SpringBoot", "RabbitMQ", "PostgreSQL", "Web Sockets","Docker"],
+        cardDescription:`An event-driven parking management system designed with a professional Angular frontend and a Spring Boot backend. It uses RabbitMQ to process asynchronous booking workflows and real-time notifications. `,
+        cardLinks:[{label:"Github", link:'https://github.com/Abinash-Anand/ParkRabbit'},],
         cardStyles:'project-item project-stack project-desc project-links',
       },
       {
-        cardHeading:"Logistics Dashboard",
-        banner:'assets/logisticManagement.png',
-        route:'/project/eber',
-        technologyStack:["Angular", "Leaflet Map", 'WebScokets'],
-        cardDescription:`Real-time logistics dashboard for vehicle tracking and route monitoring
-          with reactive UI updates.`,
-        cardLinks:[{label:"github", link:'github'}, {label:"Read more", link:'/project route redirect'}],
-        cardStyles:'project-item project-stack project-desc project-links',
-      },
-      {
-        cardHeading:"Gett Taxi",
+        cardHeading:"Eber",
         banner:'assets/taxiBooking.jpg',
-        route:'',
-        technologyStack:["Node.js", "Angular", "Postgres", "Docker", "RabbitMQ"],
-        cardDescription:`Scalable real-time notification service supporting multiple event
-          producers and client subscriptions.`,
-        cardLinks:[{label:"github", link:'github'}, {label:"Read more", link:'/project route redirect'}],
+        route:'/project/eber',
+        technologyStack:["Angular", "Google Map","Node.js","Express", "MongoDB", 'WebScokets', "Payment Gateway"],
+        cardDescription:`A full-stack ride-booking platform featuring an Angular frontend with real-time vehicle tracking via WebSockets and Google Map integration. It manages the complete ride lifecycle, from automated booking requests to secure payment processing. `,
+        cardLinks:[{label:"Github", link:'https://github.com/Abinash-Anand/Eber-app'},],
         cardStyles:'project-item project-stack project-desc project-links',
-      }
+      },
+      
     ],
     sectionStyles:{
         container:"mesh-bg-project projects-section text-black",

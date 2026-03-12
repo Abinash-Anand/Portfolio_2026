@@ -1,5 +1,5 @@
 @import "tailwindcss";
-
+@import "primeicons/primeicons.css";
 /* =========================
    DESIGN TOKENS
 ========================= */
@@ -149,7 +149,6 @@ position:relative;
 
 background:var(--black);
 color:var(--white);
-
 z-index:5;
 
 align-items:center;
@@ -472,43 +471,24 @@ opacity:1;
 
 
 
-
-.project-preview{
-
-position:fixed;
-
-pointer-events:none;
-
-z-index:1000;
-
-width:clamp(260px, 22vw, 420px);
-
-opacity:0;
-
-transform:translate(-50%, -50%) scale(.9);
-
-transition:
-opacity .2s ease,
-transform .25s ease;
-
+.project-preview {
+  position: fixed;
+  /* 1. Set left to a fixed value or percentage */
+  left: 15%; 
+  top: 50%;
+  pointer-events: none;
+  z-index: 1000;
+  width: clamp(260px, 22vw, 420px);
+  opacity: 0;
+  /* 2. Remove the -50% horizontal translation to keep it on the left */
+  transform: translateY(-50%) scale(.9); 
+  transition: 
+    opacity .2s ease, 
+    transform .25s ease;
 }
 
-.project-preview.visible{
-
-opacity:1;
-
-transform:translate(-50%, -50%) scale(1);
-
-}
-
-.project-preview img{
-
-width:100%;
-height:auto;
-
-border-radius:10px;
-
-box-shadow:
-0 20px 40px rgba(0,0,0,0.25);
-
+.project-preview.visible {
+  opacity: 1;
+  /* 3. Scale up while keeping the vertical centering */
+  transform: translateY(-50%) scale(1);
 }

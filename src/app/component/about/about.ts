@@ -12,16 +12,13 @@ export class About {
     sectionObject: Section = {
       sectionId:'about',
       sectionHeading: "About Me",
-      sectionDescription:`I’m a Software Engineer currently pursuing a Master's in Software
-        Technology at HFT Stuttgart. I specialize in building scalable
-        Angular frontends and event-driven backend systems using modern
-        architectures.
-         My focus is creating maintainable systems with clean architecture,
-        reactive frontend patterns, and real-world distributed workflows.`,
+      sectionDescription:`I am <strong>Abinash Anand</strong>, a Software Engineer and MSc student in Software Technology at <strong>Hochschule für Technik Stuttgart</strong>. My career is rooted in professional <strong>Angular Specialization </strong>, where I have led frontend teams to develop scalable logistics dashboards and real-time tracking systems.
+      <br></br>While I am an established specialist in the frontend, my <strong>current focus at HFT</strong> is mastering the 'heavy lifting' of Software Technology: Advanced Software Architecture, Distributed Systems, and other subjects. I architect end-to-end systems with a focus on Clean Architecture, Performance Optimizations and Resuability.
+      <br></br>I am a fast learner who has successfully moved between different backend environments while keeping my deep knowledge of the Angular ecosystem. I am currently looking for a <strong>Werkstudent role</strong> in Frontend or Full-Stack Engineering where I can build robust, production-grade products.`,
         cardConfig:[],
         sectionStyles:{
           container:"about-section bg-black text-white min-h-screen flex justify-evenly",
-          wrapper: "max-w-6xl  grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12 px-6 md:px-8",
+          wrapper: "max-w-7xl  grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12 px-6 md:px-8",
           leftColumn: "md:col-span-4",
           rightColumn: "md:col-span-8 space-y-6 text-lg md:text-xl lg:text-2xl leading-relaxed",
         }

@@ -45,25 +45,25 @@ export class Homepage implements OnInit, OnDestroy {
   skills = [
     'ANGULAR',
     'TYPESCRIPT',
-    'SCALABLE SYSTEMS',
+    'RxJS',
     'REST APIs',
-    'EVENT DRIVEN',
-    'REAL TIME APPS'
+    'Nest.js',
+    'Docker'
   ];
 
   socialIcons = [
-    { icon: 'github', href: '#' },
-    { icon: 'linkedin', href: '#' },
-    { icon: 'x', href: '#' },
-    { icon: 'insta', href: '#' }
+    { icon: 'github', href: 'https://github.com/Abinash-Anand' },
+    { icon: 'linkedin', href: 'https://www.linkedin.com/in/abinash-anand-064598203/' },
+    // { icon: 'x', href: '#' },
+    { icon: 'insta', href: 'https://www.instagram.com/life_in_gitlogs' }
 
   ];
 
-  stats = [
-    { num: '01', suffix: '+', label: 'YEARS EXP' },
-    { num: '5', suffix: '+', label: 'PROJECTS' },
-    // { num: '99', suffix: '%', label: 'SATISFACTION' }
-  ];
+  // stats = [
+  //   { num: '01', suffix: '+', label: 'YEARS EXP' },
+  //   { num: '5', suffix: '+', label: 'PROJECTS' },
+  //   // { num: '99', suffix: '%', label: 'SATISFACTION' }
+  // ];
 
   private particles: Particle[] = [];
   private animationId?: number;

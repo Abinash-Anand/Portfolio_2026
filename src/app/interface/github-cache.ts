@@ -1,6 +1,6 @@
 export interface GithubCache {
       timestamp: number;
-  data: GithubRepoData;
+      data: GithubRepoData;
 }
 export interface GithubRepoData {
   repo: any;

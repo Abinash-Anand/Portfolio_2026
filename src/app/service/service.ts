@@ -6,8 +6,8 @@ import { forkJoin, Observable } from 'rxjs';
   providedIn: 'root',
 })
 export class Service {
-  private http = inject(HttpClient);
-  private  baseUrl = 'https://api.github.com/repos/Abinash-Anand'
+  private readonly http = inject(HttpClient);
+  private readonly baseUrl = 'https://api.github.com/repos/Abinash-Anand'
 
   loadGithubRepo(repoName: string | null): Observable<any> {
 
