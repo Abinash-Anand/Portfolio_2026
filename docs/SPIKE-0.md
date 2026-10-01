@@ -166,9 +166,10 @@ handling in the app shell.
 3. **Mount should be spread out in Phase 3.** At 23 to 34 ms (140 to 180 ms in the slow state) it is a long task waiting to
    happen. Generate tunnel points in a few chunks across idle frames, or from a seeded fixed array, and measure.
 4. **The governor reads throttled `requestAnimationFrame` as slowness.** In the embedded pane it stepped down to `low` because
-   frames arrived at 3 to 20 per second. Real browsers pause hidden tabs (the host already pauses on `visibilitychange`), but a
-   phone in low-power mode caps animation to 30 fps and would look the same. **Check on a phone**: if it degrades to `low` for
-   that reason, the governor needs to compare against the measured refresh interval, not a fixed 60 fps basis.
+   frames arrived at 3 to 20 per second. Real browsers pause hidden tabs (the host already pauses on `visibilitychange`). A
+   phone in low-power mode caps animation to 30 fps, but the frame loop learns the display's refresh period from its first
+   frames (any period under 40 ms) and normalises frame time by it, so a steady 30 fps display is not mistaken for slowness;
+   only a display slower than 25 Hz would be. **Still to confirm on a phone** (section 10).
 5. **`PreloadAllModules` prefetches the `/journey` chunk (23 kB) on every page.** Harmless for a preview route; decide in Phase 3
    whether the experience entry deserves it.
 6. **Context loss, WebGL failure and a missing implementation all end in the 2D page**, tested with a fake renderer.
@@ -221,3 +222,37 @@ All four phases render and read as intended at the "middle-ground" level: boot (
 - The camera glide originally ended one unit from the server core and would have passed through it; it now ends 7 units
   short (`AISLE_LENGTH` 24) with the core framed and the drums glimpsed behind it. The database vault still needs its own
   beat (a second camera move) in Phase 3.
+
+## 12. Phase 3 follow-up: the five rooms (same laptop, same method)
+
+Measured with `__spike.cost` at 1920x1080, DPR 1, after each room was built and warmed (dev build). GPU is p50/p95 in ms,
+JS is p50 in ms.
+
+| Case | high | medium | low | Draw calls | Triangles (high) |
+|---|---|---|---|---|---|
+| boot | 0.53 / 0.76, 0.3 | 0.51 / 0.77, 0.3 | 0.53 / 0.81, 0.2 | 6 | 1 584 |
+| console | 0.38 / 1.47, 0.3 | 0.44 / 1.39, 0.3 | 0.38 / 1.45, 0.3 | 6 | 166 |
+| tunnel (journey) | 1.46 / 1.82, 0.3 | 0.84 / 1.24, 0.2 | 0.34 / 0.73, 0.2 | 2 | 13 824 |
+| room: about | 2.05 / 2.83, 1.0 | 1.78 / 2.32, 0.9 | 1.01 / 1.30, 0.8 | 24 | 19 064 |
+| room: education | 0.46 / 1.40, 0.5 | 0.51 / 1.05, 0.5 | 0.50 / 0.78, 0.5 | 8 | 752 |
+| room: skills | 1.06 / 1.51, 0.6 | 1.07 / 1.56, 0.5 | 1.13 / 1.55, 0.6 | 11 | 1 250 |
+| room: projects (3 pods) | 0.94 / 1.30, 0.6 | 1.00 / 1.36, 0.5 | 1.06 / 1.27, 0.5 | 11 | 12 392 |
+| room: experience | 0.31 / 0.47, 0.5 | 0.33 / 0.51, 0.5 | 0.32 / 0.48, 0.4 | 11 | 3 436 |
+
+- **Every room is cheap:** the worst is About at about 2 ms of GPU (it includes the tail of the tunnel stream while the response
+  flight settles) and about 1 ms of JavaScript. At most 24 draw calls, against a budget of about 100.
+- **Only About has a tier ladder** (the rack count and the tunnel). The other rooms cost the same at every tier because they are
+  already tiny; the lower tiers still save by capping pixel ratio and frame rate, which this fixed-size test does not show.
+  This is deliberate, not an oversight: do not invent detail to trim until the phone run shows a need.
+- **Building a room** takes 0.4 to 25 ms in one scheduled step (About is the slowest because it draws the most text and
+  geometry, and the first build runs cold). In the lifecycle test the second and later builds took 0.4 to 11 ms. Rooms are
+  ready 110 to 290 ms after being asked for, including loading their chunk, the label font, building, compiling and warm-up.
+  **Follow-up if the phone shows a visible hitch:** split the About build into two scheduler steps (the scheduler already
+  supports it).
+- **First frame in each room after preparation:** 3 to 15 ms in the readback-synced benchmark (which adds a round trip),
+  so entering a room does not hitch.
+- **Lifecycle across all five rooms** (six full cycles of mount, visit every room, dispose): alive resources constant
+  (21 geometries), nothing alive after dispose, all contexts released, heap ratio 0.74 (no growth). At most two rooms alive.
+- **Code size** (brotli): Three.js core 121 kB (unchanged), host 8.3 kB, each room 1.4 to 2.6 kB, shared helpers about
+  8 kB. A visitor who opens one room downloads the core, the host and that room (plus the next one, if they hover a key).
+  Initial JS is 94.1 kB gzip (budget about 100 kB; +1.1 kB for the route matcher, content mapper and URL sync).

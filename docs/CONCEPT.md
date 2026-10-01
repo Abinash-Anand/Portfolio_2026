@@ -176,9 +176,12 @@ be read or downloaded as a PDF with one click.
 | A3 | **Honest telemetry.** RTT, latency, payload size and `api.abinash.dev` are *simulated*: label them as such (for example a "SIMULATED" tag) or later back them with a real small NestJS endpoint. The IP/location line is fixed theatre and **never the visitor's real IP** (personal data). The FPS value can be the real measured one. | A reviewer inspecting the network tab must not find invented measurements presented as real. GDPR. | **Phase 2: implemented** (a `SIMULATED` tag on the monitor and the response line; fixed theatre IP line; HUD latency shows `SIM`; FPS is real). Awaiting owner confirmation. |
 | A4 | **Three.js instead of React Three Fiber**; the HUD says `ENGINE: THREE.JS`. | Identity is Angular; the architecture uses a framework-agnostic Three.js scene behind a thin Angular wrapper. | **Phase 2: implemented** (the HUD engine label comes from the active scene host; the placeholder reports `CANVAS-2D (PLACEHOLDER)`). **Spike 0: Three.js scene implemented** (the HUD reads `ENGINE: THREE.JS`; the placeholder remains as `?engine=2d`). Awaiting owner confirmation. |
 | A5 | **Cheaper versions of heavy effects:** "millions" of particles become tens of thousands on the GPU; motion blur becomes streak shaders; HUD hands become a reticle or simple outline; audio is synthesised with Web Audio (about zero download). | Frame budget (ARCHITECTURE.md section 9) and the middle-ground decision. | **Partly implemented** (procedural audio, tier-capped particle counts, streak lines instead of motion blur). Spike 0 added: the 0/1 tunnel is 30 000 GPU points (16 000 medium, 6 000 low); streaks and the reticle are still Phase 3. |
-| A6 | **A URL per endpoint** (`/about`, `/education`, `/skills`, `/projects`, `/experience`); back and forward work; each is shareable and prerenderable. | "No navigation" can describe the experience without removing URLs; SEO, sharing, accessibility. | proposed (the 2D endpoint routes exist; URL and back-button wiring for the 3D states is Phase 3) |
+| A6 | **A URL per endpoint** (`/about`, `/education`, `/skills`, `/projects`, `/experience`); back and forward work; each is shareable and prerenderable. | "No navigation" can describe the experience without removing URLs; SEO, sharing, accessibility. | **Phase 3: implemented** for the experience (`/journey/skills` opens straight into that room; arriving writes the URL; Back returns to the console; unknown rooms fall back to the console). The 2D pages keep `/about` and the others and stay the indexable, prerenderable versions. Awaiting owner confirmation. |
 | A7 | **Semantic palette:** blue = structure, emerald = status and success, gold = data payload, violet/indigo = backend. Defined as design tokens. | Many hues risk visual noise; roles keep it coherent. | **Phase 2: implemented** as design tokens (DESIGN.md section 3). Awaiting owner confirmation of the proposed hex values. |
 | A8 | **Headset is a stylised procedural object** (matte-black visor, emissive blue traces), not a sculpted model, unless a model is supplied. | Fits the middle-ground and code-first asset decision. | **Spike 0: implemented** (extruded visor, edges, circuit traces, glow; no model). It reads mostly as an outline and needs a surface or rim pass in Phase 3. Awaiting owner confirmation. |
+| A9 | **Skills chips follow the CV:** four chips, one per skill group in the Master CV (Languages & Frameworks, Data & Backend, Architecture & Engineering, AI-Assisted Engineering), each printed with that group's real skills. The concept's three chips (frontend, backend, data and infra) would have required regrouping the CV. | Parity: the 3D room and the 2D skills page show the same groups; resolves the open question in section 10. | **Phase 3: implemented.** Awaiting owner confirmation. |
+| A10 | **Education has two blades** (the M.Sc. and the B.Tech.), and the terminal windows show only facts from the CV (degree, institution, period, focus or GPA). The concept's "coursework and research modules" are not in the CV and are not invented. | Every claim must be defensible in an interview (section 10). | **Phase 3: implemented.** Awaiting owner confirmation. |
+| A11 | **The database vault is part of the About room**, a pit beneath the server aisle that the camera descends into, and the Act V dashboard is the DOM glass panel (not a projected 3D screen). Each commit and pod shows whole achievements in 3D up to a limit; the panel shows everything. | Keeps text real and accessible (DESIGN.md 9.2) and the journey short (A2). | **Phase 3: implemented.** Awaiting owner confirmation. |
 
 ## 7. Mapping to the architecture
 
@@ -221,24 +224,24 @@ integrated GPU, the remaining rooms are feasible; if not, scope or fidelity is r
 ### Act II to V (About journey)
 - [ ] Particle deconstruction, tunnel, telemetry overlay and arrival match section 3.
 - [ ] Telemetry is labelled as simulated or backed by a real endpoint (A3).
-- [ ] Server vault: `AuthGuard` and `ValidationPipe` gates, NestJS core, two skill text panels, `AboutService.getProfile()`.
-- [ ] Database vault: drums, laser scan, the five records, `RESPONSE_BODY (200 OK)` container.
+- [x] Server vault: `AuthGuard` and `ValidationPipe` gates, NestJS core, two skill text panels, `AboutService.getProfile()`. (Phase 3)
+- [x] Database vault: drums, laser scan, the five records, `RESPONSE_BODY (200 OK)` container. (Phase 3)
 - [ ] Return: `200 OK | 2.4KB | 24ms` line, WHOOSH, glassmorphic dashboard with the exact text, both buttons work.
 - [ ] Journey is skippable and no longer than the agreed duration (A2).
 
 ### Other rooms
-- [ ] Education: `STUTTGART_NODE_01`, blade `M.SC_SOFTWARE_TECHNOLOGY`, terminal windows.
-- [ ] Skills: three chips (frontend, backend, data and infra) with the listed skills and data streams.
-- [ ] Projects: pods generated from data; each pod links to its work page and repo.
-- [ ] Experience: git-graph corridor; commits expand into metrics and achievements.
+- [x] Education: `STUTTGART_NODE_01`, blade `M.SC_SOFTWARE_TECHNOLOGY`, terminal windows. (Phase 3; plus the B.Tech. blade, A10)
+- [x] Skills: chips with the listed skills and data streams. (Phase 3; four chips from the CV, A9)
+- [x] Projects: pods generated from data; each pod links to its work page and repo. (Phase 3: pods in 3D; links in the room panel)
+- [x] Experience: git-graph corridor; commits expand into metrics and achievements. (Phase 3)
 
 ### Cross-cutting (every scene)
 - [ ] **Performance:** holds the target frame time on the baseline device with headroom; memory within the tier budget after leaving a room; no first-frame hitch (shaders compiled ahead).
 - [ ] **Tiers:** `high`, `medium`, `low`, `static` all work; `static` shows the full 2D resume.
-- [ ] **Accessibility:** every action reachable by keyboard; visible focus; reduced motion skips journeys; HUD text is real DOM; canvas is `aria-hidden`.
-- [ ] **Parity:** everything shown in 3D is also available in the 2D resume or its section pages.
+- [x] **Accessibility:** every action reachable by keyboard; visible focus; reduced motion skips journeys; HUD text is real DOM; canvas is `aria-hidden`. (Phase 3; the full audit with a screen reader is Phase 4)
+- [x] **Parity:** everything shown in 3D is also available in the 2D resume or its section pages. (Phase 3: the room panel is built from the same content, and tests compare them)
 - [ ] **Privacy:** no real IP or location shown; no storage, cookies or fingerprinting.
-- [ ] **URLs:** each endpoint has a URL; back and forward work.
+- [x] **URLs:** each endpoint has a URL; back and forward work. (Phase 3: `/journey/:endpoint`)
 
 ## 10. Facts and content to confirm before launch
 
@@ -250,8 +253,8 @@ Status after the Master CV (2026-10-01, see Appendix A): most facts are now **co
 - **Still open:**
   - **SynthGraph repository:** found on 2026-10-01 as a public repo (`Abinash-Anand/SynthGraph`, TypeScript, with a README). The earlier GitHub listing had missed it. It is featured through the sync's fallback list and has a work page; the Projects room and the resume link to it. Resolved.
   - **Concept wording vs CV:** the concept's "Pod B" says "35% reduced client overhead"; the CV says "cutting client-side resource consumption by 35%". Use the CV wording.
-  - **Skills chips:** the CV also lists Python, Jasmine/Vitest/Pytest, system design, domain modelling and AI-assisted engineering (agentic coding workflows). Decide which appear on the chips.
-  - **Education room:** the CV also has the B.Tech. (Bharati Vidyapeeth, 2020 to 2024); add a second blade?
+  - **Skills chips:** resolved by A9 (the CV's four groups, all skills shown). Pending owner confirmation.
+  - **Education room:** resolved by A10 (a second blade for the B.Tech.). Pending owner confirmation.
   - **Phone number:** the CV contains one. It is already public (current site CV and repo history). Omit it from the web resume view and the downloadable CV going forward?
   - **Emerald and violet/indigo hex values** (design tokens).
 
@@ -273,6 +276,7 @@ Status after the Master CV (2026-10-01, see Appendix A): most facts are now **co
 | 2026-10-01 | Master CV received; facts in section 10 reconciled; Appendix A added; positioning updated to "TypeScript-focused full-stack". |
 | 2026-10-01 | Phase 2 built the boot, console, journey and room flow (placeholder scene) at `/journey`. Acts I to V and the tunnel visuals remain for Spike 0 and Phase 3; adjustment statuses updated in section 6. |
 | 2026-10-01 | Spike 0 built a real Three.js scene (headset, console, tunnel, server vault with database drums) and measured it on the baseline laptop; see docs/SPIKE-0.md. Phone run pending. |
+| 2026-10-01 | Phase 3 built the five rooms (About with its database-vault pit, Education, Skills, Projects, Experience), the room panel, `/journey/:endpoint` URLs and history, and intent-based preparation; adjustments A9 to A11 added; A6 implemented. The headset, console keys and boot layout got a small art pass. See ARCHITECTURE.md 4.2. |
 
 ## Appendix A. Source data: Master CV (2026-10-01)
 
