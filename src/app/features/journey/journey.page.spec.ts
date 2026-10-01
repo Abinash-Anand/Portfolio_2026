@@ -45,6 +45,8 @@ async function setup(capabilities: Capabilities = strong) {
     },
   );
   TestBed.configureTestingModule({
+    // Declared so compileComponents() can resolve its @defer dependencies (the lazy benchmark panel).
+    imports: [JourneyPage],
     providers: [
       provideRouter(
         ['resume', 'about', 'education', 'skills', 'work', 'experience'].map((path) => ({
@@ -61,6 +63,7 @@ async function setup(capabilities: Capabilities = strong) {
       { provide: AnalyticsPort, useValue: { track } },
     ],
   });
+  await TestBed.compileComponents();
   const fixture = TestBed.createComponent(JourneyPage);
   fixture.detectChanges();
   await fixture.whenStable();

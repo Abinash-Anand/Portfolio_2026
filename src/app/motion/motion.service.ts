@@ -34,6 +34,7 @@ export class MotionService {
   private readonly reducedMotionState = signal<boolean | null>(null);
   private readonly choice = signal<TierChoice>('auto');
   private readonly governor = signal<Tier | null>(null);
+  private readonly failed = signal(false);
 
   /** Live `prefers-reduced-motion`. */
   readonly reducedMotion = computed(() => this.reducedMotionState() ?? this.probed().reducedMotion);
@@ -50,6 +51,8 @@ export class MotionService {
 
   /** The tier the scene should render at. */
   readonly tier = computed<Tier>(() => {
+    // WebGL failed or its context was lost: show the 2D page until the visitor explicitly retries.
+    if (this.failed()) return 'static';
     const choice = this.choice();
     return choice !== 'auto' ? choice : (this.governor() ?? this.detectedTier());
   });
@@ -67,6 +70,12 @@ export class MotionService {
   setChoice(choice: TierChoice): void {
     this.choice.set(choice);
     this.governor.set(null);
+    this.failed.set(false); // choosing graphics again is an explicit retry
+  }
+
+  /** The 3D world cannot run (no context, or it was lost): fall back to the 2D experience. */
+  fallBackToStatic(): void {
+    this.failed.set(true);
   }
 
   /** auto -> high -> medium -> low -> static -> auto (the HUD graphics button). */
