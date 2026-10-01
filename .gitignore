@@ -45,7 +45,3 @@ Thumbs.db
 
 # Build-time generated data (scripts/sync-github.ts)
 /src/generated
-/public/sitemap.xml
-/public/robots.txt
-/.lighthouse
-/.lighthouseci

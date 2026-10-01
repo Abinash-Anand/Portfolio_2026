@@ -1,6 +1,5 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
-import { ShellService } from '../shell.service';
 import { AnalyticsPort, type AnalyticsEvent } from './analytics.port';
 import { newDepths, ScrollDepthTracker, type Depth } from './scroll-depth';
 import {
@@ -42,9 +41,6 @@ describe('optedOut', () => {
 describe('eventPayload: what leaves the browser', () => {
   const cases: [AnalyticsEvent, ReturnType<typeof eventPayload>][] = [
     [{ name: 'cv_download' }, { name: 'cv_download' }],
-    [{ name: 'journey_start' }, { name: 'journey_start' }],
-    [{ name: 'journey_skip' }, { name: 'journey_skip' }],
-    [{ name: 'resume_2d_toggle' }, { name: 'resume_2d_toggle' }],
     [
       { name: 'project_open', slug: 'ParkRabbit' },
       { name: 'project_open', data: { slug: 'ParkRabbit' } },
@@ -54,24 +50,8 @@ describe('eventPayload: what leaves the browser', () => {
       { name: 'contact_click', data: { channel: 'email' } },
     ],
     [
-      { name: 'endpoint_select', endpoint: 'skills' },
-      { name: 'endpoint_select', data: { endpoint: 'skills' } },
-    ],
-    [
-      { name: 'room_arrive', endpoint: 'about', how: 'skip' },
-      { name: 'room_arrive', data: { endpoint: 'about', how: 'skip' } },
-    ],
-    [
-      { name: 'tier_change', tier: 'low' },
-      { name: 'tier_change', data: { tier: 'low' } },
-    ],
-    [
       { name: 'scroll_depth', depth: 75 },
       { name: 'scroll_depth', data: { depth: 75 } },
-    ],
-    [
-      { name: 'webgl_fallback', reason: 'context_lost' },
-      { name: 'webgl_fallback', data: { reason: 'context_lost' } },
     ],
     [{ name: 'app_error' }, { name: 'app_error' }],
   ];
@@ -147,7 +127,7 @@ describe('VercelAnalytics', () => {
     expect(win.vaq).toBeUndefined();
 
     const gpc = setup({ globalPrivacyControl: true });
-    gpc.adapter.track({ name: 'journey_start' });
+    gpc.adapter.track({ name: 'cv_download' });
     expect(gpc.win.vaq).toBeUndefined();
   });
 });
@@ -176,13 +156,12 @@ describe('newDepths', () => {
 });
 
 describe('ScrollDepthTracker', () => {
-  const setup = (immersive = false) => {
+  const setup = () => {
     const track = vi.fn<(event: AnalyticsEvent) => void>();
     TestBed.configureTestingModule({
       providers: [
         provideRouter([{ path: '**', children: [] }]),
         { provide: AnalyticsPort, useValue: { track } },
-        { provide: ShellService, useValue: { immersive: () => immersive } },
       ],
     });
     const tracker = TestBed.inject(ScrollDepthTracker);
@@ -226,12 +205,5 @@ describe('ScrollDepthTracker', () => {
       { name: 'scroll_depth', depth: 25 },
       { name: 'scroll_depth', depth: 50 },
     ]);
-  });
-
-  it('measures nothing in the immersive 3D experience', () => {
-    const { track } = setup(true);
-    scroll.y = 3200;
-    window.dispatchEvent(new Event('scroll'));
-    expect(track).not.toHaveBeenCalled();
   });
 });

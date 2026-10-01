@@ -5,7 +5,7 @@ const tseslint = require('typescript-eslint');
 const angular = require('angular-eslint');
 const boundaries = require('eslint-plugin-boundaries');
 
-/** Allowed targets for a layer; see docs/ARCHITECTURE.md section 4. */
+/** Allowed targets for a layer; see docs/ARCHITECTURE.md. */
 const canUse = (from, ...to) => ({
   from: { element: { type: from } },
   allow: { to: { element: { types: { anyOf: [from, ...to] } } } },
@@ -22,11 +22,7 @@ module.exports = defineConfig([
         { type: 'core', pattern: 'src/app/core' },
         { type: 'content', pattern: 'src/app/content' },
         { type: 'data', pattern: 'src/app/data' },
-        { type: 'motion', pattern: 'src/app/motion' },
-        { type: 'scene', pattern: 'src/app/scene' },
-        { type: 'journey', pattern: 'src/app/journey' },
         { type: 'shared', pattern: 'src/app/shared' },
-        { type: 'features', pattern: 'src/app/features' },
         { type: 'generated', pattern: 'src/generated' },
         // Root files (app.ts, app.config.ts, app.routes.ts, main.ts) are the composition root:
         // they are deliberately unclassified, so they may import any layer.
@@ -46,10 +42,6 @@ module.exports = defineConfig([
             canUse('content'),
             canUse('data', 'core', 'generated'),
             canUse('shared', 'core'),
-            canUse('motion', 'core'),
-            canUse('scene', 'core', 'motion'),
-            canUse('journey', 'core', 'motion'),
-            canUse('features', 'core', 'data', 'content', 'shared', 'motion', 'scene', 'journey'),
           ],
         },
       ],
