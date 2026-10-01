@@ -49,6 +49,16 @@ export const routes: Routes = [
     loadComponent: () => import('./features/work/work-detail.page').then((m) => m.WorkDetailPage),
   },
   {
+    path: 'privacy',
+    title: 'Privacy — Abinash Anand',
+    loadComponent: () => import('./features/legal/privacy.page').then((m) => m.PrivacyPage),
+  },
+  {
+    path: 'impressum',
+    title: 'Impressum — Abinash Anand',
+    loadComponent: () => import('./features/legal/impressum.page').then((m) => m.ImpressumPage),
+  },
+  {
     path: 'resume',
     title: 'Resume — Abinash Anand',
     loadComponent: () => import('./features/resume/resume.page').then((m) => m.ResumePage),

@@ -59,6 +59,14 @@
     >
       <p>© 2026 {{ profile.name }}</p>
       <ul class="flex flex-wrap gap-6">
+        <li>
+          <a routerLink="/privacy" class="hover:text-text" i18n>Privacy</a>
+        </li>
+        @if (impressumReady) {
+          <li>
+            <a routerLink="/impressum" class="hover:text-text">Impressum</a>
+          </li>
+        }
         @for (social of profile.socials; track social.id) {
           <li>
             <a

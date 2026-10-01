@@ -1,10 +1,53 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }],
+  "trailingSlash": false,
+  "redirects": [
+    { "source": "/project/eber", "destination": "/work/Eber-app", "permanent": true },
+    { "source": "/project/eber/:section", "destination": "/work/Eber-app", "permanent": true },
+    { "source": "/project/:id", "destination": "/work/:id", "permanent": true },
+    { "source": "/project/:id/:section", "destination": "/work/:id", "permanent": true },
+    { "source": "/projects", "destination": "/work", "permanent": true }
+  ],
+  "rewrites": [
+    { "source": "/journey", "destination": "/index.csr.html" },
+    { "source": "/journey/:endpoint", "destination": "/index.csr.html" },
+    { "source": "/styleguide", "destination": "/index.csr.html" }
+  ],
   "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self' 'sha256-uHX3vGKgM/vVfKsc8SVoynXwco6zoATmSInqPYdUr9s='; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'; connect-src 'self'; media-src 'self'; manifest-src 'self'; worker-src 'self'; frame-src 'none'; frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests"
+        },
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "X-Frame-Options", "value": "DENY" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+        {
+          "key": "Permissions-Policy",
+          "value": "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=(), interest-cohort=()"
+        },
+        { "key": "Cross-Origin-Opener-Policy", "value": "same-origin" }
+      ]
+    },
     {
       "source": "/(.*)\\.(js|css|woff2)",
       "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
+    },
+    {
+      "source": "/assets/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=86400, stale-while-revalidate=604800" }
+      ]
+    },
+    {
+      "source": "/journey/:path*",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
+    },
+    {
+      "source": "/styleguide",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
     }
   ]
 }

@@ -1,0 +1,152 @@
+<article class="mx-auto max-w-3xl px-6 pt-32 pb-24 md:px-10">
+  <a routerLink="/" class="text-muted hover:text-text text-sm">← Home</a>
+  <h1 class="font-display mt-6 text-4xl font-bold tracking-tight md:text-6xl">Privacy</h1>
+  <p class="text-muted mt-3 font-mono text-xs">Last reviewed {{ legal.updated }}</p>
+
+  <div class="mt-10 flex flex-col gap-10 leading-relaxed">
+    <section aria-labelledby="privacy-short">
+      <h2 id="privacy-short" class="font-display text-2xl font-semibold tracking-tight">
+        In short
+      </h2>
+      <ul class="marker:text-blue mt-4 flex list-disc flex-col gap-2 pl-5">
+        <li>This site sets <strong>no cookies</strong> and stores nothing in your browser.</li>
+        <li>
+          It uses no advertising, no social-media trackers and no fingerprinting, and it does not
+          follow you across other sites.
+        </li>
+        <li>
+          Visits are counted anonymously, in aggregate, and the counting switches itself off if your
+          browser sends “Do Not Track” or “Global Privacy Control”.
+        </li>
+        <li>Everything you see is public information from my CV and my public GitHub profile.</li>
+      </ul>
+    </section>
+
+    <section aria-labelledby="privacy-controller">
+      <h2 id="privacy-controller" class="font-display text-2xl font-semibold tracking-tight">
+        Who is responsible
+      </h2>
+      <p class="mt-4">
+        {{ profile.name }}, Stuttgart, Germany. Contact:
+        <a [href]="'mailto:' + profile.email" class="text-blue-soft underline underline-offset-2">{{
+          profile.email
+        }}</a
+        >.
+        @if (legal.address) {
+          The full postal address is in the
+          <a routerLink="/impressum" class="text-blue-soft underline underline-offset-2"
+            >Impressum</a
+          >.
+        }
+      </p>
+    </section>
+
+    <section aria-labelledby="privacy-hosting">
+      <h2 id="privacy-hosting" class="font-display text-2xl font-semibold tracking-tight">
+        Hosting
+      </h2>
+      <p class="mt-4">
+        The site is hosted by Vercel Inc. Like every web server, the host receives your IP address
+        and the technical details of your request (the page, the time, your browser type) when you
+        load a page, and keeps them in short-lived server logs to deliver the site and to keep it
+        secure and running. I do not use these logs to identify visitors. The legal basis is my
+        legitimate interest in operating a secure website (Art. 6(1)(f) GDPR). Vercel may process
+        data outside the EU; it relies on the safeguards it publishes for that, such as standard
+        contractual clauses.
+      </p>
+    </section>
+
+    <section aria-labelledby="privacy-analytics">
+      <h2 id="privacy-analytics" class="font-display text-2xl font-semibold tracking-tight">
+        Anonymous visit statistics
+      </h2>
+      <p class="mt-4">
+        To see whether the site works, which pages are read and which projects are opened, I use
+        Vercel Web Analytics and Speed Insights. According to Vercel’s documentation they use no
+        cookies and do not store your IP address or any identifier that follows you from one day to
+        the next; the results are aggregated. What is counted:
+      </p>
+      <ul class="marker:text-blue mt-4 flex list-disc flex-col gap-2 pl-5">
+        <li>
+          Page views, the page you came from (referrer) and the country, derived from the request.
+        </li>
+        <li>Browser, operating system and screen class.</li>
+        <li>
+          A few events: opening a project, downloading the CV, clicking a contact link, how far you
+          scrolled (25, 50, 75 or 100 percent), which graphics quality level the 3D experience used
+          (high, medium, low or static), and how a visit to a room of the 3D experience began.
+        </li>
+        <li>
+          An anonymous count when something goes wrong (the 3D experience could not start, or a page
+          error occurred), without any details, so that I can notice a broken release.
+        </li>
+        <li>
+          Page-speed measurements (loading, interaction and layout stability) so that I can fix slow
+          pages.
+        </li>
+      </ul>
+      <p class="mt-4">
+        Events never contain your name, your IP address or anything you typed. I do not record
+        detailed hardware information, because it can identify a device. The legal basis is my
+        legitimate interest in understanding and improving the site (Art. 6(1)(f) GDPR). If your
+        browser sends <em>Do Not Track</em> or <em>Global Privacy Control</em>, the counting scripts
+        are not loaded at all.
+      </p>
+    </section>
+
+    <section aria-labelledby="privacy-third">
+      <h2 id="privacy-third" class="font-display text-2xl font-semibold tracking-tight">
+        Content from other sites
+      </h2>
+      <p class="mt-4">
+        Fonts and all scripts are served from this site, not from a font or script provider. Project
+        pages show the README of the project from GitHub; its images, if any, are loaded from
+        GitHub’s servers, which then see your IP address as with any image. Links to GitHub,
+        LinkedIn and Instagram leave this site, and those services have their own privacy policies.
+        The project data itself is copied from GitHub when the site is built, so your visit does not
+        contact GitHub for it.
+      </p>
+    </section>
+
+    <section aria-labelledby="privacy-3d">
+      <h2 id="privacy-3d" class="font-display text-2xl font-semibold tracking-tight">
+        The 3D experience
+      </h2>
+      <p class="mt-4">
+        The interactive experience runs entirely in your browser. The location and IP address shown
+        in its heads-up display are fixed decoration and are <strong>not</strong> your real ones,
+        and the request timings it shows are simulated. Sound is generated in your browser and is
+        off until you switch it on.
+      </p>
+    </section>
+
+    <section aria-labelledby="privacy-contact">
+      <h2 id="privacy-contact" class="font-display text-2xl font-semibold tracking-tight">
+        If you write to me
+      </h2>
+      <p class="mt-4">
+        If you email me, I receive the address and the message you send and use them only to answer
+        you. I delete the conversation when it is no longer needed, unless the law requires me to
+        keep it.
+      </p>
+    </section>
+
+    <section aria-labelledby="privacy-rights">
+      <h2 id="privacy-rights" class="font-display text-2xl font-semibold tracking-tight">
+        Your rights
+      </h2>
+      <p class="mt-4">
+        You may ask me for access to, correction or deletion of personal data I hold about you,
+        restriction of its processing, and you may object to processing based on legitimate
+        interests. Because this site does not identify visitors, I usually hold nothing about you
+        beyond an email you sent. You may also complain to a supervisory authority, for example
+        <a
+          [href]="legal.authority.url"
+          rel="noopener noreferrer"
+          class="text-blue-soft underline underline-offset-2"
+          >{{ legal.authority.name }}</a
+        >.
+      </p>
+    </section>
+  </div>
+</article>

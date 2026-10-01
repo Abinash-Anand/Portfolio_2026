@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { AnalyticsPort, type AnalyticsEvent } from '../core/analytics/analytics.port';
 import type { Capabilities } from './capabilities';
 import { CAPABILITY_PROBE, MotionService } from './motion.service';
 
@@ -13,11 +14,32 @@ const strong: Capabilities = {
 
 function setup(capabilities: Capabilities = strong) {
   const probe = vi.fn(() => capabilities);
-  TestBed.configureTestingModule({ providers: [{ provide: CAPABILITY_PROBE, useValue: probe }] });
-  return { service: TestBed.inject(MotionService), probe };
+  const track = vi.fn<(event: AnalyticsEvent) => void>();
+  TestBed.configureTestingModule({
+    providers: [
+      { provide: CAPABILITY_PROBE, useValue: probe },
+      { provide: AnalyticsPort, useValue: { track } },
+    ],
+  });
+  return { service: TestBed.inject(MotionService), probe, track };
 }
 
 describe('MotionService', () => {
+  it('falls back to the 2D experience when the 3D world cannot run, and says why (no details)', () => {
+    const { service, track } = setup();
+    expect(service.tier()).toBe('high');
+    service.fallBackToStatic('context_lost');
+    expect(service.tier()).toBe('static');
+    expect(track).toHaveBeenCalledExactlyOnceWith({
+      name: 'webgl_fallback',
+      reason: 'context_lost',
+    });
+
+    // Choosing graphics again is an explicit retry.
+    service.setChoice('auto');
+    expect(service.tier()).toBe('high');
+  });
+
   it('probes lazily and only once', () => {
     const { service, probe } = setup();
     expect(probe).not.toHaveBeenCalled();
