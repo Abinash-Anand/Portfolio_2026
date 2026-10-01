@@ -1,0 +1,529 @@
+{
+  "schemaVersion": 2,
+  "fixture": true,
+  "person": {
+    "name": "Alex Morgan",
+    "role": "Software Engineer",
+    "location": "Stuttgart / Germany",
+    "statement": "Building software\nwith clarity,\ndepth & motion.",
+    "summary": "Building reliable software across interfaces, APIs, backend systems and AI-assisted engineering."
+  },
+  "navigation": {
+    "label": "Primary navigation",
+    "initialSection": "work",
+    "links": [
+      {
+        "section": "work",
+        "label": "Work"
+      },
+      {
+        "section": "about",
+        "label": "About"
+      },
+      {
+        "section": "experience",
+        "label": "Experience"
+      }
+    ],
+    "contact": {
+      "section": "contact",
+      "label": "Contact",
+      "cursor": "TALK"
+    }
+  },
+  "hero": {
+    "visual": {
+      "kind": "nodes",
+      "label": "CONTEXT / 04"
+    },
+    "scrollCue": {
+      "label": "Scroll to explore",
+      "section": "work"
+    }
+  },
+  "sections": {
+    "projects": {
+      "index": "01",
+      "eyebrow": "Selected projects",
+      "title": "Systems built for real complexity.",
+      "note": "A selection of product, platform, and systems work."
+    },
+    "experience": {
+      "index": "02",
+      "eyebrow": "Experience",
+      "title": "Building at the intersection of product and systems."
+    },
+    "stack": {
+      "index": "03",
+      "eyebrow": "Engineering stack",
+      "title": "Tools chosen by the shape of the problem.",
+      "note": "Hover or focus to reveal where each technology has been applied."
+    },
+    "about": {
+      "index": "04",
+      "eyebrow": "About / Education",
+      "title": "Engineering should reduce uncertainty—not hide it."
+    },
+    "services": {
+      "index": "05",
+      "eyebrow": "Capabilities",
+      "title": "From product intent to working system."
+    }
+  },
+  "projects": [
+    {
+      "slug": "code-sentinel",
+      "metadata": {
+        "schemaVersion": 1,
+        "title": "Code Sentinel",
+        "summary": "A review environment that turns repository context into precise, traceable engineering feedback.",
+        "year": "2026",
+        "category": "AI engineering platform",
+        "role": "Product engineering · System architecture",
+        "stack": [
+          "Angular",
+          "TypeScript",
+          "Node.js",
+          "PostgreSQL"
+        ],
+        "order": 0,
+        "featured": false,
+        "hidden": false,
+        "visual": {
+          "kind": "nodes",
+          "label": "CONTEXT / 04"
+        },
+        "narrative": {
+          "problem": "Code review signals were fragmented across tools, leaving teams to reconstruct context by hand.",
+          "constraints": "Repository-scale context, strict data boundaries, and explainable AI output.",
+          "decision": "A retrieval layer assembles scoped code context before specialized review agents evaluate each change.",
+          "result": "A coherent review workflow with transparent sources and repeatable engineering decisions.",
+          "architecture": [
+            "Angular",
+            "API Gateway",
+            "Review Agents",
+            "pgvector",
+            "Git Providers"
+          ]
+        }
+      },
+      "repositoryUrl": null,
+      "liveUrl": null
+    },
+    {
+      "slug": "facility-importer",
+      "metadata": {
+        "schemaVersion": 1,
+        "title": "Facility Importer",
+        "summary": "A resilient import workflow for validating and reconciling complex operational datasets.",
+        "year": "2025",
+        "category": "Data operations system",
+        "role": "Lead frontend · API design",
+        "stack": [
+          "TypeScript",
+          "NestJS",
+          "PostgreSQL",
+          "Redis"
+        ],
+        "order": 1,
+        "featured": false,
+        "hidden": false,
+        "visual": {
+          "kind": "pipeline",
+          "labels": [
+            "INGEST",
+            "VERIFY",
+            "COMMIT"
+          ]
+        },
+        "narrative": {
+          "problem": "Large facility imports failed opaquely and required expensive manual reconciliation.",
+          "constraints": "Inconsistent source schemas, partial failures, and long-running background operations.",
+          "decision": "A staged, idempotent pipeline separates parsing, validation, review, and commit.",
+          "result": "Operators can understand failures, correct source data, and safely resume an import.",
+          "architecture": [
+            "Upload UI",
+            "Validation API",
+            "Job Queue",
+            "PostgreSQL",
+            "Audit Log"
+          ]
+        },
+        "caseStudyContent": {
+          "projectSlug": "facility-importer",
+          "problem": {
+            "paragraphs": [
+              "Large facility imports failed opaquely and required expensive manual reconciliation."
+            ]
+          },
+          "constraints": [
+            {
+              "paragraphs": [
+                "Inconsistent source schemas, partial failures, and long-running background operations."
+              ]
+            }
+          ],
+          "technicalDecisions": [
+            {
+              "id": "staged-import",
+              "title": "Decision",
+              "decision": {
+                "paragraphs": [
+                  "A staged, idempotent pipeline separates parsing, validation, review, and commit."
+                ]
+              }
+            }
+          ],
+          "results": {
+            "status": "not-documented",
+            "note": "No verified outcome evidence has been supplied for this baseline content."
+          }
+        }
+      },
+      "repositoryUrl": null,
+      "liveUrl": null
+    },
+    {
+      "slug": "northstar",
+      "metadata": {
+        "schemaVersion": 1,
+        "title": "Northstar",
+        "summary": "A technical control surface for understanding events moving through distributed services.",
+        "year": "2025",
+        "category": "Distributed observability",
+        "role": "Architecture · Interaction design",
+        "stack": [
+          "Go",
+          "Kafka",
+          "gRPC",
+          "React"
+        ],
+        "order": 2,
+        "featured": false,
+        "hidden": false,
+        "visual": {
+          "kind": "radar",
+          "label": "N 48.7"
+        },
+        "narrative": {
+          "problem": "Operational events were technically available but difficult to connect into a system narrative.",
+          "constraints": "High event volume, asynchronous services, and multiple ownership boundaries.",
+          "decision": "A normalized event model and streaming gateway power a focused investigation interface.",
+          "result": "Teams gain a shared, navigable view of service behavior without masking system complexity.",
+          "architecture": [
+            "React",
+            "gRPC Gateway",
+            "Go Services",
+            "Kafka",
+            "Event Store"
+          ]
+        }
+      },
+      "repositoryUrl": null,
+      "liveUrl": null
+    },
+    {
+      "slug": "vc-brain",
+      "metadata": {
+        "schemaVersion": 1,
+        "title": "VC Brain",
+        "summary": "A research workspace that connects company knowledge, market context, and sourced analysis.",
+        "year": "2024",
+        "category": "Retrieval workspace",
+        "role": "Full-stack engineering",
+        "stack": [
+          "Python",
+          "RAG",
+          "PostgreSQL",
+          "React"
+        ],
+        "order": 3,
+        "featured": false,
+        "hidden": false,
+        "visual": {
+          "kind": "retrieval",
+          "labels": [
+            "QUERY",
+            "ROUTER",
+            "CONTEXT",
+            "SYNTHESIS"
+          ]
+        },
+        "narrative": {
+          "problem": "Research lived across documents and personal notes, making evidence hard to retrieve.",
+          "constraints": "Mixed document formats, access control, and the need for source-grounded answers.",
+          "decision": "Hybrid retrieval combines structured company data with semantically indexed documents.",
+          "result": "Research becomes reusable and every generated synthesis remains connected to evidence.",
+          "architecture": [
+            "Research UI",
+            "Query Router",
+            "RAG Pipeline",
+            "pgvector",
+            "Source Library"
+          ]
+        }
+      },
+      "repositoryUrl": null,
+      "liveUrl": null
+    }
+  ],
+  "projectDetail": {
+    "storySteps": [
+      "Overview",
+      "Problem",
+      "Architecture",
+      "Implementation",
+      "Result"
+    ],
+    "decisionLabels": [
+      "Problem",
+      "Constraint",
+      "Decision",
+      "Result"
+    ],
+    "sectionLabels": [
+      "01 / Engineering narrative",
+      "02 / System architecture",
+      "03 / Technical implementation",
+      "04 / Result"
+    ],
+    "implementation": {
+      "lines": [
+        "request → scope_context()",
+        "context → evaluate(change)",
+        "result → persist_with_sources()"
+      ],
+      "summary": "Interfaces expose system state without concealing the underlying data flow."
+    },
+    "architecture": {
+      "activeLabel": "Active node",
+      "descriptionSuffix": " is part of the project’s primary request and data path."
+    }
+  },
+  "experience": [
+    {
+      "company": "Aperture Systems",
+      "role": "Senior Software Engineer",
+      "period": "2023—Now",
+      "tech": "Angular · Node.js · PostgreSQL",
+      "id": "aperture-systems",
+      "description": "Working across product definition, system architecture, and implementation to deliver software that remains understandable as it grows."
+    },
+    {
+      "company": "Fieldwork Labs",
+      "role": "Software Engineer",
+      "period": "2021—2023",
+      "tech": "TypeScript · NestJS · Kafka",
+      "id": "fieldwork-labs",
+      "description": "Working across product definition, system architecture, and implementation to deliver software that remains understandable as it grows."
+    },
+    {
+      "company": "Independent",
+      "role": "Product Engineer",
+      "period": "2019—2021",
+      "tech": "React · Python · Prototyping",
+      "id": "independent",
+      "description": "Working across product definition, system architecture, and implementation to deliver software that remains understandable as it grows."
+    }
+  ],
+  "technologies": [
+    {
+      "label": "Frontend",
+      "items": [
+        {
+          "name": "Angular",
+          "usedIn": "Code Sentinel"
+        },
+        {
+          "name": "TypeScript",
+          "usedIn": "Code Sentinel"
+        },
+        {
+          "name": "RxJS",
+          "usedIn": "Facility Importer"
+        },
+        {
+          "name": "Signals",
+          "usedIn": "Code Sentinel"
+        },
+        {
+          "name": "HTML / CSS",
+          "usedIn": "All projects"
+        },
+        {
+          "name": "Tailwind",
+          "usedIn": "VC Brain"
+        }
+      ]
+    },
+    {
+      "label": "Backend",
+      "items": [
+        {
+          "name": "Node.js",
+          "usedIn": "Code Sentinel"
+        },
+        {
+          "name": "Express",
+          "usedIn": "Internal APIs"
+        },
+        {
+          "name": "NestJS",
+          "usedIn": "Facility Importer"
+        },
+        {
+          "name": "Go",
+          "usedIn": "Northstar"
+        },
+        {
+          "name": "Python",
+          "usedIn": "VC Brain"
+        }
+      ]
+    },
+    {
+      "label": "Data",
+      "items": [
+        {
+          "name": "PostgreSQL",
+          "usedIn": "Facility Importer"
+        },
+        {
+          "name": "Redis",
+          "usedIn": "Facility Importer"
+        },
+        {
+          "name": "MongoDB",
+          "usedIn": "Internal tools"
+        },
+        {
+          "name": "Kafka",
+          "usedIn": "Northstar"
+        },
+        {
+          "name": "gRPC",
+          "usedIn": "Northstar"
+        }
+      ]
+    },
+    {
+      "label": "AI / Systems",
+      "items": [
+        {
+          "name": "RAG",
+          "usedIn": "VC Brain"
+        },
+        {
+          "name": "pgvector",
+          "usedIn": "Code Sentinel"
+        },
+        {
+          "name": "AI agents",
+          "usedIn": "Code Sentinel"
+        },
+        {
+          "name": "Docker",
+          "usedIn": "All projects"
+        },
+        {
+          "name": "CI / CD",
+          "usedIn": "All projects"
+        }
+      ]
+    }
+  ],
+  "education": [
+    {
+      "qualification": "MSc · Computer Science"
+    }
+  ],
+  "about": {
+    "description": "I build software as a connected system: interface, state, service boundaries, data, and the people operating it. The goal is not novelty. It is clarity that survives complexity.",
+    "location": "Based in Stuttgart, Germany",
+    "exploration": "Currently exploring reliable AI-assisted software",
+    "interestsLabel": "Areas of interest",
+    "interests": [
+      "Frontend engineering",
+      "Distributed systems",
+      "Developer tooling",
+      "Product engineering"
+    ]
+  },
+  "services": [
+    {
+      "id": "product-engineering",
+      "title": "Product Engineering",
+      "description": "From ambiguous product problem to resilient software system."
+    },
+    {
+      "id": "frontend-engineering",
+      "title": "Frontend Engineering",
+      "description": "Complex interfaces with clear state, motion, and accessibility."
+    },
+    {
+      "id": "full-stack-development",
+      "title": "Full-stack Development",
+      "description": "Cohesive products across data, services, and user experience."
+    },
+    {
+      "id": "ai-assisted-software",
+      "title": "AI-assisted Software",
+      "description": "Grounded AI features with deliberate context and evaluation."
+    },
+    {
+      "id": "technical-prototyping",
+      "title": "Technical Prototyping",
+      "description": "Fast, production-aware exploration of critical product ideas."
+    }
+  ],
+  "contact": {
+    "email": "alex@example.com",
+    "calendly": "https://calendly.com/abinashanandab/15min",
+    "booking": {
+      "label": "BOOK A CONVERSATION",
+      "detail": "15 MIN · CALENDLY",
+      "accessibleLabel": "Book a 15-minute conversation (opens in a new tab)"
+    },
+    "availability": "Available for selected projects",
+    "location": "Stuttgart · CET",
+    "headingLines": [
+      "Let’s build",
+      "something useful."
+    ],
+    "cursor": "LET’S TALK",
+    "socials": [
+      {
+        "label": "LinkedIn",
+        "href": "https://linkedin.com"
+      },
+      {
+        "label": "GitHub",
+        "href": "https://github.com"
+      }
+    ]
+  },
+  "resume": null,
+  "footer": {
+    "statement": "Designed and engineered with restraint",
+    "backToTop": "Back to top ↑"
+  },
+  "labels": {
+    "overlay": {
+      "close": "Close",
+      "closeAria": "Close detail"
+    },
+    "projectOverlay": "Project case study",
+    "experienceOverlay": "Experience",
+    "serviceOverlay": "Capability",
+    "projectCta": "View case study",
+    "projectCursor": "OPEN ↗",
+    "projectVisualPrefix": "SYS / 0",
+    "experienceCursor": "VIEW",
+    "serviceCursor": "OPEN",
+    "caseProgressAria": "Case study progress",
+    "usedIn": "Used in",
+    "experienceTechnologies": "Core technologies",
+    "capability": "Selected capability",
+    "discussProject": "Discuss a project"
+  }
+}

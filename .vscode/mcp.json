@@ -1,9 +1,24 @@
 {
-  // For more information, visit: https://angular.dev/ai/mcp
   "servers": {
-    "angular-cli": {
-      "command": "npx",
-      "args": ["-y", "@angular/cli", "mcp"]
+    "appmap": {
+      "type": "stdio",
+      "command": "${userHome}/.appmap/bin/appmap",
+      "args": [
+        "query",
+        "mcp"
+      ]
+    },
+    "appmap-gold-traces": {
+      "type": "stdio",
+      "command": "${userHome}/.appmap/bin/appmap",
+      "args": [
+        "query",
+        "mcp",
+        "--appmap-dir",
+        "gold_traces/baseline/appmaps",
+        "--query-db",
+        "tmp/gold_traces_query.db"
+      ]
     }
   }
 }

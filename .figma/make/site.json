@@ -1,0 +1,10 @@
+{
+  "description": "Showcase your software engineering expertise with a premium, interactive portfolio that emphasizes technical competence and product design through a sophisticated, editorial experience.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
