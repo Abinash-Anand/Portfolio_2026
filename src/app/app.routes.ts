@@ -43,19 +43,41 @@ export const routes: Routes = [
     title: 'Resume — Abinash Anand',
     loadComponent: () => import('./features/resume/resume.page').then((m) => m.ResumePage),
   },
-  { path: 'about', title: 'About — Abinash Anand', data: { section: 'about' }, loadComponent: loadSectionPage },
+  {
+    path: 'about',
+    title: 'About — Abinash Anand',
+    data: { section: 'about' },
+    loadComponent: loadSectionPage,
+  },
   {
     path: 'experience',
     title: 'Experience — Abinash Anand',
     data: { section: 'experience' },
     loadComponent: loadSectionPage,
   },
-  { path: 'skills', title: 'Skills — Abinash Anand', data: { section: 'skills' }, loadComponent: loadSectionPage },
+  {
+    path: 'skills',
+    title: 'Skills — Abinash Anand',
+    data: { section: 'skills' },
+    loadComponent: loadSectionPage,
+  },
   {
     path: 'education',
     title: 'Education — Abinash Anand',
     data: { section: 'education' },
     loadComponent: loadSectionPage,
+  },
+  // Preview routes for the experience engine (not linked from the site, not indexed).
+  {
+    path: 'journey',
+    title: "Experience preview — Packet's Journey",
+    loadComponent: () => import('./features/journey/journey.page').then((m) => m.JourneyPage),
+  },
+  {
+    path: 'styleguide',
+    title: 'Styleguide — Abinash Anand',
+    loadComponent: () =>
+      import('./features/styleguide/styleguide.page').then((m) => m.StyleguidePage),
   },
   // The "projects" endpoint of the planned experience is the work list in 2D.
   { path: 'projects', redirectTo: 'work' },

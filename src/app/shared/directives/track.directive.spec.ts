@@ -1,6 +1,10 @@
 import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { AnalyticsPort, NoopAnalytics, type AnalyticsEvent } from '../../core/analytics/analytics.port';
+import {
+  AnalyticsPort,
+  NoopAnalytics,
+  type AnalyticsEvent,
+} from '../../core/analytics/analytics.port';
 import { TrackDirective } from './track.directive';
 
 @Component({
@@ -12,7 +16,9 @@ class Host {}
 describe('TrackDirective', () => {
   it('sends the configured event to the analytics port on click', () => {
     const track = vi.fn<(event: AnalyticsEvent) => void>();
-    TestBed.configureTestingModule({ providers: [{ provide: AnalyticsPort, useValue: { track } }] });
+    TestBed.configureTestingModule({
+      providers: [{ provide: AnalyticsPort, useValue: { track } }],
+    });
     const fixture = TestBed.createComponent(Host);
     fixture.detectChanges();
 

@@ -16,7 +16,9 @@ export class PortfolioStore {
   readonly projects = computed<readonly Project[]>(() => this.state()?.projects ?? []);
   readonly featured = computed(() => this.projects().filter((p) => p.featured));
   readonly archive = computed(() => this.projects().filter((p) => !p.featured));
-  private readonly bySlug = computed(() => new Map(this.projects().map((p) => [p.slug, p] as const)));
+  private readonly bySlug = computed(
+    () => new Map(this.projects().map((p) => [p.slug, p] as const)),
+  );
 
   /** Languages used across projects, most common first. */
   readonly languages = computed(() => {
@@ -26,7 +28,9 @@ export class PortfolioStore {
         counts.set(language.name, (counts.get(language.name) ?? 0) + 1);
       }
     }
-    return [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(([name]) => name);
+    return [...counts.entries()]
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+      .map(([name]) => name);
   });
 
   async load(): Promise<void> {

@@ -11,15 +11,21 @@
       </div>
     }
     @case ('experience') {
-      <h1 class="font-display mt-6 text-4xl font-bold tracking-tight md:text-6xl" i18n>Experience</h1>
+      <h1 class="font-display mt-6 text-4xl font-bold tracking-tight md:text-6xl" i18n>
+        Experience
+      </h1>
       <div class="mt-10"><app-experience-section [entries]="resume.experience" [level]="2" /></div>
     }
     @case ('skills') {
       <h1 class="font-display mt-6 text-4xl font-bold tracking-tight md:text-6xl" i18n>Skills</h1>
-      <div class="mt-10"><app-skills-section [groups]="resume.skills" [spoken]="resume.spoken" [level]="2" /></div>
+      <div class="mt-10">
+        <app-skills-section [groups]="resume.skills" [spoken]="resume.spoken" [level]="2" />
+      </div>
     }
     @case ('education') {
-      <h1 class="font-display mt-6 text-4xl font-bold tracking-tight md:text-6xl" i18n>Education</h1>
+      <h1 class="font-display mt-6 text-4xl font-bold tracking-tight md:text-6xl" i18n>
+        Education
+      </h1>
       <div class="mt-10"><app-education-section [entries]="resume.education" [level]="2" /></div>
     }
   }

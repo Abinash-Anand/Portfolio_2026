@@ -37,6 +37,8 @@ export class WorkIndexPage {
 
   private filter(projects: readonly Project[]): readonly Project[] {
     const language = this.language();
-    return language ? projects.filter((p) => p.languages.some((l) => l.name === language)) : projects;
+    return language
+      ? projects.filter((p) => p.languages.some((l) => l.name === language))
+      : projects;
   }
 }

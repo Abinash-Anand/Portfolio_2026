@@ -20,7 +20,8 @@ describe('renderReadme', () => {
   });
 
   it('sanitises scripts, event handlers and javascript: links', async () => {
-    const md = 'Hello <script>alert(1)</script> <img src="x" onerror="alert(1)"> [bad](javascript:alert(1))';
+    const md =
+      'Hello <script>alert(1)</script> <img src="x" onerror="alert(1)"> [bad](javascript:alert(1))';
     const { html } = await renderReadme(md, ctx);
     expect(html).not.toMatch(/<script/i);
     expect(html).not.toMatch(/onerror/i);
@@ -28,14 +29,20 @@ describe('renderReadme', () => {
   });
 
   it('makes relative image and link URLs absolute and leaves anchors alone', async () => {
-    const { html } = await renderReadme('![shot](docs/shot.png) [guide](./GUIDE.md) [top](#top)', ctx);
+    const { html } = await renderReadme(
+      '![shot](docs/shot.png) [guide](./GUIDE.md) [top](#top)',
+      ctx,
+    );
     expect(html).toContain('src="https://raw.githubusercontent.com/me/proj/HEAD/docs/shot.png"');
     expect(html).toContain('href="https://github.com/me/proj/blob/HEAD/GUIDE.md"');
     expect(html).toContain('href="#top"');
   });
 
   it('opens external links safely and lazy-loads images', async () => {
-    const { html } = await renderReadme('[site](https://example.com) ![a](https://example.com/a.png)', ctx);
+    const { html } = await renderReadme(
+      '[site](https://example.com) ![a](https://example.com/a.png)',
+      ctx,
+    );
     expect(html).toContain('rel="noopener noreferrer"');
     expect(html).toContain('target="_blank"');
     expect(html).toContain('loading="lazy"');
@@ -50,12 +57,14 @@ describe('renderReadme', () => {
 
 describe('firstParagraph', () => {
   it('skips headings and badge rows and returns the first real sentence', () => {
-    const md = '# Title\n\n[![CI](a.svg)](b)\n[![MIT](c.svg)](d)\n\n**A data lineage system for synthetic training data.**\n\nMore.';
+    const md =
+      '# Title\n\n[![CI](a.svg)](b)\n[![MIT](c.svg)](d)\n\n**A data lineage system for synthetic training data.**\n\nMore.';
     expect(firstParagraph(md)).toBe('A data lineage system for synthetic training data.');
   });
 
   it('skips known boilerplate', () => {
-    const md = '# App\n\nThis template provides a minimal setup to get React working in Vite with HMR.\n\nReal description of what this application does for users.';
+    const md =
+      '# App\n\nThis template provides a minimal setup to get React working in Vite with HMR.\n\nReal description of what this application does for users.';
     expect(firstParagraph(md)).toBe('Real description of what this application does for users.');
   });
 
@@ -67,6 +76,8 @@ describe('firstParagraph', () => {
 
 describe('plainText', () => {
   it('removes emphasis, code ticks and link syntax', () => {
-    expect(plainText('**Bold** and `code` and [a link](http://x.y)')).toBe('Bold and code and a link');
+    expect(plainText('**Bold** and `code` and [a link](http://x.y)')).toBe(
+      'Bold and code and a link',
+    );
   });
 });

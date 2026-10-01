@@ -1,0 +1,16 @@
+@if (visible && view(); as v) {
+  <aside
+    aria-hidden="true"
+    class="hud-label bg-void/80 border-line pointer-events-none fixed top-14 right-3 z-30 hidden rounded-sm border px-3 py-2 normal-case md:block"
+  >
+    <p class="text-emerald">{{ v.fps }} fps · {{ v.frameMs }} ms</p>
+    <p>
+      draws {{ v.drawCalls }}
+      @if (v.heapMb !== null) {
+        · heap {{ v.heapMb }} MB
+      }
+    </p>
+    <p>tier {{ v.tier }} ({{ v.choice }})</p>
+    <p class="text-faint">{{ v.engine }}</p>
+  </aside>
+}

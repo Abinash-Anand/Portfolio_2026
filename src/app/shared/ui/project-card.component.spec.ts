@@ -12,11 +12,19 @@ describe('ProjectCard', () => {
   }
 
   it('links the title to the work page and lists the stack', () => {
-    const el = render({ slug: 'ParkRabbit', title: 'ParkRabbit', summary: 'Events.', stack: ['Java', 'RabbitMQ'] });
+    const el = render({
+      slug: 'ParkRabbit',
+      title: 'ParkRabbit',
+      summary: 'Events.',
+      stack: ['Java', 'RabbitMQ'],
+    });
     expect(el.querySelector('a')?.getAttribute('href')).toBe('/work/ParkRabbit');
     expect(el.querySelector('a')?.textContent?.trim()).toBe('ParkRabbit');
     expect(el.textContent).toContain('Events.');
-    expect([...el.querySelectorAll('li')].map((li) => li.textContent?.trim())).toEqual(['Java', 'RabbitMQ']);
+    expect([...el.querySelectorAll('li')].map((li) => li.textContent?.trim())).toEqual([
+      'Java',
+      'RabbitMQ',
+    ]);
   });
 
   it('omits the summary and the stack list when there is nothing to show', () => {

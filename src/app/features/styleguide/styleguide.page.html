@@ -1,0 +1,209 @@
+<article class="mx-auto max-w-6xl px-6 pt-28 pb-24 md:px-10">
+  <header>
+    <p class="hud-label">Internal · not indexed · docs/DESIGN.md</p>
+    <h1 class="font-display mt-3 text-4xl font-bold tracking-tight md:text-6xl">Styleguide</h1>
+    <p class="text-muted mt-4 max-w-2xl">
+      Every value on this page is read from the real design tokens (<code class="font-mono"
+        >src/styles.css</code
+      >
+      and <code class="font-mono">core/design/tokens.ts</code>); contrast ratios are computed live.
+      If this page and the app ever disagree, that is a bug.
+    </p>
+  </header>
+
+  <!-- COLOR -->
+  <section class="mt-16" aria-labelledby="sg-color">
+    <h2 id="sg-color" class="font-display text-2xl font-semibold">Color</h2>
+    <p class="text-muted mt-2 max-w-2xl text-sm">
+      Text uses text-safe tokens only (AA on <code class="font-mono">void</code> and
+      <code class="font-mono">surface</code>). The <code class="font-mono">-deep</code> variants and
+      <code class="font-mono">faint</code> are for glows, graphics and decoration.
+    </p>
+    <ul class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      @for (swatch of swatches; track swatch.token) {
+        <li class="border-line bg-surface flex gap-4 rounded-lg border p-4">
+          <span
+            class="border-line h-16 w-16 shrink-0 rounded-md border"
+            [style.background-color]="swatch.hex"
+            aria-hidden="true"
+          ></span>
+          <div class="min-w-0 text-sm">
+            <p class="font-mono font-semibold">{{ swatch.token }}</p>
+            <p class="text-muted font-mono text-xs">{{ swatch.hex }}</p>
+            @if (swatch.role === 'surface') {
+              <p class="text-muted mt-1 text-xs">surface</p>
+            } @else {
+              <p class="mt-1 text-xs">
+                <span [style.color]="swatch.hex">Aa</span>
+                <span class="text-muted">
+                  {{ swatch.onVoid | number: '1.1-1' }} on void ·
+                  {{ swatch.onSurface | number: '1.1-1' }} on surface
+                </span>
+              </p>
+              <p
+                class="mt-1 text-xs"
+                [class.text-emerald]="swatch.passes"
+                [class.text-danger]="!swatch.passes"
+              >
+                {{ swatch.role === 'text' ? 'AA text' : 'Graphics only (3:1)' }}:
+                {{ swatch.passes ? 'pass' : 'FAIL' }}
+              </p>
+            }
+          </div>
+        </li>
+      }
+    </ul>
+
+    <h3 class="font-display mt-10 text-lg font-semibold">What each hue means</h3>
+    <ul class="mt-3 flex flex-col gap-2 text-sm">
+      @for (entry of semantics; track entry[0]) {
+        <li class="flex items-center gap-3">
+          <span class="flex gap-1" aria-hidden="true">
+            @for (token of entry[1]; track token) {
+              <span class="h-3 w-3 rounded-full" [style.background-color]="colors[token]"></span>
+            }
+          </span>
+          <span>{{ entry[0] }}</span>
+          <span class="text-muted font-mono text-xs">{{ entry[1].join(', ') }}</span>
+        </li>
+      }
+    </ul>
+  </section>
+
+  <!-- TYPOGRAPHY -->
+  <section class="mt-16" aria-labelledby="sg-type">
+    <h2 id="sg-type" class="font-display text-2xl font-semibold">Typography</h2>
+    <div class="border-line bg-surface mt-6 flex flex-col gap-5 rounded-lg border p-6">
+      <p class="font-display text-5xl leading-none font-bold tracking-tighter md:text-7xl">
+        Display
+      </p>
+      <p class="font-display text-3xl font-bold tracking-tight md:text-5xl">Heading 1</p>
+      <p class="font-display text-2xl font-semibold md:text-4xl">Heading 2</p>
+      <p class="font-display text-xl font-semibold">Heading 3</p>
+      <p class="max-w-prose leading-relaxed">
+        Body text in Inter at 16px with a 1.6 line height, kept to 65 to 75 characters per line for
+        comfortable reading.
+      </p>
+      <p class="text-muted text-sm">Small text for secondary information.</p>
+      <p class="hud-label">HUD_LABEL: UPPER_SNAKE_CASE, 12px mono, 0.08em tracking</p>
+      <p class="text-emerald font-mono text-sm">SYSTEM STATUS: ONLINE</p>
+    </div>
+  </section>
+
+  <!-- HUD BLOCKS -->
+  <section class="mt-16" aria-labelledby="sg-hud">
+    <h2 id="sg-hud" class="font-display text-2xl font-semibold">HUD building blocks</h2>
+
+    <h3 class="font-display mt-8 text-lg font-semibold">Buttons (hover, press and focus them)</h3>
+    <div class="mt-4 flex flex-wrap gap-3">
+      <button type="button" class="hud-button">[ Default ]</button>
+      <button type="button" class="hud-button hud-button--primary">[ Primary ]</button>
+      <button type="button" class="hud-button" disabled>[ Disabled ]</button>
+    </div>
+
+    <h3 class="font-display mt-8 text-lg font-semibold">Keycaps (the DOM mirror of the console)</h3>
+    <div class="mt-4"><app-endpoint-keys [endpoints]="endpoints" /></div>
+
+    <h3 class="font-display mt-8 text-lg font-semibold">Glass panel, chips</h3>
+    <div
+      class="relative mt-4 overflow-hidden rounded-xl p-6"
+      style="background: linear-gradient(135deg, var(--color-indigo-deep), var(--color-void) 60%)"
+    >
+      <div class="glass-panel max-w-md p-5">
+        <p class="hud-label">Panel on a busy background</p>
+        <p class="mt-2 text-sm">Blurred glass; switched off on the low and static tiers.</p>
+        <ul class="mt-4 flex flex-wrap gap-2">
+          <li class="border-line bg-surface rounded-full border px-3 py-1 text-sm">TypeScript</li>
+          <li class="border-line bg-surface rounded-full border px-3 py-1 text-sm">NestJS</li>
+          <li class="border-line bg-surface rounded-full border px-3 py-1 text-sm">PostgreSQL</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3 class="font-display mt-8 text-lg font-semibold">
+      Terminal text and the simulated request monitor
+    </h3>
+    <div class="mt-4 grid gap-6 md:grid-cols-2">
+      <div class="border-line bg-surface rounded-lg border p-5">
+        <app-typewriter [lines]="bootLines" [speedMs]="22" />
+      </div>
+      <app-telemetry-monitor endpoint="about" [instant]="motion.reducedMotion()" />
+    </div>
+  </section>
+
+  <!-- MOTION -->
+  <section class="mt-16" aria-labelledby="sg-motion">
+    <h2 id="sg-motion" class="font-display text-2xl font-semibold">Motion</h2>
+    <p class="text-muted mt-2 max-w-2xl text-sm">
+      Hover the boxes. Under <code class="font-mono">prefers-reduced-motion</code> every transition
+      collapses to about zero. Journeys take at most {{ motionTokens.journeyMs.first / 1000 }} s the
+      first time and {{ motionTokens.journeyMs.repeat / 1000 }} s on repeat, and are always
+      skippable.
+    </p>
+    <ul class="mt-6 grid gap-4 md:grid-cols-4">
+      @for (duration of durations; track duration[0]) {
+        <li class="border-line bg-surface group rounded-lg border p-4">
+          <p class="font-mono text-sm font-semibold">dur-{{ duration[0] }}</p>
+          <p class="text-muted font-mono text-xs">{{ duration[1] }} ms</p>
+          <div
+            class="bg-blue mt-3 h-8 w-8 rounded-sm group-hover:translate-x-24"
+            [style.transition]="'transform ' + duration[1] + 'ms var(--ease-glide)'"
+            aria-hidden="true"
+          ></div>
+        </li>
+      }
+    </ul>
+    <ul class="mt-4 flex flex-col gap-1 font-mono text-xs">
+      @for (easing of easings; track easing[0]) {
+        <li>
+          <span class="text-text">ease-{{ easing[0] }}</span>
+          <span class="text-muted">{{ easing[1] }}</span>
+        </li>
+      }
+    </ul>
+  </section>
+
+  <!-- TIERS -->
+  <section class="mt-16" aria-labelledby="sg-tiers">
+    <h2 id="sg-tiers" class="font-display text-2xl font-semibold">Quality tiers</h2>
+    <p class="text-muted mt-2 text-sm">
+      This device: detected <strong class="text-text">{{ motion.detectedTier() }}</strong
+      >, effective
+      <strong class="text-text">{{ motion.tier() }}</strong>
+      @if (motion.reducedMotion()) {
+        (reduced motion is on)
+      }
+    </p>
+    <div class="border-line mt-4 overflow-x-auto rounded-lg border">
+      <table class="w-full text-left text-sm">
+        <caption class="sr-only">
+          Quality tiers and their rendering budgets
+        </caption>
+        <thead class="bg-surface hud-label">
+          <tr>
+            <th scope="col" class="px-4 py-3">Tier</th>
+            <th scope="col" class="px-4 py-3">Max DPR</th>
+            <th scope="col" class="px-4 py-3">Max FPS</th>
+            <th scope="col" class="px-4 py-3">Particles</th>
+            <th scope="col" class="px-4 py-3">Links</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of tiers; track row.tier) {
+            <tr class="border-line border-t">
+              <th scope="row" class="px-4 py-3 font-mono">{{ row.tier }}</th>
+              @if (row.profile; as profile) {
+                <td class="px-4 py-3">{{ profile.maxDpr }}</td>
+                <td class="px-4 py-3">{{ profile.maxFps }}</td>
+                <td class="px-4 py-3">{{ profile.particles }}</td>
+                <td class="px-4 py-3">{{ profile.links ? 'yes' : 'no' }}</td>
+              } @else {
+                <td class="text-muted px-4 py-3" colspan="4">No WebGL: the 2D resume</td>
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+</article>

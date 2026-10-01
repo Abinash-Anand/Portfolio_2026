@@ -8,7 +8,10 @@ import { ResumePage } from './resume.page';
 describe('ResumePage', () => {
   async function render() {
     TestBed.configureTestingModule({
-      providers: [provideRouter([]), provideFixturePortfolio([makeProject({ slug: 'ParkRabbit', title: 'ParkRabbit' })])],
+      providers: [
+        provideRouter([]),
+        provideFixturePortfolio([makeProject({ slug: 'ParkRabbit', title: 'ParkRabbit' })]),
+      ],
     });
     await TestBed.inject(PortfolioStore).load();
     const fixture = TestBed.createComponent(ResumePage);
@@ -31,7 +34,9 @@ describe('ResumePage', () => {
 
   it('links a CV project to its work page only when that page exists', async () => {
     const el = await render();
-    const links = [...el.querySelectorAll<HTMLAnchorElement>('a[href^="/work/"]')].map((a) => a.getAttribute('href'));
+    const links = [...el.querySelectorAll<HTMLAnchorElement>('a[href^="/work/"]')].map((a) =>
+      a.getAttribute('href'),
+    );
     expect(links).toEqual(['/work/ParkRabbit']); // SynthGraph is not in this fixture, so no link
   });
 

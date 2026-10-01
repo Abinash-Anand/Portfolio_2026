@@ -16,11 +16,22 @@ describe('routes', () => {
         provideRouter(routes, withComponentInputBinding()),
         provideFixturePortfolio(
           [
-            makeProject({ slug: 'sample', title: 'Sample Project', summary: 'About the sample.', hasReadme: true }),
+            makeProject({
+              slug: 'sample',
+              title: 'Sample Project',
+              summary: 'About the sample.',
+              hasReadme: true,
+            }),
             makeProject({ slug: 'Eber-app', title: 'Eber app' }),
             makeProject({ slug: 'ParkRabbit', title: 'ParkRabbit' }),
           ],
-          { sample: { slug: 'sample', readmeHtml: '<h2 id="usage">Usage</h2><p>Run it.</p>', toc: [{ id: 'usage', text: 'Usage', depth: 2 }] } },
+          {
+            sample: {
+              slug: 'sample',
+              readmeHtml: '<h2 id="usage">Usage</h2><p>Run it.</p>',
+              toc: [{ id: 'usage', text: 'Usage', depth: 2 }],
+            },
+          },
         ),
       ],
     });
@@ -41,7 +52,9 @@ describe('routes', () => {
 
   it('resolves a project and renders its README on /work/:slug', async () => {
     await harness.navigateByUrl('/work/sample');
-    expect(harness.routeNativeElement?.querySelector('h1')?.textContent).toContain('Sample Project');
+    expect(harness.routeNativeElement?.querySelector('h1')?.textContent).toContain(
+      'Sample Project',
+    );
     expect(text()).toContain('Run it.');
     expect(text()).toContain('Usage');
   });

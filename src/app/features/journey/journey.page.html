@@ -1,0 +1,160 @@
+<div class="bg-void fixed inset-0 overflow-hidden" [attr.data-tier]="tier()">
+  <h1 class="sr-only" i18n>Experience preview: Packet's Journey</h1>
+  <p class="sr-only" role="status" aria-live="polite">{{ announcement() }}</p>
+
+  @if (showCanvas()) {
+    <div class="absolute inset-0">
+      <app-scene-canvas [snapshot]="snapshot()" [tier]="renderTier()" />
+    </div>
+  }
+
+  <div class="absolute inset-0 z-10 overflow-y-auto px-4 pt-20 pb-44 md:px-10 md:py-24">
+    <!-- min-h-full: centers short content, but lets tall content scroll instead of overflowing both ends. -->
+    <div class="flex min-h-full items-center justify-center">
+      @switch (journey.kind()) {
+        @case ('boot') {
+          <section
+            class="flex w-full max-w-xl flex-col items-start gap-8"
+            aria-label="Boot sequence"
+            i18n-aria-label
+          >
+            <app-typewriter [lines]="bootLines" [instant]="plainText()" />
+            <button
+              type="button"
+              class="hud-button hud-button--primary"
+              data-autofocus
+              (click)="journey.enter()"
+              (mouseenter)="journey.cueHover()"
+            >
+              [ INITIALIZE NEURAL LINK ]
+            </button>
+          </section>
+        }
+
+        @case ('console') {
+          <section
+            class="flex w-full max-w-6xl flex-col gap-6"
+            aria-label="Control console"
+            i18n-aria-label
+          >
+            <p class="hud-label">{{ consolePrompt }}</p>
+            <app-endpoint-keys
+              [endpoints]="endpoints"
+              (selected)="journey.select($event)"
+              (hovered)="journey.cueHover()"
+            />
+          </section>
+        }
+
+        @case ('journey') {
+          <section
+            class="flex w-full flex-col items-center gap-6"
+            aria-label="Packet in transit"
+            i18n-aria-label
+          >
+            @if (info(); as target) {
+              <app-telemetry-monitor [endpoint]="target.id" [instant]="plainText()" />
+            }
+            <button
+              type="button"
+              class="hud-button"
+              data-autofocus
+              (click)="journey.skip()"
+              (mouseenter)="journey.cueHover()"
+            >
+              <span i18n>[ Skip journey ]</span>
+              <span class="text-muted" aria-hidden="true">Esc</span>
+            </button>
+          </section>
+        }
+
+        @case ('room') {
+          @if (info(); as room) {
+            <section class="glass-panel w-full max-w-2xl p-6 md:p-8" aria-labelledby="room-title">
+              <p class="hud-label mb-4 flex flex-wrap items-center gap-x-3 gap-y-1">
+                <span class="border-muted text-muted rounded-sm border px-1.5 py-0.5">{{
+                  simulatedTag
+                }}</span>
+                <span class="text-gold">{{ responseLine }}</span>
+              </p>
+
+              @if (room.id === 'about') {
+                <h2
+                  id="room-title"
+                  class="font-display text-2xl font-bold tracking-tight md:text-3xl"
+                >
+                  {{ profile.name.toUpperCase() }} // {{ profile.role.toUpperCase() }}
+                </h2>
+                <p class="mt-4 leading-relaxed">{{ profile.about[1] }}</p>
+                <ul class="mt-4 flex flex-col gap-1 text-sm">
+                  <li><span class="text-muted" i18n>Location:</span> Stuttgart, Germany</li>
+                  <li><span class="text-muted" i18n>Core stack:</span> {{ coreStack }}</li>
+                </ul>
+              } @else {
+                <h2
+                  id="room-title"
+                  class="font-display text-2xl font-bold tracking-tight md:text-3xl"
+                >
+                  GET {{ room.path }}
+                </h2>
+                <p class="mt-2">{{ room.summary }}</p>
+                <p class="text-muted mt-4 text-sm" i18n>
+                  The full 3D room is built in Phase 3. The same content is available now as a plain
+                  page.
+                </p>
+                <a
+                  [routerLink]="room.route"
+                  class="text-blue-soft mt-3 inline-block text-sm hover:underline"
+                  i18n
+                >
+                  Open the {{ room.title }} page →
+                </a>
+              }
+
+              <div class="mt-8 flex flex-wrap gap-3">
+                <button
+                  type="button"
+                  class="hud-button hud-button--primary"
+                  data-autofocus
+                  (click)="journey.rerun()"
+                  (mouseenter)="journey.cueHover()"
+                >
+                  [ RE-RUN PACKET JOURNEY ]
+                </button>
+                @if (journey.next(); as next) {
+                  <button
+                    type="button"
+                    class="hud-button"
+                    (click)="journey.routeToNext()"
+                    (mouseenter)="journey.cueHover()"
+                  >
+                    [ ROUTE TO NEXT ENDPOINT: {{ next.title.toUpperCase() }} ]
+                  </button>
+                }
+                <button
+                  type="button"
+                  class="hud-button"
+                  (click)="journey.toConsole()"
+                  (mouseenter)="journey.cueHover()"
+                >
+                  <span i18n>[ BACK TO CONSOLE ]</span>
+                </button>
+              </div>
+            </section>
+          }
+        }
+      }
+    </div>
+  </div>
+
+  <app-hud
+    [audioLabel]="audio.label()"
+    [audioOn]="!audio.muted()"
+    [graphicsLabel]="graphicsLabel()"
+    (audioToggle)="toggleAudio()"
+    (graphicsCycle)="motion.cycleChoice()"
+    (resume2d)="journey.toggle2d()"
+    (cue)="journey.cueHover()"
+  />
+  <app-dev-overlay />
+</div>

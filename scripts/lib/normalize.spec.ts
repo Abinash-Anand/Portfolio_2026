@@ -48,7 +48,9 @@ describe('buildPortfolio', () => {
   });
 
   it('uses the fallback featured list only when nothing is pinned, and says so', async () => {
-    const { index, warnings } = await build([repo('x'), repo('y')], [], { featuredFallback: ['y'] });
+    const { index, warnings } = await build([repo('x'), repo('y')], [], {
+      featuredFallback: ['y'],
+    });
     expect(index.projects.find((p) => p.slug === 'y')?.featured).toBe(true);
     expect(index.projects.find((p) => p.slug === 'x')?.featured).toBe(false);
     expect(warnings.join(' ')).toMatch(/No repositories are pinned/);
@@ -60,7 +62,13 @@ describe('buildPortfolio', () => {
   it('excludes forks, private repos, the profile repo and manifest-hidden repos', async () => {
     const hidden = repo('hidden', { manifest: { text: '{"hidden": true}' } });
     const { index } = await build(
-      [repo('keep'), repo('forked', { isFork: true }), repo('secret', { isPrivate: true }), repo('me'), hidden],
+      [
+        repo('keep'),
+        repo('forked', { isFork: true }),
+        repo('secret', { isPrivate: true }),
+        repo('me'),
+        hidden,
+      ],
       [],
     );
     expect(index.projects.map((p) => p.slug)).toEqual(['keep']);
@@ -82,12 +90,21 @@ describe('buildPortfolio', () => {
         homepageUrl: 'https://plain.example.com',
         languages: {
           totalSize: 100,
-          edges: [{ size: 75, node: { name: 'TypeScript', color: '#3178c6' } }, { size: 25, node: { name: 'CSS', color: null } }],
+          edges: [
+            { size: 75, node: { name: 'TypeScript', color: '#3178c6' } },
+            { size: 25, node: { name: 'CSS', color: null } },
+          ],
         },
       }),
     ]);
     const m = index.projects.find((p) => p.slug === 'm')!;
-    expect(m).toMatchObject({ title: 'Nice Title', summary: 'Manifest summary', stack: ['Go'], highlights: ['one'], liveUrl: 'https://live.example.com' });
+    expect(m).toMatchObject({
+      title: 'Nice Title',
+      summary: 'Manifest summary',
+      stack: ['Go'],
+      highlights: ['one'],
+      liveUrl: 'https://live.example.com',
+    });
     expect(m.cover).toBe('https://raw.githubusercontent.com/me/m/HEAD/docs/cover.png');
     const plain = index.projects.find((p) => p.slug === 'plain')!;
     expect(plain.summary).toBe('Bold description');
@@ -100,13 +117,17 @@ describe('buildPortfolio', () => {
   });
 
   it('renders READMEs, honours readme: "hide", and falls back to the first paragraph for the summary', async () => {
-    const md = '# P\n\nA reasonably long first paragraph describing the project well.\n\n## Usage\n\nrun it';
+    const md =
+      '# P\n\nA reasonably long first paragraph describing the project well.\n\n## Usage\n\nrun it';
     const withReadme = repo('with', { readmeUpper: { text: md } });
     const { index, details } = await build(
       [
         withReadme,
         repo('archived', { readmeUpper: { text: md } }),
-        repo('hidden-readme', { readmeUpper: { text: md }, manifest: { text: '{"readme":"hide"}' } }),
+        repo('hidden-readme', {
+          readmeUpper: { text: md },
+          manifest: { text: '{"readme":"hide"}' },
+        }),
         repo('none'),
       ],
       [withReadme],
@@ -117,7 +138,10 @@ describe('buildPortfolio', () => {
       summary: 'A reasonably long first paragraph describing the project well.',
     });
     // Not featured: the README paragraph is not trusted as a summary.
-    expect(index.projects.find((p) => p.slug === 'archived')).toMatchObject({ hasReadme: true, summary: '' });
+    expect(index.projects.find((p) => p.slug === 'archived')).toMatchObject({
+      hasReadme: true,
+      summary: '',
+    });
     expect(index.projects.find((p) => p.slug === 'hidden-readme')?.hasReadme).toBe(false);
     expect(index.projects.find((p) => p.slug === 'none')?.hasReadme).toBe(false);
   });
@@ -142,7 +166,9 @@ describe('toLanguages', () => {
 describe('manifest helpers', () => {
   it('keeps absolute cover URLs and resolves relative ones against the repo', () => {
     expect(resolveCover('https://x.y/c.png', 'me', 'r')).toBe('https://x.y/c.png');
-    expect(resolveCover('./c.png', 'me', 'r')).toBe('https://raw.githubusercontent.com/me/r/HEAD/c.png');
+    expect(resolveCover('./c.png', 'me', 'r')).toBe(
+      'https://raw.githubusercontent.com/me/r/HEAD/c.png',
+    );
   });
 
   it('returns null for empty input', () => {

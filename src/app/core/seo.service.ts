@@ -11,6 +11,8 @@ export interface PageSeo {
   readonly path: string;
   readonly image?: string | null;
   readonly type?: 'website' | 'article';
+  /** Defaults to indexable. Preview and internal routes pass `noindex`. */
+  readonly robots?: string;
 }
 
 /** Per-page meta description, canonical URL and Open Graph / Twitter tags. */
@@ -24,7 +26,7 @@ export class SeoService {
     const url = new URL(page.path, this.site).toString();
     this.name('description', page.description);
     // Reset first: a previous page (for example the 404 page) may have set noindex in this SPA.
-    this.name('robots', 'index, follow');
+    this.name('robots', page.robots ?? 'index, follow');
     this.property('og:site_name', SITE_NAME);
     this.property('og:title', page.title);
     this.property('og:description', page.description);

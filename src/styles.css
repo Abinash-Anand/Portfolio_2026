@@ -1,6 +1,7 @@
 @import 'tailwindcss';
 @import '@fontsource-variable/inter';
 @import '@fontsource-variable/space-grotesk';
+@import '@fontsource-variable/jetbrains-mono';
 
 /*
   Design tokens: the source of truth for values.
@@ -13,8 +14,9 @@
 @theme static {
   --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
   --font-display: 'Space Grotesk Variable', 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
-  /* HUD / terminal. JetBrains Mono is proposed (DESIGN.md section 4); system mono until installed. */
-  --font-mono: ui-monospace, 'Cascadia Code', Consolas, 'Liberation Mono', monospace;
+  /* HUD / terminal (DESIGN.md section 4). JetBrains Mono is proposed, pending owner confirmation. */
+  --font-mono:
+    'JetBrains Mono Variable', ui-monospace, 'Cascadia Code', Consolas, 'Liberation Mono', monospace;
 
   /* Surfaces */
   --color-void: #0a0d12;
@@ -227,5 +229,146 @@
   body {
     background: #fff;
     color: #000;
+  }
+}
+
+/*
+  HUD building blocks (DESIGN.md sections 5, 6, 8). Tokens only. Glow appears on hover/focus of one element at a
+  time (it costs repaint); the glass blur is switched off on the low and static tiers.
+*/
+@layer components {
+  .hud-label {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .hud-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 2.75rem;
+    padding: 0.5rem 1rem;
+    border: 1px solid color-mix(in srgb, var(--color-blue) 45%, transparent);
+    border-radius: 2px;
+    background: transparent;
+    color: var(--color-text);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition:
+      border-color var(--dur-fast) var(--ease-glide),
+      box-shadow var(--dur-fast) var(--ease-glide),
+      transform var(--dur-instant) var(--ease-snap);
+  }
+
+  .hud-button:hover {
+    border-color: var(--color-blue);
+    box-shadow: 0 0 24px color-mix(in srgb, var(--color-blue) 30%, transparent);
+  }
+
+  .hud-button:active {
+    transform: translateY(2px);
+  }
+
+  .hud-button:disabled,
+  .hud-button[aria-disabled='true'] {
+    opacity: 0.45;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+
+  /* The primary action of a screen (terminal green). */
+  .hud-button--primary {
+    border-color: color-mix(in srgb, var(--color-emerald) 60%, transparent);
+    color: var(--color-emerald);
+  }
+
+  .hud-button--primary:hover {
+    border-color: var(--color-emerald);
+    box-shadow: 0 0 24px color-mix(in srgb, var(--color-emerald) 30%, transparent);
+  }
+
+  /* A physical keycap: the DOM mirror of the 3D console keys. */
+  .keycap {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    min-height: 4.5rem;
+    padding: 0.75rem 1rem;
+    text-align: left;
+    border: 1px solid var(--color-line);
+    border-bottom-width: 3px;
+    border-radius: 4px;
+    background: var(--color-raised);
+    color: var(--color-text);
+    cursor: pointer;
+    transition:
+      border-color var(--dur-fast) var(--ease-glide),
+      box-shadow var(--dur-fast) var(--ease-glide),
+      transform var(--dur-instant) var(--ease-snap);
+  }
+
+  .keycap:hover {
+    border-color: var(--color-blue);
+    box-shadow: 0 0 24px color-mix(in srgb, var(--color-blue) 30%, transparent);
+  }
+
+  .keycap:active {
+    transform: translateY(2px);
+    border-bottom-width: 1px;
+    margin-bottom: 2px;
+  }
+
+  .keycap:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+
+  .keycap__path {
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    color: var(--color-blue-soft);
+  }
+
+  .keycap__summary {
+    font-size: 0.8125rem;
+    color: var(--color-muted);
+  }
+
+  /* Holographic panel. At most two blurred panels visible at once (DESIGN.md section 5). */
+  .glass-panel {
+    border: 1px solid var(--color-line);
+    border-radius: 0.75rem;
+    background: color-mix(in srgb, var(--color-surface) 60%, transparent);
+    backdrop-filter: blur(12px) saturate(1.2);
+  }
+
+  [data-tier='low'] .glass-panel,
+  [data-tier='static'] .glass-panel {
+    background: var(--color-surface);
+    backdrop-filter: none;
+  }
+
+  /* Terminal caret; reduced motion freezes it (the global rule shortens animations to ~0). */
+  .caret {
+    display: inline-block;
+    width: 0.6ch;
+    height: 1.1em;
+    margin-left: 0.1ch;
+    vertical-align: text-bottom;
+    background: var(--color-emerald);
+    animation: caret-blink 1s steps(1) infinite;
+  }
+
+  @keyframes caret-blink {
+    50% {
+      opacity: 0;
+    }
   }
 }

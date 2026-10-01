@@ -1,7 +1,11 @@
 <div class="flex flex-col gap-8">
   @for (group of groups(); track group.id) {
     <div>
-      <p role="heading" [attr.aria-level]="level()" class="text-muted font-mono text-xs tracking-wider uppercase">
+      <p
+        role="heading"
+        [attr.aria-level]="level()"
+        class="text-muted font-mono text-xs tracking-wider uppercase"
+      >
         {{ group.label }}
       </p>
       <ul class="mt-3 flex flex-wrap gap-2">
