@@ -22,7 +22,16 @@ export type AnalyticsEvent =
       readonly how: 'journey' | 'skip' | 'direct';
     }
   | { readonly name: 'resume_2d_toggle' }
-  | { readonly name: 'tier_change'; readonly tier: TierId };
+  | { readonly name: 'tier_change'; readonly tier: TierId }
+  /** The 3D world could not run and the visitor was given the 2D experience instead. */
+  | {
+      readonly name: 'webgl_fallback';
+      readonly reason: 'init_failed' | 'context_lost';
+    }
+  /** Something went wrong in the page (no details are sent). Lets a broken release be noticed. */
+  | { readonly name: 'app_error' }
+  /** How far down a page the visitor scrolled, once per page and threshold. */
+  | { readonly name: 'scroll_depth'; readonly depth: 25 | 50 | 75 | 100 };
 
 /**
  * Port: components send events here and know nothing about the provider.

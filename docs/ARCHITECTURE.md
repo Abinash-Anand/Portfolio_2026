@@ -169,6 +169,8 @@ The sync is TypeScript (`scripts/sync-github.ts` plus `scripts/lib/*`), run by `
 4. **Write** `src/generated/` (gitignored): `index.json` (card data), `projects/<slug>.json` (README HTML), `project-loaders.ts` (one lazy `import()` per project, so each README is its own chunk and prerender-safe) and `routes.txt` (prerender list for Phase 4).
 5. **Failure policy.** No token: use the committed real-data fixture (`scripts/fixtures/github.fixture.json`, recorded with `npm run sync:record-fixture`), **but fail Vercel production builds** so sample data can never ship. Token present and the API fails: **fail in CI**, fall back to the fixture locally with a warning. The app footer shows a notice whenever the source is the fixture.
 
+The sync also fetches the contribution calendar (`contributionsCollection`) and stores it compactly as `activity` in `index.json` (week-major counts, about 370 numbers). It is `null` for fixture data or when the token cannot read it, and the home page then omits the Activity section.
+
 ### 5.4 Opt-in rule
 - **Featured** = repos pinned on the GitHub profile (max 6, public only). **As of 2026-10-01 no repositories are pinned**, so the sync falls back to a documented list in `scripts/sync-github.ts` (`FEATURED_FALLBACK`: SynthGraph, ParkRabbit, Eber-app) and says so in its output. Pinning any repo makes the fallback stop applying.
 - Optional `portfolio.json` in a repo enriches it: `title`, `summary`, `role`, `stack[]`, `highlights[]`, `cover`, `liveUrl`, `order`, `readme: "full" | "hide"`.
@@ -367,8 +369,8 @@ phone run are still open**. Full data and the procedure for the open items: docs
 - **SEO:** `SeoService` sets title, meta and Open Graph per page (GitHub OG image for projects), JSON-LD `Person`, sitemap and robots at build.
 - **Config:** typed injection tokens (no scattered constants).
 - **Accessibility:** semantic landmarks, skip link (done), keyboard-operable interactive elements, visible focus, `prefers-reduced-motion`, real DOM text over the canvas; template a11y lint rules are enabled.
-- **Security and privacy:** build-time sanitised README HTML only (`safe-html` pipe is the one place that trusts it); no secrets in the client; fonts self-hosted (done), no third-party trackers; CSP and security headers set via Vercel; dependency audit in CI.
-- **Germany:** the site probably needs an Impressum and privacy page. Treat as a requirement to verify (not legal advice).
+- **Security and privacy:** build-time sanitised README HTML only (`safe-html` pipe is the one place that trusts it); no secrets in the client; fonts self-hosted, no third-party trackers; strict CSP and security headers set via Vercel (`vercel.json`, checked at build and by the smoke test); dependency audit in CI.
+- **Germany:** the privacy page is built. The Impressum page is built too but stays hidden until `LEGAL.address` in `content/legal.ts` is filled in by the owner; whether one is required is for the owner to confirm (not legal advice).
 - **i18n (English and German):** adopted for v1; see 10.2.
 
 ### 10.1 Analytics and privacy (consent-free by design)
@@ -405,7 +407,7 @@ Time on page comes from the provider's engaged-time measure.
 - Declarative tracking with an `appTrack` directive on links and buttons; page views from router events; scroll depth from IntersectionObserver sentinels (not scroll events); `web-vitals` loaded lazily on idle after load, so analytics never sits in the LCP path.
 - Known limit: ad blockers undercount, so numbers are approximate.
 
-**Provider (pending decision):** Plausible (EU-hosted, paid, handles most of the list natively), Umami (open source, free cloud tier or self-hosted), or Vercel Web Analytics and Speed Insights (simplest on Vercel; check plan limits for custom events).
+**Provider (decided in Phase 4): Vercel Web Analytics and Speed Insights**, the simplest option on the existing host and cookieless. It is wired through our own `VercelAnalytics` adapter, not the `@vercel/*` packages (their optional peer dependencies conflicted with the toolchain, and the adapter is about 100 lines). It loads only in production browser builds, never when Do Not Track or Global Privacy Control is on, and sends only the coarse event values in the table above plus `webgl_fallback` and `app_error` (a reason code, never a message or URL). The owner must enable both features in the Vercel dashboard; until then the two script requests return 404 and nothing is collected. Plausible or Umami remain a one-file swap behind `AnalyticsPort`.
 
 ### 10.2 Internationalisation (English and German)
 
@@ -437,7 +439,9 @@ Decision: the i18n structure is adopted. English is the default locale and Germa
 
 - **Vercel** builds on push and gives preview URLs per branch. The build runs the sync (`prebuild`), with `PORTFOLIO_GH_TOKEN` set in Vercel (Production and Preview).
 - **Scheduled freshness:** a GitHub Action (daily cron plus a manual button) calls a Vercel **deploy hook** (`VERCEL_DEPLOY_HOOK` secret).
-- **Prerender:** `@angular/ssr` static output; per-project routes via `getPrerenderParams`. `vercel.json` (added in Phase 1) provides the single-page-app fallback rewrite and immutable caching for hashed `js`/`css`/`woff2` files; it is revisited with prerendering in Phase 4.
+- **Prerender (Phase 4):** `@angular/ssr` static output; an explicit route list, with per-project routes from `getPrerenderParams`; everything else (`/journey`) is client-rendered through `index.csr.html`. A postbuild step (`scripts/postbuild.ts`) generates `sitemap.xml` and `robots.txt`, writes `404.html` and checks the CSP hashes. `vercel.json` carries the headers, CSP, legacy redirects, `noindex` for the 3D routes and immutable caching for hashed assets.
+- **Verification after deploy:** `scripts/smoke.ts` (12 checks: real prerendered HTML, true 404, redirects, headers, sitemap, CV, share image, real data); a GitHub workflow runs it after each successful production deployment.
+- **Launch steps and owner-only items:** docs/LAUNCH.md.
 - **Steps only the owner can do** (tokens are never handled by the assistant): create the GitHub token (public data only), add it to Vercel, create the deploy hook and add it as a GitHub secret, pin the repos to feature.
 
 ## 13. Roadmap
@@ -453,9 +457,9 @@ and a **review stop**.
 | 2. Design system and experience engine (no heavy 3D) | HUD components; journey state machine (pure TypeScript, unit-tested); audio service (Web Audio); `MotionService` and tier detection; `SceneHost` interface with the main-thread host; dev overlay (FPS, draw calls, memory); `/styleguide`; owner sign-off of the visual mock (DESIGN.md section 17) | HUD and state machine run over a placeholder scene; design decisions signed off | **done** (pushed). Built: journey state machine, `/journey` HUD flow over a placeholder scene, procedural audio, tiers and governor, dev overlay, `/styleguide`. Pending: owner sign-off of DESIGN.md section 17 and CONCEPT.md A1 to A8 |
 | 2.5 Spike 0 (measured) | Boot scene (procedural headset, console), tunnel, About room (server vault, database vault, dashboard), measured on the baseline laptop and a phone; decide the worker tier; calibrate budgets | Section 9.7 criteria met, or scope and fidelity reduced **before** Phase 3 (go/no-go) | **built and measured on the laptop** (pushed); **conditional go**: phone and live-frame runs open, see docs/SPIKE-0.md. Its open items (the database-vault camera beat, the dashboard act) were built in Phase 3 |
 | 3. Rooms and integration | Remaining rooms (Skills, Projects from data, Education, Experience); `ReadinessScheduler`; tiers and adaptive quality; skip and repeat journeys; URL and back-button wiring to the state machine; worker tier if approved; analytics events | Every endpoint works in 3D and 2D with parity; budgets hold on the baseline devices | **built and measured on the laptop** (uncommitted). All five rooms, the scheduler, URL and history wiring, the room panel with hover-to-look, intent prefetch, the `room_arrive` event, no worker tier (decided in Spike 0). Worst room: about 2 ms GPU and 1 ms JS at 1080p. **Open:** the phone run (Spike 0), a live-frame check on a visible tab, and owner review of the rooms' look |
-| 4. Production hardening | SSR static prerender and Vercel rewrites; SEO, Open Graph, sitemap, JSON-LD; accessibility audit (axe, keyboard, screen reader); Lighthouse CI budgets enforced; real-user Web Vitals; security headers and CSP; privacy page (and Impressum if required); analytics provider wiring; German and `hreflang` only if natively reviewed; caching headers | Lighthouse mobile >= 90, axe clean, all checklists in CONCEPT.md section 9 and DESIGN.md section 16 pass | |
-| 5. Launch | Merge `redesign/v2` to `main`; production deploy on the existing Vercel project and domain; swap in the new CV; verify redirects; monitoring | Live and verified | |
-| 6. Post-launch (optional) | Integrations (writing via RSS, npm, WakaTime, activity graph); Storybook revisit; photoreal top tier revisit | | |
+| 4. Production hardening | SSR static prerender and Vercel rewrites; SEO, Open Graph, sitemap, JSON-LD; accessibility audit (axe, keyboard, screen reader); Lighthouse CI budgets enforced; real-user Web Vitals; security headers and CSP; privacy page (and Impressum if required); analytics provider wiring; German and `hreflang` only if natively reviewed; caching headers | Lighthouse mobile >= 90, axe clean, all checklists in CONCEPT.md section 9 and DESIGN.md section 16 pass | **built and measured locally** (uncommitted). Static prerender with hydration, real 404, SEO and JSON-LD, strict CSP with build-time hash verification, privacy page and a conditional Impressum, Vercel analytics through our own adapter, error and fallback events, axe tests for every page, CI smoke and Lighthouse. Lighthouse mobile (local, compressed): performance 99 to 100, accessibility 100, SEO 100, best practices 96; axe: 0 violations. **Open:** manual screen-reader pass; German (needs native review) |
+| 5. Launch | Merge `redesign/v2` to `main`; production deploy on the existing Vercel project and domain; swap in the new CV; verify redirects; monitoring | Live and verified | **code ready, launch owner-blocked.** The merge to `main` happened (PRs 1 and 2), but production deployments failed (token policy, ADR-015) so the live site is probably still v1. Runbook and the owner-only steps: docs/LAUNCH.md. Post-deploy smoke workflow added |
+| 6. Post-launch (optional) | Integrations (writing via RSS, npm, WakaTime, activity graph); Storybook revisit; photoreal top tier revisit | **activity graph built** (uncommitted). Writing, npm and WakaTime need owner inputs; Storybook and photoreal stay deferred (docs/LAUNCH.md section 4) | |
 
 Dependencies and cut lines:
 - Phase 1 is shippable by itself, so a complete site exists before any 3D work starts.
@@ -478,6 +482,7 @@ Dependencies and cut lines:
 | All ten recommended core principles | Adopted; see the register in 2.1 |
 | i18n: English default, German second, Angular build-time localisation | Structure adopted; German launch pending native review (owner is A2 per CV); see 10.2 |
 | Storybook deferred; internal `/styleguide` route instead | Recommendation, can be overruled; see 10.3 |
+| Analytics provider: Vercel Web Analytics and Speed Insights, through our own adapter | Decided in Phase 4; see 10.1 and ADR-026 |
 
 **Pending**
 | Decision | Recommendation |
@@ -485,7 +490,6 @@ Dependencies and cut lines:
 | Baseline device (laptop only, or also a mid-range Android phone) | Include a phone in Spike 0 |
 | Render worker in v1, or after the spike | **Decided after the spike: not in v1.** The scene needs about 3% of the main thread; kept possible behind the `SceneHost` interface |
 | Asset sourcing for hero models (code-only, CC0, modelled) | Code-only for Spike 0 (zero asset bytes, worked); models optional later |
-| Analytics provider (Plausible, Umami or Vercel Analytics) | Plausible or Umami; the `AnalyticsPort` keeps the choice swappable |
 | Error monitoring, feature flags | Default: none beyond the Logger; a debug override for the tier |
 
 **Proposed ADRs** (each a short file in `docs/adr/`)
@@ -511,12 +515,18 @@ Dependencies and cut lines:
 - ADR-020 3D text is a decorative label atlas; the same content is real DOM text in a panel (replaces projected DOM labels)
 - ADR-021 One route for the console and every room (`UrlMatcher`), with URL and journey state kept in step by `JourneyUrlSync`
 - ADR-022 `SceneContent`: the scene receives plain data and never imports the content or data layers
+- ADR-023 Static prerender with hydration (no event replay) and an explicit route list; the 3D routes stay client-rendered
+- ADR-024 Strict CSP without `unsafe-inline` for scripts: one hashed inline script, hashes verified at build, `inlineCritical` off so no inline handlers exist
+- ADR-025 Redirects, headers and the 404 page live in `vercel.json` and are verified by tests, not by hand
+- ADR-026 Own cookieless analytics adapter for Vercel instead of the `@vercel/*` packages; DNT and GPC respected
+- ADR-027 Post-deploy smoke checks as the monitoring baseline; an error-monitoring service only if the owner wants one
+- ADR-028 The GitHub activity calendar is optional data inside `index.json`; it is never committed in the fixture (it contains private-contribution counts) and its section is hidden without it
 
 ## 15. How to extend
 
 - **Add a project:** pin the repo on GitHub (optionally add `portfolio.json`). It appears after the next scheduled or manual deploy. No code change.
 - **Add a section to the home page:** create a presentational component under `features/home/sections/`, read data from the store, wrap below-the-fold sections in `@defer`, use the shared directives for motion.
-- **Add an integration (e.g. articles, npm stats):** add a provider under `scripts/providers/` (fail-soft, merged into the same generated JSON), extend the models and schema, add a store selector and a section. LinkedIn has no public read API and stays a link.
+- **Add an integration (e.g. articles, npm stats):** the activity graph is the reference example (query in `scripts/lib/github.ts`, normaliser in `scripts/lib/activity.ts`, optional field in the schema and `PortfolioIndex`, store signal, a section in `features/home/`). For a new source, add a provider under `scripts/providers/` (fail-soft, merged into the same generated JSON), extend the models and schema, add a store selector and a section. LinkedIn has no public read API and stays a link.
 - **Change the data source:** provide a different `PortfolioRepository` adapter; components do not change.
 
 ## 16. Risks

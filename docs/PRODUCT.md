@@ -74,8 +74,8 @@ Technical design: ARCHITECTURE.md section 10.1.
 
 ## 4. Later (not in the MVP)
 
-- Activity graph from GitHub contributions (cheap to add since the sync already fetches it; may move into the MVP).
-- Writing section from RSS (dev.to/Medium), npm and WakaTime stats (Phase 5 integrations).
+- Writing section from RSS (dev.to/Medium), npm and WakaTime stats. Need owner inputs (feed URL, package names, API key); see docs/LAUNCH.md section 4.
+- The GitHub activity graph is **built** (home page, Phase 6) and appears when the build has a token.
 - Per-locale `summary_de` fields in `portfolio.json` for translated project summaries.
 - Storybook, if the shared UI grows large (deferred; the `/styleguide` route covers the MVP).
 - A contact form (needs a small serverless function and consent for the data it collects).
@@ -96,9 +96,9 @@ Backend or database, user accounts, comments, a CMS, a photoreal default experie
 
 ## 7. Open questions
 
-1. Analytics provider (Plausible, Umami or Vercel Analytics): decision pending.
-2. Does the MVP include the contributions activity graph?
-3. Does an Impressum apply to this site? Verify before launch.
+1. ~~Analytics provider~~ Decided: Vercel Web Analytics and Speed Insights (owner enables them in the dashboard).
+2. ~~Activity graph~~ Built.
+3. Does an Impressum apply to this site? The page exists but is hidden until the owner adds an address in `content/legal.ts`; verify before launch.
 4. German content: the CV states German A2 (progressing toward B1), so the owner cannot be the final reviewer. Ship German at launch only after native-speaker review, or launch English-only first?
 5. Phone number: the Master CV contains one and it is already public (current site CV, repo history). Omit it from the web resume view and the downloadable CV going forward?
 6. Availability line ("looking for a Werkstudent role"): keep it on the site? The new CV does not state it.

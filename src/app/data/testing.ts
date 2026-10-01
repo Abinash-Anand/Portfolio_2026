@@ -1,5 +1,5 @@
 import type { Provider } from '@angular/core';
-import type { PortfolioIndex, Project, ProjectDetail } from './models';
+import type { ActivityCalendar, PortfolioIndex, Project, ProjectDetail } from './models';
 import { PortfolioRepository } from './portfolio.repository';
 
 /** Test helpers: an in-memory repository so specs never depend on generated files. */
@@ -43,12 +43,14 @@ export class FixtureRepository extends PortfolioRepository {
 export function provideFixturePortfolio(
   projects: readonly Project[] = [makeProject()],
   details: Readonly<Record<string, ProjectDetail>> = {},
+  activity: ActivityCalendar | null = null,
 ): Provider {
   const index: PortfolioIndex = {
     generatedAt: '2026-10-01T00:00:00.000Z',
     source: 'fixture',
     login: 'me',
     projects,
+    activity,
   };
   return { provide: PortfolioRepository, useValue: new FixtureRepository(index, details) };
 }

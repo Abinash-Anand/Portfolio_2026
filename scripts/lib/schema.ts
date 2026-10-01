@@ -39,11 +39,23 @@ export const ProjectSchema = z.object({
   hasReadme: z.boolean(),
 });
 
+export const ActivityCalendarSchema = z
+  .object({
+    total: z.number().int().min(0),
+    from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    days: z.array(z.number().int().min(0).nullable()),
+  })
+  .refine(
+    (calendar) => calendar.days.length % 7 === 0,
+    'days must be whole weeks (a multiple of 7)',
+  );
+
 export const PortfolioIndexSchema = z.object({
   generatedAt: z.iso.datetime(),
   source: z.enum(['github', 'fixture']),
   login: z.string().min(1),
   projects: z.array(ProjectSchema),
+  activity: ActivityCalendarSchema.nullable(),
 });
 
 export const ProjectDetailSchema = z.object({
