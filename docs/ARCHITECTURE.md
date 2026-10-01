@@ -107,7 +107,7 @@ src/app/
   content/     profile.ts, resume.ts (typed content from the CV)
   data/        models, PortfolioRepository (port), build-time JSON adapter, PortfolioStore (signals), project resolver
   motion/      capability probe, tier ladder, AdaptiveQuality governor, MotionService (reduced motion + effective tier), audio/ (procedural sounds, AudioService)
-  scene/       SceneHost contract, FrameLoop (single loop, even pacing), SceneCanvas wrapper, DevOverlay, SceneRegistry, placeholder-scene (replaced by the Three.js host in Spike 0)
+  scene/       SceneHost contract, FrameLoop (single loop, even pacing), SceneCanvas wrapper, DevOverlay, SceneRegistry, `three/` (the Three.js host and its world parts, lazy-loaded), `bench/` (Spike 0 benchmark, `?bench` only), placeholder-scene (kept as a `?engine=2d` baseline)
   journey/     journey.machine (pure state machine), JourneyService (timers, audio cues, analytics), endpoints, telemetry (simulated)
   features/    home/, work/, resume/, journey/ (page + hud/), styleguide/, not-found/
   shared/      ui/, directives/, pipes/
@@ -255,9 +255,9 @@ input-message latency. Everything else below is **[reasoned]** until Spike 0.
 | S1 | Budget-first, enforced in CI | Angular budgets, Lighthouse CI, size check for the 3D chunk and asset folder | reasoned |
 | S2 | One canvas, one loop, one scroll source | Persistent canvas behind the DOM; Lenis -> GSAP ticker -> ScrollTrigger -> render; scroll drives the camera path | reasoned |
 | S3 | Angular out of the hot path | `SceneHost` is an imperative class; thin Angular wrapper; signals only on coarse events | reasoned |
-| S4 | Render worker as an opt-in tier | `MainThreadSceneHost` and `WorkerSceneHost` behind one interface; always keep the main-thread fallback; own message-driven camera control (no `OrbitControls` in a worker) | benefit **measured** for CPU stalls only; Safari and message latency assumed |
+| S4 | Render worker as an opt-in tier | `MainThreadSceneHost` and `WorkerSceneHost` behind one interface; always keep the main-thread fallback; own message-driven camera control (no `OrbitControls` in a worker) | benefit **measured** for CPU stalls only; Spike 0 found the real scene needs 0.1 to 0.6 ms of JS per frame and no long tasks, so **not built for v1** (SPIKE-0.md section 7); the interface keeps it possible |
 | S5 | Asset decoding in worker pools (always) | `createImageBitmap`, Draco/Meshopt, KTX2 transcoding off-thread; transfer buffers zero-copy | reasoned |
-| S6 | Early preparation during load | `preload`/`modulepreload`, early GL context, `compileAsync`, `initTexture` in time slices, hidden warm-up frame, immutable caching | reasoned |
+| S6 | Early preparation during load | `preload`/`modulepreload`, early GL context, `compileAsync`, `initTexture` in time slices, hidden warm-up frame, immutable caching | `compileAsync` plus a one-pixel draw-ahead warm-up **measured** (first frames 7/5/4.5 ms to about 1 ms; SPIKE-0.md section 5); the rest reasoned |
 | S7 | ReadinessScheduler | Priority queue with a per-frame budget (about 4 ms) and intent signals (see 9.4) | reasoned |
 | S8 | CPU/GPU balance rules | Profile first. GPU-bound: hoist work, CPU culling/LOD, baking, fewer pixels. CPU-bound: instancing, merged geometry, GPU-side animation and particles. Avoid sync points | reasoned |
 | S9 | Device tiers and adaptive quality | Detect GPU class; watch frame time; degrade in steps with hysteresis (pixel ratio, effects, particles, static) | reasoned |
@@ -312,7 +312,7 @@ flowchart TD
 Every scheduled task has a deadline and a fallback, because idle time is not guaranteed (slow devices, background tabs,
 `requestIdleCallback` starvation).
 
-### 9.5 Starting budgets (to calibrate in Spike 0)
+### 9.5 Starting budgets (calibrated in Spike 0, see docs/SPIKE-0.md section 7)
 
 | Metric | Target |
 |---|---|
@@ -323,6 +323,9 @@ Every scheduled task has a deadline and a fallback, because idle time is not gua
 | Frame rate | 60 fps on a mid-range laptop, >= 30 fps on low tier |
 | GPU time per frame, baseline device | about 10 ms (headroom for thermal throttling) |
 | Lighthouse mobile performance | >= 90 |
+
+Spike 0 result on the baseline laptop: worst phase about 1.7 ms GPU and 0.4 ms JS at 1080p, 21 draw calls, 19 k triangles, initial JS
+93.0 kB gz, Three.js chunk 127 kB brotli (153 kB gz), 0 asset bytes. Budgets kept; the phone run decides whether the tier profiles change.
 
 ### 9.6 Considered and deferred or rejected
 
@@ -342,6 +345,10 @@ Run on the baseline integrated-GPU laptop and a mid-range phone. Success criteri
 - first content (LCP) is not delayed by early preparation;
 - the tier ladder degrades smoothly when frame time is pushed over budget;
 - memory stays inside the per-tier budget across route changes.
+
+**Result (2026-10-01): conditional GO.** Memory, LCP (by construction) and the cost ladder are met on the baseline laptop; the worker
+criterion is not applicable (decided against a worker tier); live frame cadence, governor behaviour under stress and the **mid-range
+phone run are still open**. Full data and the procedure for the open items: docs/SPIKE-0.md.
 
 ## 10. Cross-cutting concerns
 
@@ -434,7 +441,7 @@ and a **review stop**.
 | 0. Foundation | Branch, dependency patches (0 audit findings), angular-eslint, skeleton routes and shell, design tokens, self-hosted fonts, favicon, legacy redirects, motion gate | Lint, tests and build green | **done** (uncommitted) |
 | 1. Content and data foundation (safety net first) | GitHub sync script **in TypeScript** with fixture and schema validation; `PortfolioRepository` port and adapters; `PortfolioStore`; typed content files from the CV (profile, experience, education, skills); `/work` and `/work/:slug`; **2D resume `/resume`** with print styles and CV download; a 2D page per endpoint (`/about`, `/education`, `/skills`, `/projects`, `/experience`); `SeoService` basics; boundary lint; i18n structure; `AnalyticsPort` with the no-op adapter; CI (lint, tests, build, budgets) and the deploy-hook Action | A complete, accessible, indexable 2D site on a Vercel preview with real GitHub data and no WebGL. **Shippable on its own** | **done** (uncommitted). Deferred from the plan: contributions calendar (not needed for the 2D MVP), `de` locale build (German pending native review; `ng extract-i18n` works and 54 messages are extracted), real analytics provider (Phase 4) |
 | 2. Design system and experience engine (no heavy 3D) | HUD components; journey state machine (pure TypeScript, unit-tested); audio service (Web Audio); `MotionService` and tier detection; `SceneHost` interface with the main-thread host; dev overlay (FPS, draw calls, memory); `/styleguide`; owner sign-off of the visual mock (DESIGN.md section 17) | HUD and state machine run over a placeholder scene; design decisions signed off | **done** (uncommitted). Built: journey state machine, `/journey` HUD flow over a placeholder scene, procedural audio, tiers and governor, dev overlay, `/styleguide`. Pending: owner sign-off of DESIGN.md section 17 and CONCEPT.md A1 to A8 |
-| 2.5 Spike 0 (measured) | Boot scene (procedural headset, console), tunnel, About room (server vault, database vault, dashboard), measured on the baseline laptop and a phone; decide the worker tier; calibrate budgets | Section 9.7 criteria met, or scope and fidelity reduced **before** Phase 3 (go/no-go) | next |
+| 2.5 Spike 0 (measured) | Boot scene (procedural headset, console), tunnel, About room (server vault, database vault, dashboard), measured on the baseline laptop and a phone; decide the worker tier; calibrate budgets | Section 9.7 criteria met, or scope and fidelity reduced **before** Phase 3 (go/no-go) | **built and measured on the laptop** (uncommitted); **conditional go**: phone and live-frame runs open, see docs/SPIKE-0.md. Not built: dashboard act, a dedicated database-vault camera beat |
 | 3. Rooms and integration | Remaining rooms (Skills, Projects from data, Education, Experience); `ReadinessScheduler`; tiers and adaptive quality; skip and repeat journeys; URL and back-button wiring to the state machine; worker tier if approved; analytics events | Every endpoint works in 3D and 2D with parity; budgets hold on the baseline devices | |
 | 4. Production hardening | SSR static prerender and Vercel rewrites; SEO, Open Graph, sitemap, JSON-LD; accessibility audit (axe, keyboard, screen reader); Lighthouse CI budgets enforced; real-user Web Vitals; security headers and CSP; privacy page (and Impressum if required); analytics provider wiring; German and `hreflang` only if natively reviewed; caching headers | Lighthouse mobile >= 90, axe clean, all checklists in CONCEPT.md section 9 and DESIGN.md section 16 pass | |
 | 5. Launch | Merge `redesign/v2` to `main`; production deploy on the existing Vercel project and domain; swap in the new CV; verify redirects; monitoring | Live and verified | |
@@ -466,8 +473,8 @@ Dependencies and cut lines:
 | Decision | Recommendation |
 |---|---|
 | Baseline device (laptop only, or also a mid-range Android phone) | Include a phone in Spike 0 |
-| Render worker in v1, or after the spike | After the spike, behind the `SceneHost` interface from day one |
-| Asset sourcing for hero models (code-only, CC0, modelled) | Code-only for Spike 0; models optional later |
+| Render worker in v1, or after the spike | **Decided after the spike: not in v1.** The scene needs about 3% of the main thread; kept possible behind the `SceneHost` interface |
+| Asset sourcing for hero models (code-only, CC0, modelled) | Code-only for Spike 0 (zero asset bytes, worked); models optional later |
 | Analytics provider (Plausible, Umami or Vercel Analytics) | Plausible or Umami; the `AnalyticsPort` keeps the choice swappable |
 | Error monitoring, feature flags | Default: none beyond the Logger; a debug override for the tier |
 
