@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { PortfolioRepository } from './portfolio.repository';
 import { PortfolioStore } from './portfolio.store';
 import { makeProject, provideFixturePortfolio } from './testing';
 
@@ -18,6 +19,18 @@ describe('PortfolioStore', () => {
     });
     return TestBed.inject(PortfolioStore);
   }
+
+  it('loads once, and callers that arrive during the load wait for it', async () => {
+    const store = setup();
+    const repository = TestBed.inject(PortfolioRepository);
+    const getIndex = vi.spyOn(repository, 'getIndex');
+
+    await Promise.all([store.load(), store.load()]);
+    await store.load();
+
+    expect(getIndex).toHaveBeenCalledTimes(1);
+    expect(store.loaded()).toBe(true);
+  });
 
   it('is empty until loaded, then exposes read-only views', async () => {
     const store = setup();

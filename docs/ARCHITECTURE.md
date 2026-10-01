@@ -124,7 +124,7 @@ All components are standalone and `OnPush`; the app is zoneless (Angular 21 defa
 
 Routes: `/` · `/work` · `/work/:slug` (prerendered per project in Phase 4) · `/resume` · `/about` · `/experience` · `/skills` · `/education` · `/not-found` · `**` 404.
 Preview routes for the experience engine (not linked, `noindex`): `/journey` (the console), `/journey/:endpoint` (a room: `about`, `education`, `skills`, `projects`, `experience`) and `/styleguide`. The two journey URLs are ONE route (a custom `UrlMatcher`), so the page and the 3D world inside it stay alive while Back and Forward move between rooms.
-Legacy `/project/:id` URLs redirect to `/work/:slug`. The router uses `withComponentInputBinding()`, `withViewTransitions()` and in-memory scrolling.
+Legacy `/project/:id` URLs redirect to `/work/:slug`. The router uses `withEnabledBlockingInitialNavigation()` (hydration needs the first lazy page in place, otherwise the page blanks and Lighthouse sees a layout shift of 1.0), `withComponentInputBinding()` and in-memory scrolling. View transitions were removed for the same reason: even with the initial transition skipped they produced the same layout shift.
 
 ### 4.1 The experience engine (Phases 2 and 3)
 

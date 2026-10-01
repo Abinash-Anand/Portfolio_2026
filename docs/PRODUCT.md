@@ -30,7 +30,7 @@ Success looks like:
 | F5 | **Work detail** (`/work/:slug`) | README rendered with a table of contents, facts rail (stack, links, stars, last push), prerendered per project |
 | F6 | **Skills** | Derived from project stacks and languages, with curated overrides |
 | F7 | **Contact and CV** | Email, GitHub, LinkedIn, Instagram; CV download works and is tracked (F12) |
-| F8 | **Motion** | Smooth scroll, parallax, reveals, card-to-detail view transition; all honour `prefers-reduced-motion` |
+| F8 | **Motion** | Smooth scroll, parallax, reveals; all honour `prefers-reduced-motion` |
 | F9 | **Tiers and fallbacks** | `high`, `medium`, `low`, `static` tiers; a device without WebGL or with reduced motion still gets full content |
 | F10 | **SEO and sharing** | Per-page title, description and Open Graph tags, sitemap, real 404, old `/project/:id` URLs redirect |
 | F11 | **Accessibility baseline** | Keyboard-operable, visible focus, skip link, landmarks, no critical axe violations |
