@@ -473,3 +473,29 @@ This is a reusable entry template, not a completed change. Copy it for each mean
 - The rebuilt bundle still embeds the GitHub snapshot (owner `Abinash-Anand`, portfolio revision `c413349…`, pins SynthGraph, ParkRabbit, Eber-app in order) and contains no `Alex Morgan`, `PORTFOLIO_GH_TOKEN`, GitHub API host or token-shaped string.
 - In the embedded Chromium pane, Inter now loads in production (`document.fonts.check('500 14px Inter')` is true; the latin face reports `loaded` and its 48256-byte body decodes). A reload added no new font-decode warnings to the console; the ten warnings still listed in that tab's buffer came from earlier visits before the fix.
 - The six-width layout audit (1920, 1440, 1280, 1024, 768, 390) on the live site matches the earlier local Inter-rendered results: no horizontal overflow, clipped text or spill, three projects, and identical experience-row heights (76/76/76 at 1920–1280, 95/76/95 at 1024, 119 at 768, 119/119/138 at 390). Simulated viewport emulation only; interactions and motion were not re-run because no application, CSS or motion code changed in this fix.
+
+## 2026-10-02 — Replace the stale Angular-era CI workflow
+
+### Fixed
+
+- `.github/workflows/ci.yml` still described the previous Angular project and failed on every push since the React migration (`2f7f94f`, `d0ad8fe`, `c413349`, `7d1eb01`). The recorded failure was at `actions/setup-node`: `cache: npm` requires `package-lock.json`, but this repository tracks `pnpm-lock.yaml`. The later steps (`npm run format:check`, `lint`, `typecheck:scripts`, `test:scripts`, `npm test -- --no-watch`) name scripts that no longer exist in `package.json`, so the workflow could not have passed even with caching fixed.
+- The workflow now installs with the pnpm version pinned in `.mise.toml` (`pnpm install --frozen-lockfile`, cached through setup-node) and runs, on Node 22 (the declared toolchain) and Node 24: the application type check, the strict build-script type check, an offline build, `pnpm test`, and `pnpm audit --prod --audit-level=high` (Node 24 only). It adds a concurrency group that cancels superseded runs and a 10 minute timeout; `permissions: contents: read` is retained.
+
+### Changed
+
+- The build step deliberately does not run `pnpm build`. That is the production build: it runs the authenticated GitHub sync and refuses fixture data, so it needs `PORTFOLIO_GH_TOKEN`, which Vercel provides and which GitHub does not give to pull requests from forks. CI instead runs the sync in `PORTFOLIO_DATA_MODE=fixture` and `vite build`, with no secret and no GitHub request. The output is never deployed; it exists so the test that scans a built bundle for tokens and GitHub hosts runs instead of skipping.
+- `ARCHITECTURE.md` gained a short description of what CI does and does not certify.
+
+### Preserved
+
+- `.github/workflows/scheduled-deploy.yml`, all application, CSS, motion and content code, scripts, tests, dependencies and the Vercel build are unchanged. No formatting or lint gate was added: no lint script exists, and `oxfmt` has not been applied to this code base, so a format check would fail on untouched files.
+
+### Regression Testing
+
+- Both workflows pass the `@action-validator/cli` schema check. Each step was run exactly as written in a clean clone of the committed tree (no `node_modules`, no `package-lock.json`) using the lockfile's dependency versions (for example vite 8.0.5, TypeScript 5.9.3): `pnpm install --frozen-lockfile`, both type checks, the fixture sync and `vite build`, and `pnpm test` all passed on Node 24.11.0 and on Node 22.23.3, each with 25 of 25 tests and 0 skipped, so the built-bundle scan executed. `pnpm audit --prod --audit-level=high` reported no known vulnerabilities. The first attempt at the Node 22 run silently used Node 24 because of a PATH mistake; it was discarded and redone with the version asserted.
+- Not verified locally: execution on GitHub's Linux runners, which is checked by the first run after this commit.
+
+### Notes
+
+- A passing CI run covers types, offline tests and an offline build only. It does not certify the real-data production build (Vercel), browser interaction, motion or accessibility.
+- `package-lock.json` remains an untracked local file; CI and Vercel resolve dependencies from `pnpm-lock.yaml`.

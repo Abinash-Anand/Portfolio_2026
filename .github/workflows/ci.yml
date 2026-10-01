@@ -8,38 +8,55 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   verify:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        # 22 is the toolchain declared in .mise.toml; 24 is the current LTS line the project is also developed on.
+        node: [22, 24]
     steps:
       - uses: actions/checkout@v4
 
+      # Same pnpm version as .mise.toml. It must be installed before setup-node so the pnpm store can be cached.
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.34.3
+
       - uses: actions/setup-node@v4
         with:
-          node-version: 24
-          cache: npm
+          node-version: ${{ matrix.node }}
+          cache: pnpm
 
-      # `npm ci` also runs the postinstall sync, which uses the committed fixture (no token needed in CI).
-      - run: npm ci
+      - run: pnpm install --frozen-lockfile
 
-      - name: Formatting
-        run: npm run format:check
-
-      - name: Lint (app, templates, scripts, layer boundaries)
-        run: npm run lint
+      - name: Type-check application
+        run: pnpm exec tsc --noEmit
 
       - name: Type-check build scripts
-        run: npm run typecheck:scripts
+        run: pnpm exec tsc --noEmit --strict --skipLibCheck --target ES2022 --module nodenext --moduleResolution nodenext --allowImportingTsExtensions scripts/sync-github.ts scripts/portfolio-contract.ts
 
-      - name: Test build scripts
-        run: npm run test:scripts
+      # `pnpm build` is the production build: it runs the authenticated GitHub sync, so it needs PORTFOLIO_GH_TOKEN and
+      # real data, which only Vercel provides (secrets are also unavailable to pull requests from forks). CI therefore
+      # stays offline and secret-free: it synchronizes the checked-in development fixture and compiles the bundle. The
+      # output is never deployed; it exists so the tests below can scan the built bundle for tokens and GitHub hosts.
+      - name: Build (offline, development fixture data)
+        env:
+          PORTFOLIO_DATA_MODE: fixture
+        run: |
+          node --experimental-strip-types scripts/sync-github.ts
+          pnpm exec vite build
 
-      - name: Test app
-        run: npm test -- --no-watch
-
-      # Fails on size-budget errors (angular.json). Uses the fixture, so CI never depends on the GitHub API.
-      - name: Build
-        run: npm run build
+      # Offline contract, synchronization, security and generic-rendering tests; no network, no token.
+      - name: Test
+        run: pnpm test
 
       - name: Audit production dependencies
-        run: npm audit --omit=dev --audit-level=high
+        if: matrix.node == 24
+        run: pnpm audit --prod --audit-level=high
