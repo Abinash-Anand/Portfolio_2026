@@ -1,7 +1,6 @@
 import { DOCUMENT } from '@angular/common';
 import { inject, Injectable, NgZone } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
-import { ShellService } from '../shell.service';
 import { AnalyticsPort } from './analytics.port';
 
 export const DEPTHS = [25, 50, 75, 100] as const;
@@ -26,14 +25,13 @@ export function newDepths(
 }
 
 /**
- * Sends `scroll_depth` (25, 50, 75, 100) once per page and threshold, for the 2D pages. The immersive 3D
- * experience has no page scroll and is skipped. Passive listener, throttled to one check per frame.
+ * Sends `scroll_depth` (25, 50, 75, 100) once per page and threshold. Passive listener, throttled to one check
+ * per frame.
  */
 @Injectable({ providedIn: 'root' })
 export class ScrollDepthTracker {
   private readonly analytics = inject(AnalyticsPort);
   private readonly router = inject(Router);
-  private readonly shell = inject(ShellService);
   private readonly document = inject(DOCUMENT);
   private readonly zone = inject(NgZone);
 
@@ -56,7 +54,7 @@ export class ScrollDepthTracker {
   }
 
   private check(view: Window): void {
-    if (this.scheduled || this.shell.immersive()) return;
+    if (this.scheduled) return;
     this.scheduled = true;
     view.requestAnimationFrame(() => {
       this.scheduled = false;

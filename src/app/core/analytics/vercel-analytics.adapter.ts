@@ -51,22 +51,11 @@ export function eventPayload(event: AnalyticsEvent): EventPayload {
       return { name: event.name, data: { slug: event.slug } };
     case 'contact_click':
       return { name: event.name, data: { channel: event.channel } };
-    case 'endpoint_select':
-      return { name: event.name, data: { endpoint: event.endpoint } };
-    case 'room_arrive':
-      return { name: event.name, data: { endpoint: event.endpoint, how: event.how } };
-    case 'tier_change':
-      return { name: event.name, data: { tier: event.tier } };
     case 'scroll_depth':
       return { name: event.name, data: { depth: event.depth } };
-    case 'webgl_fallback':
-      return { name: event.name, data: { reason: event.reason } };
     case 'app_error':
       return { name: event.name };
     case 'cv_download':
-    case 'journey_start':
-    case 'journey_skip':
-    case 'resume_2d_toggle':
       return { name: event.name };
   }
 }

@@ -35,8 +35,4 @@ export async function writeOutputs(dir: string, output: BuildOutput): Promise<vo
     join(dir, 'project-loaders.ts'),
     projectLoadersSource(output.details.map((d) => d.slug)),
   );
-
-  // Routes for prerendering (used in Phase 4).
-  const routes = output.index.projects.map((p) => `/work/${p.slug}`).join('\n');
-  await writeFile(join(dir, 'routes.txt'), routes + '\n');
 }
