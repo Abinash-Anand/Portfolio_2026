@@ -499,3 +499,8 @@ This is a reusable entry template, not a completed change. Copy it for each mean
 
 - A passing CI run covers types, offline tests and an offline build only. It does not certify the real-data production build (Vercel), browser interaction, motion or accessibility.
 - `package-lock.json` remains an untracked local file; CI and Vercel resolve dependencies from `pnpm-lock.yaml`.
+
+### Follow-up verification (GitHub Actions run for `8e81bab`, 2026-10-02)
+
+- The first run of the new workflow passed on GitHub's Linux runners for both matrix legs, Node 22.23.3 and 24.21.0, with no failing or unexpectedly skipped step. Each leg reported 25 of 25 tests passed and 0 skipped, including the built-bundle token/GitHub-host scan; `pnpm install --frozen-lockfile`, both type checks and the offline build passed; the production dependency audit (Node 24 leg only) reported no known vulnerabilities.
+- This confirms the workflow executes as designed on its target runners. It does not change what CI certifies (see Notes above): real-data production builds remain Vercel's, and browser behavior was not exercised by CI.
