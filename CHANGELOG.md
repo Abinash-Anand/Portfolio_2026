@@ -466,3 +466,10 @@ This is a reusable entry template, not a completed change. Copy it for each mean
 ### Notes
 
 - `.gitattributes` carries a "Generated" header from the project template. If a platform tool regenerates it, the LFS rules for `*.woff2`/`*.ico` could return and reintroduce the defect; the comment beside each new rule states why. `*.woff`, `*.ttf`, `*.otf`, `*.eot` and the remaining LFS rules were deliberately left alone as no such files are in use.
+
+### Follow-up verification (live site, 2026-10-02, after `c413349` deployed)
+
+- Vercel production deployment of `c413349` succeeded. Every font and icon file now served by `abinashanand.vercel.app` is byte-identical to its `public/` source with the correct content type: `inter-*.woff2` (all seven, `font/woff2`), `favicon.ico` (3765 bytes, `image/vnd.microsoft.icon`) and `favicon.svg`.
+- The rebuilt bundle still embeds the GitHub snapshot (owner `Abinash-Anand`, portfolio revision `c413349…`, pins SynthGraph, ParkRabbit, Eber-app in order) and contains no `Alex Morgan`, `PORTFOLIO_GH_TOKEN`, GitHub API host or token-shaped string.
+- In the embedded Chromium pane, Inter now loads in production (`document.fonts.check('500 14px Inter')` is true; the latin face reports `loaded` and its 48256-byte body decodes). A reload added no new font-decode warnings to the console; the ten warnings still listed in that tab's buffer came from earlier visits before the fix.
+- The six-width layout audit (1920, 1440, 1280, 1024, 768, 390) on the live site matches the earlier local Inter-rendered results: no horizontal overflow, clipped text or spill, three projects, and identical experience-row heights (76/76/76 at 1920–1280, 95/76/95 at 1024, 119 at 768, 119/119/138 at 390). Simulated viewport emulation only; interactions and motion were not re-run because no application, CSS or motion code changed in this fix.
