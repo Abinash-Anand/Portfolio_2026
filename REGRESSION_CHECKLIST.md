@@ -101,11 +101,13 @@ Additional shared checks:
 
 ## Stack
 
-- [ ] Frontend, Backend, Data, and AI / Systems groups render with all baseline entries.
-- [ ] Desktop hover and visible keyboard focus reveal the correct “Used in” text and inset feedback.
-- [ ] Technology/group typography, separators, spacing, and readability remain intact.
-- [ ] Narrow layout uses two columns and intentionally hides reference text.
-- [ ] No unintended click action or modal has been added to the informational stack buttons.
+- [ ] Every technology in the data renders exactly once as a brick-wall tile, in data order, numbered from 01, with its category label; the field has no gaps, and every row fills edge to edge (12 columns above 1100 px, 7 from 801 to 1100 px, 2 at ≤800 px).
+- [ ] Desktop hover and visible keyboard focus invert the tile to the dark surface, shift the name 6 px and replace the category with the correct “Used in” text; Tab order follows data order.
+- [ ] Tile text never clips or leaves its tile, long names get wider tiles, and there is no horizontal page overflow at 1920/1440/1280/1024/768/390/~360 px.
+- [ ] Narrow layout (≤800 px) keeps the category label and intentionally hides the reference text.
+- [ ] Changing the stack in `portfolio.json` (add, remove, reorder, recategorize, many skills) changes the wall with no component change.
+- [ ] No unintended click action or modal has been added to the informational stack tiles.
+- [ ] Tiles reveal once on entering the viewport and stay visible; reduced motion shows them immediately with an instant category/reference swap.
 
 ## About / Education
 

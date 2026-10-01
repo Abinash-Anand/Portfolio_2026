@@ -13,6 +13,7 @@ import { createPortfolioRepository } from "../src/app/application/portfolioRepos
 import { PortfolioStore } from "../src/app/application/PortfolioStore.ts";
 import { noAnalytics, analyticsPayload } from "../src/app/application/AnalyticsPort.ts";
 import { discoverPinnedRepositories, syncPortfolio } from "../scripts/sync-github.ts";
+import * as stackLayout from "../src/stackLayout.ts";
 
 const root = resolve(import.meta.dirname, "..");
 const fixture = JSON.parse(readFileSync(resolve(root, "fixtures/portfolio.fixture.json"), "utf8"));
@@ -24,6 +25,7 @@ const compiled = ts.transpileModule(appSource.replaceAll("import.meta.env.BASE_U
 const module = {exports: {}};
 const load = name => {
   if (name === "./useParallaxEngine") return {useScrollSceneEngine: () => {}};
+  if (name === "./stackLayout") return stackLayout;
   if (name === "./app/application/portfolioProjects") return {portfolioStore: storeFor(fixture)};
   if (name === "./app/application/AnalyticsPort") return {noAnalytics};
   if (name === "react-dom") return {createPortal: () => null};

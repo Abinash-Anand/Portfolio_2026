@@ -504,3 +504,55 @@ This is a reusable entry template, not a completed change. Copy it for each mean
 
 - The first run of the new workflow passed on GitHub's Linux runners for both matrix legs, Node 22.23.3 and 24.21.0, with no failing or unexpectedly skipped step. Each leg reported 25 of 25 tests passed and 0 skipped, including the built-bundle token/GitHub-host scan; `pnpm install --frozen-lockfile`, both type checks and the offline build passed; the production dependency audit (Node 24 leg only) reported no known vulnerabilities.
 - This confirms the workflow executes as designed on its target runners. It does not change what CI certifies (see Notes above): real-data production builds remain Vercel's, and browser behavior was not exercised by CI.
+
+## 2026-10-02 — Repository history: remove the Claude co-author trailer and keep it out
+
+### Changed
+
+- Twenty-six commits on `main` were recreated with the `Co-Authored-By: Claude` trailer removed from the message: the range runs from the first commit that carried the trailer (`d629198`, parent `387946b` untouched) to the then-tip (old `fd01d42`, now `3d2da0b`). Author, committer, author/committer dates, parent structure and every tree are unchanged: for each recreated commit `git rev-parse <old>^{tree}` equals `git rev-parse <new>^{tree}`, and the tip tree is identical. Nothing before that range, and no other repository, was touched. `main` was force-pushed once with `--force-with-lease` after the rewrite was shown and approved.
+- Hashes cited in earlier entries for this repository's `main` therefore changed: `2f7f94f` → `a4266ea`, `d0ad8fe` → `aabc3a3`, `c413349` → `120a25e`, `7d1eb01` → `ac5ecfd`, `8e81bab` → `c79673a`. The earlier entries are left as written (see Rules); read them with this mapping. Hashes of commits in other repositories (the `SynthGraph`, `ParkRabbit` and `Eber-app` snapshot revisions) are unaffected.
+- Going forward, every commit is authored and committed by the owner's configured GitHub identity with no attribution trailer. This is enforced outside the repository (not tracked by git): local `user.name`/`user.email`, a `commit-msg` hook that rejects an author or committer other than the owner's identity and any Claude/Anthropic attribution in the message, a `pre-push` hook that checks author, committer and message of every outgoing commit before the existing Git LFS step, and the Claude Code `attribution` setting (`commit` and `pr` empty, `sessionUrl` false).
+
+### Preserved
+
+- Application, CSS, motion, content, scripts, tests, dependencies and deployment are unchanged by this step. The working tree before and after the rewrite is byte-identical.
+
+### Notes
+
+- GitHub's contributor graph (Insights) and the REST contributors endpoint now list only the owner. The repository page sidebar and the GraphQL `mentionableUsers` list still showed `claude` when last checked. The cause is not determined: it may be GitHub's cached recalculation, or the pre-rewrite commits that stay reachable through merged branches (`redesign/v2`, `chore/drop-v2-ui`, `fix/hydration-cls`) and `refs/pull/*/head`. No further rewrite or branch deletion was performed. `ParkRabbit`, `Eber-app` and `SynthGraph` still show the contributor and were deliberately left alone.
+- The `commit-msg` and `pre-push` hooks live in `.git/hooks` and are not versioned; a fresh clone must reinstall them for the same guard.
+
+## 2026-10-02 — Engineering Stack brick wall and focused motion refinement
+
+### Added
+
+- `src/stackLayout.ts`: a pure, deterministic brick-wall layout for the Engineering Stack. It receives the normalized `portfolio.technologies` groups and returns one rectangular tile per skill with a column span for each of three grids (12 columns at desktop, 7 at ≤1100px, 2 at ≤800px). Spans follow the length of the skill name (short names get narrow tiles, long names wide ones); rows are packed greedily, each row's spans are scaled to fill it exactly (largest remainder, so no gaps and no overflow), and neighbouring rows are offset by up to one column so their seams do not line up, like brickwork. The module contains no skill, category or project name.
+- `tests/stack-bricks.test.mjs` (11 tests): every row of all three grids fills exactly for any number of skills; the layout is deterministic and keeps order, names, categories and references; widths follow content and seams are staggered; very long names never overflow a row; the rendered stack contains exactly the technologies in the data; data-only edits (add, remove, reorder, recategorise, a larger set) change the field with no component change; neither the component nor the layout hard-codes a skill, category or project; content layers carry no scroll-mapped opacity; structural parallax travel is small and nothing scales or rotates with scroll; reveals are enter-triggered once; the capability row keeps its inversion while its detail is open.
+
+### Changed
+
+- **Engineering Stack** (`Stack` in `src/App.tsx`, `.stack-field`/`.stack-tile*` in `src/index.css`): the grouped list is replaced by independent rectangular tiles with hairline borders on the paper background — no gradients, shadows, rounded corners or ratings. Each tile shows a two-digit index, the skill, its category as a subtle label and the "Used in" count from the existing data. Category order and membership come from the data and remain visible as the per-tile category label. Hover/focus inverts the tile to the existing black/light treatment and nudges the name 6px; the "Used in" reference replaces the category label in place on hover/focus (desktop) so no tile reserves space for hidden text. ≤800px the reference is hidden and the field is a two-column wall. Reduced motion swaps the label instantly with no transform.
+- **Reveals**: content reveals are enter-triggered once and never reverse. The reveal observer is unchanged (adds `.is-visible` once, then unobserves); the experience, service and stack rows and the contact block now use `.reveal` so their opacity is set by the one-time reveal rather than by scroll position, with the existing `cubic-bezier(.16,1,.3,1)` easing. Stack tiles stagger by column (≤5 steps × 45ms).
+- **Structural parallax reduced**: scroll-mapped opacity, scale and horizontal drift were removed from content layers (hero title/summary/meta, section headers, project copy/meta/index, experience cells, about, service rows, contact). Their travel is now a small vertical offset (≤14px for most layers; hero title −40px and summary −60px, hero label −20px, contact ≤26px, service arrow ≤8px horizontal). Decorative and ambient layers (hero grid and orbit art, scroll cue, project backdrops, art and overlays, contact grid) and the overlay internals (`ProjectDetail`, `ArchitectureDiagram`) keep their original parallax and opacity behavior.
+- **Four-level motion hierarchy** (documented in `MOTION_SYSTEM.md`): ambient/decorative parallax, one-time entrance, hover/focus response, and the overlay hand-off. Each layer type belongs to exactly one level.
+- **Capability row → overlay hand-off**: the selected service row now keeps its black inversion (`.service-row.is-selected`, same treatment as hover) while its detail overlay is open, so the row visibly "holds" the state it opened from. The overlay architecture, portal, scroll lock and focus handling are unchanged.
+- Documentation updated: `MOTION_SYSTEM.md` (reveal rule, motion hierarchy, stack hover, service hand-off, parallax table), `ARCHITECTURE.md` (stack layout module, data row, reveal row, ≤800px row), `REGRESSION_CHECKLIST.md` (Stack section).
+
+### Preserved
+
+- Native scrolling is untouched: no scroll library, snap, wheel interception or competing scheduler; the single central scene engine and its read → calculate → write loop, geometry cache, `--scene-*` variables and invalidation are unchanged. `src/useParallaxEngine.ts` was not edited.
+- Data flow (GitHub pins → sync → generated JSON → repository/store → components), content, copy, typography, spacing, light/dark sections, navigation, project order and visuals, project row hover/pointer interaction, the detail overlays and their scrolling, and the scheduled-deploy and CI workflows are unchanged.
+
+### Regression Testing
+
+- `pnpm exec tsc --noEmit` and the strict build-script type check passed; `node --experimental-strip-types --test tests/*.test.mjs` passed 36 of 36 with 0 skipped (the built-bundle token/GitHub-host scan executed against a local `vite build`). The authenticated sync was not re-run for this change because no data, sync or contract code changed; the content audited below is the GitHub-mode snapshot of revision `3d2da0b` (the pinned `SynthGraph`, `ParkRabbit` and `Eber-app`, in that order).
+- Layout audit in the embedded Chromium pane (simulated viewports) at 1920, 1440, 1280, 1024, 768, 390 and a ~360px width, against the real three-project, 19-skill content: no horizontal overflow, no clipped or overflowing tile text, every row fills the field exactly with a uniform height, correct project order and real content, no console errors, and no runtime GitHub or Calendly request. Lg rows are 5/5/4/3/2 tiles with zero seam coincidences; the 7-column grid lays out three tiles per row with zero coincidences; ≤800px is two columns.
+- Motion probe on the production preview, scrolling slowly, fast and in stepped alternating directions across all sections (before → after): content layers scrolled above the viewport had opacity ≈0 → 1; the lowest opacity of a revealed on-screen content layer was 0.10 → 1; maximum structural travel was 190px vertical / 34px horizontal → 60px / 8px; reveal classes removed after being added: 0, and no element revealed more than once. Project hover while scrolling, repeated section-boundary crossings and the capability-row open/close cycle were exercised; the selected row stays inverted while open.
+- Reduced motion was verified by emulation only: a scratch build with the media query forced to match and `matchMedia` stubbed (the pane cannot toggle `prefers-reduced-motion`). In it, reveals complete with no transform and the stack hover swaps instantly. Not verified with the operating system setting.
+
+### Notes
+
+- All scrolling and pointer input was simulated through the embedded browser; no physical trackpad, mouse wheel or touch device was used. The pane reports the page as hidden, so transitions only progress when a frame is forced; timings were therefore checked from computed styles and class changes rather than watched in real time.
+- The overlay internals (`ProjectDetail`, `ArchitectureDiagram`) still map opacity to scroll position inside the overlay; they were out of scope and deliberately left alone. At ≤390px the long `SYNTHGRAPH` title in the detail overlay still spills about 15px: typography is protected and this predates this change.
+- A cursor label for stack tiles was not added: the content contract has no field for it, and inventing one would extend the data model.
+- `package-lock.json` remains an untracked local file and was not staged.

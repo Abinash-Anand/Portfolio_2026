@@ -40,6 +40,7 @@ Page components and motion remain principally in two modules, with typed data/ap
 
 - `src/App.tsx`: generic React components receiving normalized data, local interaction state, native/React event handling, and existing overlays. `App` reads the injected/default store and passes data down.
 - `src/useParallaxEngine.ts`: scene types, interpolation/layout helpers, cached measurement, central scheduling, pointer state, observers, and CSS-variable rendering.
+- `src/stackLayout.ts`: a pure, dependency-free function of the normalized technologies data that packs skills, in their given order, into the Engineering Stack brick wall. It knows no skill, category or project names and no counts; it returns per-tile column spans for the 12-, 7- and 2-column grids the stylesheet switches between (above 1100 px, 801–1100 px, and ≤800 px), plus each tile's position in its row for the entrance stagger. Widths follow name length, every row fills its grid exactly, spare columns are shared in proportion to demand, and neighbouring rows are offset so seams do not line up. The same data always produces the same layout; no layout work happens in the browser at resize time.
 - `src/app/domain/portfolioProject.ts`: provider-independent editorial metadata, existing narrative, and composed portfolio-project types, with an optional separate `CaseStudy`; no React or provider imports.
 - `src/app/domain/caseStudy.ts`: optional-depth engineering case studies, decision reasoning, explicit result status, sourced metric contracts, structured visual evidence, and relevant links; no rendering or provider integration.
 - `src/app/application/projectContentContract.ts`: shared runtime validation for inline narrative, implementation and structured case-study content. The TypeScript fixture factory and unused content compatibility adapters were removed.
@@ -70,7 +71,7 @@ The former component-local content object has been removed. `App` obtains the im
 | --- | --- | --- |
 | Projects | Separate normalized metadata, compatibility narrative, visual descriptor, implementation copy, optional case study/evidence/README | Generic row/detail consumers; no project-slug switches. Current detail still renders compatibility narrative, not deeper case-study sections. |
 | Experience | Typed ID/company/role/period/tech/description records | Row selection passes the same record to the existing simple detail. |
-| Stack | Ordered typed label/items groups with name/usedIn records | Nested mapping preserves group/item order and hover/focus disclosures. |
+| Stack | Ordered typed label/items groups with name/usedIn records | `layoutStackTiles` flattens the groups in order into one brick-wall field; each tile shows a running number, the skill and its category, and its hover/focus “Used in” disclosure. Adding, removing, reordering or recategorizing a skill, or growing the list to any length, is a data-only change. |
 | Services | Typed ID/title/description records | Row selection passes the record to the existing capability detail and shared email action. |
 
 `portfolio.person` supplies shared identity and hero copy; statement is split on newlines. Wordmark/footer use the same name, footer uses the same role, and contact/service actions share one email. About, education, availability, navigation/footer/accessibility/detail copy and technical-art labels come from the contract.
@@ -196,7 +197,7 @@ Navigation uses native hash links plus CSS `scroll-behavior`, not a programmatic
 | --- | --- |
 | Document scroll progress | Engine reads `window.scrollY` and cached document range; writes root `--progress`; CSS scales the fixed bar. |
 | Detail chapter progress | `ProjectDetail` observer updates React `activeStep`; `.case-progress` styles the current marker. This is separate from document progress. |
-| Reveal | Engine IntersectionObserver adds `.is-visible` once at threshold `0.12`, then unobserves; CSS animates reveal opacity/offset and header staggering. The completed reveal state persists independently of scene-driven opacity. |
+| Reveal | Engine IntersectionObserver adds `.is-visible` once at threshold `0.12`, then unobserves; CSS animates reveal opacity/offset and header staggering. The completed reveal state persists independently of scene-driven opacity, and since the 2026-10-02 motion pass content layers have no scene-driven opacity at all, so revealed content never fades back out with scroll position (only decorative/ambient layers keep it). Rows, stack tiles and the contact content use the same once-only reveal. |
 | Parallax | Engine discovers scenes/layers and samples keyframes from native scroll state; CSS consumes scene variables. |
 | Hover | CSS owns project title/disclosure/art scaling, experience feedback, stack disclosure, service sweep/arrows, and contact/link feedback. |
 | Cursor | Engine writes positional variables; `Cursor` sets contextual labels; CSS owns shape/label transitions and pointer fallbacks. |
@@ -222,7 +223,7 @@ The render's `getBoundingClientRect()` read is for an active pointer anchor, not
 | Condition | Current behavior |
 | --- | --- |
 | Default desktop CSS | Multi-column editorial layouts; fixed navigation; sticky hero/contact interiors and project rows; hover disclosures; custom cursor. |
-| Width ≤800 px | Primary nav links hidden; wordmark/Contact retained; custom cursor hidden. Project tracks/rows lose desktop sticking, descriptions/CTAs remain visible, and art shrinks to a corner. Experience reflows, stack becomes two-column, About/details stack, footer becomes vertical, and architecture becomes a vertical sequence. Stack references and chapter progress are hidden. Hero/contact use shortened sticky tracks under normal motion. |
+| Width ≤800 px | Primary nav links hidden; wordmark/Contact retained; custom cursor hidden. Project tracks/rows lose desktop sticking, descriptions/CTAs remain visible, and art shrinks to a corner. Experience reflows, the stack brick wall becomes a two-column field (it is a seven-column field from 801 to 1100 px and twelve-column above), About/details stack, footer becomes vertical, and architecture becomes a vertical sequence. Stack references and chapter progress are hidden. Hero/contact use shortened sticky tracks under normal motion. |
 | Engine width ≥1100 px | Full motion strength `1`. |
 | Engine width ≥600 and <1100 px | Motion strength `0.66`. |
 | Engine width <600 px | Motion strength `0.26`. |

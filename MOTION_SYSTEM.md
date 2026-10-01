@@ -8,6 +8,8 @@ Motion should communicate hierarchy, depth, interaction, continuity, and technic
 
 This philosophy is a constraint on future work. The implementation details below describe what exists, including limitations, not a claim that every effect fully meets that ideal.
 
+**Motion hierarchy (2026-10-02).** Motion is layered in four levels that must not compete: **primary**, the once-only enter reveal of sections and content (translate plus opacity, then it stays put and visible); **secondary**, parallax depth, kept small on structural elements and reserved for decorative layers (hero art and grid, project visuals, annotations); **tertiary**, hover, focus and cursor feedback, short and restrained; **ambient**, the scroll progress bar and scroll cue. Structural content is anchored to the document; only decorative layers may feel slightly detached. A reveal never reverses: scroll position decides *when* a reveal starts, never how visible revealed content is.
+
 ## Current Motion Systems
 
 ### Shared timing and capability rules
@@ -33,7 +35,7 @@ Project details have a separate five-chapter indicator: an overlay-rooted Inters
 ### Section reveal
 
 - **Trigger / elements:** engine IntersectionObserver at threshold `0.12` observes `.reveal`, adds `.is-visible` once, then unobserves it. These include section headers, project rows, stack groups, service rows, and About copy.
-- **Properties:** header/About `--reveal-opacity` and `--reveal-y` transition from invisible/26 px to visible/zero. Row/group reveals animate opacity. Scene-layer opacity is composed with reveal opacity where applicable.
+- **Properties:** header/About `--reveal-opacity` and `--reveal-y` transition from invisible/26 px to visible/zero. Row/group reveals animate opacity. Since the 2026-10-02 motion pass, content layers carry no scroll-mapped opacity, so a revealed layer stays fully opaque however far it scrolls and is never faded out by scroll position; only decorative/ambient layers (hero grid and art, scroll cue, project annotation, contact grid) and the detail overlay's internals keep scene opacity. Project, experience and service rows, stack tiles and the contact content use the same once-only enter reveal (`.is-visible` is added once and never removed). Stack tiles stagger by their position in a row (45 ms per column, capped).
 - **Timing/easing:** header/About 800 ms primary ease; heading delay 100 ms, note delay 180 ms; project/stack/service opacity 700 ms primary ease.
 - **Responsive:** reveal mechanism remains; reflow does not introduce a second observer system.
 - **Reduced motion:** CSS forces reveal content visible, removes offsets/transforms, and minimizes transition durations. Observer behavior remains, but content does not depend on its entrance animation to be visible under this preference.
@@ -69,6 +71,7 @@ The `.is-visible` state does not reset on leaving/re-entering. A separate scene'
 - **Trigger / elements:** `.service-row:hover`, its background pseudo-element, and arrow.
 - **Properties:** dark background translates from `-101%` to rest, text changes to light, left/right padding becomes 12 px, and arrow variables add `(4px, -4px)` to scene translation.
 - **Timing/easing:** pseudo-background sweep 500 ms primary ease. The base row declares padding/color at 500 ms, but the more-specific `.service-row.reveal` transition list overrides it: current rows use 350 ms primary-ease padding and have no effective color transition. Arrow variable transitions are declared at 250 ms primary ease; these variables are not registered with `@property`, so the declaration alone does not guarantee interpolated custom-property motion.
+- **Detail hand-off (2026-10-02):** while the capability's detail overlay is open, its row keeps the same inversion through `.is-selected` (set from the section's existing selection state), so the dark row and the dark panel read as one continuous surface; the class clears when the selection clears and the 500 ms sweep returns to rest as the overlay slides out. This adds no listener, timer or transform owner.
 - **Responsive:** rows shorten/reflow at ≤800 px; no separate touch animation is installed. Tap opens the existing capability detail without requiring hover.
 - **Reduced motion:** transitions become near-instant, and the arrow's scene-layer transform is suppressed. The non-scene background can still change between its hover states.
 
@@ -82,11 +85,11 @@ The `.is-visible` state does not reset on leaving/re-entering. A separate scene'
 
 ### Stack hover
 
-- **Trigger / elements:** technology button hover or `:focus-visible`, including its “Used in” reference.
-- **Properties:** left padding becomes 8 px; reference opacity increases and its `translateX(-6px)` returns to rest. Buttons do not open details on click.
-- **Timing/easing:** 300 ms primary ease for padding and reference transition.
-- **Responsive:** ≤800 px uses two columns and hides reference text, including on focus/hover.
-- **Reduced motion:** reveal-descendant transform/opacity overrides expose reference state where CSS displays it; transitions are near-instant. The padding state can still change.
+- **Trigger / elements:** a brick-wall tile button (`.stack-tile button`) on hover or `:focus-visible`; its “Used in” reference replaces its category label in the same slot.
+- **Properties:** the tile inverts to `--dark` with light text, the name shifts 6 px right, and the reference fades/slides in (`translateX(-6px)` to rest) as the category fades out. Tiles do not open details on click and carry no scroll parallax.
+- **Timing/easing:** 350 ms primary ease for background, colour and name; 300 ms for the category/reference swap. The entrance is the once-only reveal: 700 ms opacity, delayed 45 ms per column position (capped at five).
+- **Responsive:** above 1100 px a 12-column field, 801–1100 px a 7-column field, ≤800 px a 2-column field; spans for each come from `src/stackLayout.ts`. At ≤800 px the reference is hidden and the category stays.
+- **Reduced motion:** the reveal is forced visible, the name/reference transforms are removed, and on desktop the category/reference swap is an instant `display` change rather than an animation.
 
 ### Custom cursor
 
@@ -171,13 +174,14 @@ Representative configured desktop values (before damping, additional reveal/hove
 | Layer | Existing travel / scale |
 | --- | --- |
 | Hero grid | y `[-45, 0, 85]` px; scale `[1.025, 1, .99]` |
-| Hero headline / summary | y `[24, 0, -150]` / `[38, 0, -190]` px |
+| Hero headline / summary | y `[0, 0, -40]` / `[0, 0, -60]` px (structural; reduced on 2026-10-02 from `[24, 0, -150]` / `[38, 0, -190]`) |
 | Project art | y `[±44]`, `[±52]`, `[±48]`, `[±58]` px by row, with middle zero; x `[22, 0, -18]`; scale `[1.1, 1.04, 1.1]` |
 | Project backdrop / foreground | y amplitude `0.35 ×` art travel, opposite direction / `1.35 ×` art travel |
-| Contact grid / headline | y `[-80, 0, 90]` / `[145, 0, -105]` px |
+| Contact grid / headline | y `[-80, 0, 90]` px (decorative, unchanged) / `[24, 0, -20]` px (structural; was `[145, 0, -105]` with scale and opacity) |
+| Other structural layers | section headings, kicker and note, project index/copy/meta, experience cells, About and service labels: at most 14 px y; service arrow: up to 8 px x; hero label 20 px y; contact meta/actions/links: up to 26 px y. None scale, rotate or fade with scroll |
 | Detail art | y `[90, 0, -90]` px; scale `[1.08, 1, 1.06]` |
 
-**Maximum movement:** there is no global runtime travel cap. The largest absolute configured scroll y value is 190 px (hero summary); largest absolute scroll x is 42 px (hero art). Current configured rotation reaches 1.4 degrees and scale keyframes span `.94`–`1.1`; hover can additionally multiply project art by `1.04`. These describe this markup, not combined screen-space bounds or a new mandated limit.
+**Maximum movement:** there is no global runtime travel cap. The largest absolute configured structural scroll y value is 60 px (hero summary) and x is 8 px; the largest decorative values are hero art (y 115 px, x 42 px) and the scroll cue (y 110 px). Before 2026-10-02 the largest structural values were 190 px (hero summary) and 34 px. Current configured rotation reaches 1.4 degrees and scale keyframes span `.94`–`1.1`; hover can additionally multiply project art by `1.04`. These describe this markup, not combined screen-space bounds or a new mandated limit.
 
 Within a project row, normalized pointer offsets are approximately ±5 px x and ±4 px y at row edges. Hero pointer amplitude 18 yields approximately ±9 px per viewport axis at full strength. Magnetic displacement is proportional, without a global clamp. Do not describe these as universal hard limits.
 

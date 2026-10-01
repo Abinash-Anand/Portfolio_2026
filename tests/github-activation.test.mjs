@@ -14,6 +14,7 @@ import { createPortfolioRepository } from "../src/app/application/portfolioRepos
 import { PortfolioStore } from "../src/app/application/PortfolioStore.ts";
 import { noAnalytics } from "../src/app/application/AnalyticsPort.ts";
 import { discoverPins, missingOptionalMetadata, syncPortfolio } from "../scripts/sync-github.ts";
+import * as stackLayout from "../src/stackLayout.ts";
 
 // Real-workflow coverage for the GitHub-backed content pipeline. Everything here is offline and synthetic:
 // it exercises the same sync/validation/normalization code used in production, never live GitHub data.
@@ -73,6 +74,7 @@ const appModule = {exports: {}};
 runInNewContext(compiled, {
   require: name => {
     if (name === "./useParallaxEngine") return {useScrollSceneEngine: () => {}};
+    if (name === "./stackLayout") return stackLayout;
     if (name === "./app/application/portfolioProjects") return {portfolioStore: storeFor(fixture)};
     if (name === "./app/application/AnalyticsPort") return {noAnalytics};
     if (name === "react-dom") return {createPortal: () => null};
