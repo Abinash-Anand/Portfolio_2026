@@ -1,0 +1,17 @@
+<ul class="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+  @for (endpoint of endpoints(); track endpoint.id; let first = $first) {
+    <li>
+      <button
+        type="button"
+        class="keycap w-full"
+        [disabled]="disabled()"
+        [attr.data-autofocus]="first ? '' : null"
+        (click)="selected.emit(endpoint.id)"
+        (mouseenter)="hovered.emit()"
+      >
+        <span class="keycap__path">{{ label(endpoint) }}</span>
+        <span class="keycap__summary">{{ endpoint.summary }}</span>
+      </button>
+    </li>
+  }
+</ul>

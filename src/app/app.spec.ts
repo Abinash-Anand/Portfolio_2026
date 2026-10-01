@@ -27,8 +27,8 @@ describe('App', () => {
   it('tells the visitor when sample data is shown (no GitHub token at build time)', async () => {
     const fixture = TestBed.createComponent(App);
     await fixture.whenStable();
-    expect((fixture.nativeElement as HTMLElement).querySelector('[role="status"]')?.textContent).toContain(
-      'sample GitHub data',
-    );
+    expect(
+      (fixture.nativeElement as HTMLElement).querySelector('[role="status"]')?.textContent,
+    ).toContain('sample GitHub data');
   });
 });

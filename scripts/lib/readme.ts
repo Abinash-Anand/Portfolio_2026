@@ -65,7 +65,12 @@ function shapeHeadings(ctx: RenderContext) {
       if (!/^h[1-6]$/.test(node.tagName)) return;
       if (!seenHeading) {
         seenHeading = true;
-        if (node.tagName === 'h1' && known.has(normalise(toString(node))) && parent && index !== undefined) {
+        if (
+          node.tagName === 'h1' &&
+          known.has(normalise(toString(node))) &&
+          parent &&
+          index !== undefined
+        ) {
           toRemove.push({ parent: parent as Root | Element, index });
           return;
         }
@@ -82,7 +87,11 @@ function finaliseLinks() {
   return (tree: Root) => {
     visit(tree, 'element', (node: Element) => {
       const props = node.properties;
-      if (node.tagName === 'a' && typeof props['href'] === 'string' && /^https?:\/\//i.test(props['href'])) {
+      if (
+        node.tagName === 'a' &&
+        typeof props['href'] === 'string' &&
+        /^https?:\/\//i.test(props['href'])
+      ) {
         props['target'] = '_blank';
         props['rel'] = ['noopener', 'noreferrer'];
       }

@@ -10,7 +10,9 @@ describe('SeoService', () => {
   let doc: Document;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({ providers: [{ provide: SITE_URL, useValue: 'https://example.test' }] });
+    TestBed.configureTestingModule({
+      providers: [{ provide: SITE_URL, useValue: 'https://example.test' }],
+    });
     seo = TestBed.inject(SeoService);
     meta = TestBed.inject(Meta);
     doc = TestBed.inject(DOCUMENT);
@@ -23,7 +25,9 @@ describe('SeoService', () => {
     expect(content('name="description"')).toBe('Desc');
     expect(content('property="og:title"')).toBe('Title');
     expect(content('property="og:url"')).toBe('https://example.test/work/x');
-    expect(doc.head.querySelector('link[rel="canonical"]')?.getAttribute('href')).toBe('https://example.test/work/x');
+    expect(doc.head.querySelector('link[rel="canonical"]')?.getAttribute('href')).toBe(
+      'https://example.test/work/x',
+    );
     expect(content('name="twitter:card"')).toBe('summary');
   });
 

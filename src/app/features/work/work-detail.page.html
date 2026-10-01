@@ -2,7 +2,9 @@
   <a routerLink="/work" class="text-muted text-sm hover:text-text" i18n>← All work</a>
 
   <header class="mt-6 max-w-3xl">
-    <h1 class="font-display text-4xl font-bold tracking-tight md:text-6xl">{{ page().project.title }}</h1>
+    <h1 class="font-display text-4xl font-bold tracking-tight md:text-6xl">
+      {{ page().project.title }}
+    </h1>
     @if (page().project.summary) {
       <p class="text-muted mt-4 text-lg leading-relaxed">{{ page().project.summary }}</p>
     }
@@ -24,11 +26,17 @@
         <p class="text-muted font-mono text-xs tracking-wider uppercase" i18n>README</p>
         <div class="readme mt-6" [innerHTML]="detail.readmeHtml | safeHtml"></div>
       } @else {
-        <p class="text-muted" i18n>No README is published for this project. See the repository for details.</p>
+        <p class="text-muted" i18n>
+          No README is published for this project. See the repository for details.
+        </p>
       }
     </div>
 
-    <aside class="flex flex-col gap-8 lg:sticky lg:top-24 lg:self-start" aria-label="Project facts" i18n-aria-label>
+    <aside
+      class="flex flex-col gap-8 lg:sticky lg:top-24 lg:self-start"
+      aria-label="Project facts"
+      i18n-aria-label
+    >
       <ul class="flex flex-col gap-3 text-sm">
         <li>
           <a
@@ -43,7 +51,14 @@
         </li>
         @if (page().project.liveUrl; as liveUrl) {
           <li>
-            <a [href]="liveUrl" target="_blank" rel="noopener" class="text-blue-soft hover:underline" i18n>Live site ↗</a>
+            <a
+              [href]="liveUrl"
+              target="_blank"
+              rel="noopener"
+              class="text-blue-soft hover:underline"
+              i18n
+              >Live site ↗</a
+            >
           </li>
         }
       </ul>
@@ -94,7 +109,9 @@
           <ul class="mt-3 flex max-h-72 flex-col gap-1.5 overflow-y-auto text-sm">
             @for (item of page().detail?.toc ?? []; track item.id) {
               <li [class.pl-4]="item.depth === 3">
-                <a [href]="'#' + item.id" class="text-muted hover:text-text line-clamp-2">{{ item.text }}</a>
+                <a [href]="'#' + item.id" class="text-muted hover:text-text line-clamp-2">{{
+                  item.text
+                }}</a>
               </li>
             }
           </ul>

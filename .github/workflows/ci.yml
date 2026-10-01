@@ -22,6 +22,9 @@ jobs:
       # `npm ci` also runs the postinstall sync, which uses the committed fixture (no token needed in CI).
       - run: npm ci
 
+      - name: Formatting
+        run: npm run format:check
+
       - name: Lint (app, templates, scripts, layer boundaries)
         run: npm run lint
 

@@ -4,8 +4,12 @@
   <p class="text-muted mt-2 text-sm tracking-wide">{{ profile.headlineStack }}</p>
   <p class="text-muted mt-4 max-w-xl">{{ profile.tagline }}</p>
   <div class="mt-10 flex flex-wrap gap-4">
-    <a routerLink="/work" class="bg-text text-void rounded-full px-6 py-3 font-semibold" i18n>View work</a>
-    <a routerLink="/resume" class="border-line hover:border-blue rounded-full border px-6 py-3" i18n>Resume</a>
+    <a routerLink="/work" class="bg-text text-void rounded-full px-6 py-3 font-semibold" i18n
+      >View work</a
+    >
+    <a routerLink="/resume" class="border-line hover:border-blue rounded-full border px-6 py-3" i18n
+      >Resume</a
+    >
     <a
       [href]="profile.cvPath"
       [appTrack]="{ name: 'cv_download' }"
@@ -21,7 +25,9 @@
 @if (featured().length) {
   <section class="mx-auto max-w-6xl px-6 pb-24 md:px-10" aria-labelledby="home-featured">
     <div class="flex items-baseline justify-between gap-4">
-      <h2 id="home-featured" class="text-muted font-mono text-xs tracking-wider uppercase" i18n>Featured work</h2>
+      <h2 id="home-featured" class="text-muted font-mono text-xs tracking-wider uppercase" i18n>
+        Featured work
+      </h2>
       <a routerLink="/work" class="text-blue-soft text-sm hover:underline" i18n>All projects →</a>
     </div>
     <ul class="mt-6 grid gap-6 md:grid-cols-3">
@@ -41,12 +47,49 @@
 }
 
 <section class="mx-auto max-w-6xl px-6 pb-24 md:px-10" aria-labelledby="home-explore">
-  <h2 id="home-explore" class="text-muted font-mono text-xs tracking-wider uppercase" i18n>Explore</h2>
+  <h2 id="home-explore" class="text-muted font-mono text-xs tracking-wider uppercase" i18n>
+    Explore
+  </h2>
   <ul class="mt-6 grid gap-3 sm:grid-cols-2 md:grid-cols-5">
-    <li><a routerLink="/about" class="border-line hover:border-blue block rounded-lg border px-4 py-3" i18n>About</a></li>
-    <li><a routerLink="/experience" class="border-line hover:border-blue block rounded-lg border px-4 py-3" i18n>Experience</a></li>
-    <li><a routerLink="/skills" class="border-line hover:border-blue block rounded-lg border px-4 py-3" i18n>Skills</a></li>
-    <li><a routerLink="/education" class="border-line hover:border-blue block rounded-lg border px-4 py-3" i18n>Education</a></li>
-    <li><a routerLink="/resume" class="border-line hover:border-blue block rounded-lg border px-4 py-3" i18n>Full resume</a></li>
+    <li>
+      <a
+        routerLink="/about"
+        class="border-line hover:border-blue block rounded-lg border px-4 py-3"
+        i18n
+        >About</a
+      >
+    </li>
+    <li>
+      <a
+        routerLink="/experience"
+        class="border-line hover:border-blue block rounded-lg border px-4 py-3"
+        i18n
+        >Experience</a
+      >
+    </li>
+    <li>
+      <a
+        routerLink="/skills"
+        class="border-line hover:border-blue block rounded-lg border px-4 py-3"
+        i18n
+        >Skills</a
+      >
+    </li>
+    <li>
+      <a
+        routerLink="/education"
+        class="border-line hover:border-blue block rounded-lg border px-4 py-3"
+        i18n
+        >Education</a
+      >
+    </li>
+    <li>
+      <a
+        routerLink="/resume"
+        class="border-line hover:border-blue block rounded-lg border px-4 py-3"
+        i18n
+        >Full resume</a
+      >
+    </li>
   </ul>
 </section>

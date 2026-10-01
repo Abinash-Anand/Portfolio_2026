@@ -18,22 +18,57 @@ export const PORTFOLIO_QUERY = /* GraphQL */ `
     isPrivate
     openGraphImageUrl
     usesCustomOpenGraphImage
-    primaryLanguage { name color }
+    primaryLanguage {
+      name
+      color
+    }
     languages(first: 8, orderBy: { field: SIZE, direction: DESC }) {
       totalSize
-      edges { size node { name color } }
+      edges {
+        size
+        node {
+          name
+          color
+        }
+      }
     }
-    repositoryTopics(first: 12) { nodes { topic { name } } }
-    readmeUpper: object(expression: "HEAD:README.md") { ... on Blob { text } }
-    readmeMixed: object(expression: "HEAD:Readme.md") { ... on Blob { text } }
-    readmeLower: object(expression: "HEAD:readme.md") { ... on Blob { text } }
-    manifest: object(expression: "HEAD:portfolio.json") { ... on Blob { text } }
+    repositoryTopics(first: 12) {
+      nodes {
+        topic {
+          name
+        }
+      }
+    }
+    readmeUpper: object(expression: "HEAD:README.md") {
+      ... on Blob {
+        text
+      }
+    }
+    readmeMixed: object(expression: "HEAD:Readme.md") {
+      ... on Blob {
+        text
+      }
+    }
+    readmeLower: object(expression: "HEAD:readme.md") {
+      ... on Blob {
+        text
+      }
+    }
+    manifest: object(expression: "HEAD:portfolio.json") {
+      ... on Blob {
+        text
+      }
+    }
   }
 
   query Portfolio($login: String!) {
     user(login: $login) {
       pinnedItems(first: 6, types: REPOSITORY) {
-        nodes { ... on Repository { ...RepoFields } }
+        nodes {
+          ... on Repository {
+            ...RepoFields
+          }
+        }
       }
       repositories(
         first: 100
@@ -42,7 +77,9 @@ export const PORTFOLIO_QUERY = /* GraphQL */ `
         privacy: PUBLIC
         orderBy: { field: PUSHED_AT, direction: DESC }
       ) {
-        nodes { ...RepoFields }
+        nodes {
+          ...RepoFields
+        }
       }
     }
   }
@@ -68,7 +105,9 @@ export const RawRepoSchema = z.object({
     totalSize: z.number(),
     edges: z.array(z.object({ size: z.number(), node: lang })),
   }),
-  repositoryTopics: z.object({ nodes: z.array(z.object({ topic: z.object({ name: z.string() }) })) }),
+  repositoryTopics: z.object({
+    nodes: z.array(z.object({ topic: z.object({ name: z.string() }) })),
+  }),
   readmeUpper: blob,
   readmeMixed: blob,
   readmeLower: blob,
@@ -110,7 +149,9 @@ export async function fetchRawPortfolio(login: string, token: string): Promise<R
     body: JSON.stringify({ query: PORTFOLIO_QUERY, variables: { login } }),
   });
   if (!response.ok) {
-    throw new Error(`GitHub GraphQL request failed: HTTP ${response.status} ${response.statusText}`);
+    throw new Error(
+      `GitHub GraphQL request failed: HTTP ${response.status} ${response.statusText}`,
+    );
   }
   const body = (await response.json()) as { data?: unknown; errors?: { message: string }[] };
   if (body.errors?.length) {

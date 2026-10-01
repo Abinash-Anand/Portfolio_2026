@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import type { EndpointId, TierId } from '../experience';
 
 /**
  * The only analytics events that exist. A typed union, so a typo or an unplanned property
@@ -7,7 +8,15 @@ import { Injectable } from '@angular/core';
 export type AnalyticsEvent =
   | { readonly name: 'cv_download' }
   | { readonly name: 'project_open'; readonly slug: string }
-  | { readonly name: 'contact_click'; readonly channel: 'email' | 'github' | 'linkedin' | 'instagram' };
+  | {
+      readonly name: 'contact_click';
+      readonly channel: 'email' | 'github' | 'linkedin' | 'instagram';
+    }
+  | { readonly name: 'journey_start' }
+  | { readonly name: 'endpoint_select'; readonly endpoint: EndpointId }
+  | { readonly name: 'journey_skip' }
+  | { readonly name: 'resume_2d_toggle' }
+  | { readonly name: 'tier_change'; readonly tier: TierId };
 
 /**
  * Port: components send events here and know nothing about the provider.

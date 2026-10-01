@@ -14,5 +14,5 @@
     "noEmit": true,
     "types": ["node", "vitest/globals"]
   },
-  "include": ["scripts/**/*.ts", "src/app/data/models.ts", "src/app/content/profile.ts"]
+  "include": ["scripts/**/*.ts", "src/app/data/models.ts", "src/app/content/profile.ts", "src/app/core/design/tokens.ts"]
 }

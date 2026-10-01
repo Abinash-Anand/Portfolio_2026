@@ -59,7 +59,17 @@ export const RESUME: Resume = {
     {
       id: 'languages-frameworks',
       label: 'Languages & Frameworks',
-      items: ['TypeScript', 'JavaScript', 'React', 'Angular', 'Next.js', 'Node.js', 'Express.js', 'NestJS', 'Python'],
+      items: [
+        'TypeScript',
+        'JavaScript',
+        'React',
+        'Angular',
+        'Next.js',
+        'Node.js',
+        'Express.js',
+        'NestJS',
+        'Python',
+      ],
     },
     {
       id: 'data-backend',

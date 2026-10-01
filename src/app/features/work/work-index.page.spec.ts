@@ -14,7 +14,12 @@ describe('WorkIndexPage', () => {
         provideRouter([]),
         provideFixturePortfolio([
           makeProject({ slug: 'feat-ts', title: 'Featured TS', featured: true, languages: [ts] }),
-          makeProject({ slug: 'feat-java', title: 'Featured Java', featured: true, languages: [java] }),
+          makeProject({
+            slug: 'feat-java',
+            title: 'Featured Java',
+            featured: true,
+            languages: [java],
+          }),
           makeProject({ slug: 'old-ts', title: 'Old TS', languages: [ts] }),
           makeProject({ slug: 'old-java', title: 'Old Java', languages: [java] }),
         ]),
@@ -31,13 +36,17 @@ describe('WorkIndexPage', () => {
 
   it('lists featured projects as cards and the rest in the archive', async () => {
     const { el } = await render();
-    expect(titles(el)).toEqual(expect.arrayContaining(['Featured TS', 'Featured Java', 'Old TS', 'Old Java']));
+    expect(titles(el)).toEqual(
+      expect.arrayContaining(['Featured TS', 'Featured Java', 'Old TS', 'Old Java']),
+    );
     expect(el.querySelectorAll('app-project-card')).toHaveLength(2);
   });
 
   it('filters by language with aria-pressed buttons, and toggles the filter off again', async () => {
     const { fixture, el } = await render();
-    const button = [...el.querySelectorAll('button')].find((b) => b.textContent?.trim() === 'Java') as HTMLButtonElement;
+    const button = [...el.querySelectorAll('button')].find(
+      (b) => b.textContent?.trim() === 'Java',
+    ) as HTMLButtonElement;
     expect(button.getAttribute('aria-pressed')).toBe('false');
 
     button.click();

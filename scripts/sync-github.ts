@@ -61,7 +61,9 @@ async function main(): Promise<void> {
       console.warn(`[sync] WARNING: ${message}\n[sync] Falling back to the fixture (sample data).`);
     }
   } else if (!args.has('--fixture') && isProduction) {
-    throw new Error('[sync] PORTFOLIO_GH_TOKEN is required for production builds (refusing to ship sample data).');
+    throw new Error(
+      '[sync] PORTFOLIO_GH_TOKEN is required for production builds (refusing to ship sample data).',
+    );
   }
 
   if (!raw) {

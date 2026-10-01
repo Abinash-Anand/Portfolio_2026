@@ -1,0 +1,11 @@
+<section
+  class="glass-panel max-w-xl px-5 py-4"
+  aria-label="Request monitor, simulated"
+  i18n-aria-label
+>
+  <p class="hud-label mb-3 flex items-center gap-2">
+    <span class="border-muted text-muted rounded-sm border px-1.5 py-0.5">{{ tag }}</span>
+    <span>request monitor</span>
+  </p>
+  <app-typewriter [lines]="lines()" [instant]="instant()" [speedMs]="14" />
+</section>

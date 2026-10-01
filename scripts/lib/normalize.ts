@@ -62,12 +62,19 @@ export async function buildPortfolio(input: BuildInput): Promise<BuildOutput> {
   const warn = (message: string): void => {
     warnings.push(message);
   };
-  const excluded = new Set([input.login.toLowerCase(), ...(input.excluded ?? []).map((n) => n.toLowerCase())]);
+  const excluded = new Set([
+    input.login.toLowerCase(),
+    ...(input.excluded ?? []).map((n) => n.toLowerCase()),
+  ]);
 
   const usingFallback = input.raw.pinned.length === 0 && (input.featuredFallback?.length ?? 0) > 0;
-  const featuredNames = usingFallback ? [...(input.featuredFallback ?? [])] : input.raw.pinned.map((r) => r.name);
+  const featuredNames = usingFallback
+    ? [...(input.featuredFallback ?? [])]
+    : input.raw.pinned.map((r) => r.name);
   if (usingFallback) {
-    warn(`No repositories are pinned on GitHub; featuring the fallback list (${featuredNames.join(', ')}). Pin repos to override it.`);
+    warn(
+      `No repositories are pinned on GitHub; featuring the fallback list (${featuredNames.join(', ')}). Pin repos to override it.`,
+    );
   }
   const pinnedOrder = new Map(featuredNames.map((name, index) => [name, index] as const));
   const seen = new Set<string>();
