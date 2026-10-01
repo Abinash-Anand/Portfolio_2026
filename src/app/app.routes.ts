@@ -28,7 +28,7 @@ export const journeyMatcher: UrlMatcher = (segments) => {
 
 const loadSectionPage = () => import('./features/resume/section.page').then((m) => m.SectionPage);
 
-export const routes: Routes = [
+const pages: Routes = [
   {
     path: '',
     title: 'Abinash Anand — Full-Stack Software Engineer',
@@ -112,5 +112,18 @@ export const routes: Routes = [
     path: '**',
     title: 'Page not found — Abinash Anand',
     loadComponent: () => import('./features/not-found/not-found.page').then((m) => m.NotFoundPage),
+  },
+];
+
+/**
+ * Every page sits under one pathless parent whose resolver waits for the portfolio data. The first navigation
+ * starts while the app starts (it must, so hydration finds the page in place), and without this wait a page
+ * would be built before its data exists: a project page would send the visitor to "not found".
+ */
+export const routes: Routes = [
+  {
+    path: '',
+    resolve: { portfolio: () => inject(PortfolioStore).load() },
+    children: pages,
   },
 ];

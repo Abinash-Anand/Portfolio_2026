@@ -41,9 +41,14 @@ export class PortfolioStore {
       .map(([name]) => name);
   });
 
-  async load(): Promise<void> {
-    if (this.state()) return;
-    this.state.set(await this.repository.getIndex());
+  private loading: Promise<void> | null = null;
+
+  /** Loads the data once; callers that arrive while it loads wait for the same load. */
+  load(): Promise<void> {
+    this.loading ??= this.repository.getIndex().then((index) => {
+      this.state.set(index);
+    });
+    return this.loading;
   }
 
   project(slug: string): Project | undefined {
