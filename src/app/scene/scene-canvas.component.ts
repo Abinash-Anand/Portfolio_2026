@@ -12,8 +12,10 @@ import {
 import { AdaptiveQuality } from '../motion/adaptive-quality';
 import { MotionService } from '../motion/motion.service';
 import {
+  EMPTY_CONTENT,
   SCENE_HOST_FACTORY,
   type RenderTier,
+  type SceneContent,
   type SceneHost,
   type SceneSnapshot,
 } from './scene-host';
@@ -23,7 +25,10 @@ import { SceneRegistry } from './scene-registry';
  * Thin Angular wrapper around a SceneHost (ARCHITECTURE.md S3): it owns the canvas and the lifecycle,
  * pushes COARSE inputs in (snapshot, tier, size) and runs the adaptive-quality governor. Nothing per-frame
  * flows through Angular. The canvas is decorative (`aria-hidden`): all meaning is also in DOM text.
- * The host is created asynchronously, so its implementation can be code-split and lazy-loaded.
+ *
+ * The host is created asynchronously (its implementation is code-split), and anything that goes wrong,
+ * whether the implementation fails to start or the browser later takes the WebGL context away, drops the
+ * visitor to the 2D experience instead of leaving a blank screen.
  */
 @Component({
   selector: 'app-scene-canvas',
@@ -34,6 +39,8 @@ import { SceneRegistry } from './scene-registry';
 export class SceneCanvas {
   readonly snapshot = input.required<SceneSnapshot>();
   readonly tier = input.required<RenderTier>();
+  /** What the rooms are built from; changing it rebuilds the rooms lazily. */
+  readonly content = input<SceneContent>(EMPTY_CONTENT);
 
   private readonly canvas = viewChild.required<ElementRef<HTMLCanvasElement>>('canvas');
   private readonly registry = inject(SceneRegistry);
@@ -53,13 +60,19 @@ export class SceneCanvas {
 
     afterNextRender(async () => {
       const element = this.canvas().nativeElement;
-      const created = await this.createHost();
+
+      let created: SceneHost;
+      try {
+        created = await this.createHost();
+      } catch {
+        if (!destroyed) this.motion.fallBackToStatic();
+        return;
+      }
       if (destroyed) {
         // The page was left while the implementation was still loading.
         created.dispose();
         return;
       }
-      host = created;
 
       created.onFrameTime = (ms) => {
         // A tier the user forced is respected as is; only "auto" is adapted.
@@ -67,10 +80,21 @@ export class SceneCanvas {
         const change = governor.push(ms);
         if (change) this.motion.reportGovernorTier(change);
       };
-      created.setTier(this.tier());
-      created.setSnapshot(this.snapshot());
-      created.mount(element);
-      created.resize(element.clientWidth, element.clientHeight, window.devicePixelRatio || 1);
+      created.onContextLost = () => this.motion.fallBackToStatic();
+
+      try {
+        created.setTier(this.tier());
+        created.setContent?.(this.content());
+        created.setSnapshot(this.snapshot());
+        created.mount(element);
+        created.resize(element.clientWidth, element.clientHeight, window.devicePixelRatio || 1);
+      } catch {
+        // For example: no WebGL, or the driver refused to create a context.
+        created.dispose();
+        this.motion.fallBackToStatic();
+        return;
+      }
+      host = created;
       this.registry.register(created);
 
       const observer = new ResizeObserver(([entry]) => {
@@ -104,6 +128,11 @@ export class SceneCanvas {
     effect(() => {
       const tier = this.tier();
       host?.setTier(tier);
+    });
+
+    effect(() => {
+      const content = this.content();
+      host?.setContent?.(content);
     });
 
     // When the user hands control back to "auto", start the governor fresh from the detected tier.

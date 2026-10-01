@@ -1,4 +1,4 @@
-import type { Routes } from '@angular/router';
+import type { Routes, UrlMatcher } from '@angular/router';
 import { projectPageResolver } from './data/project-page.resolver';
 import { PortfolioStore } from './data/portfolio.store';
 import { inject } from '@angular/core';
@@ -14,6 +14,16 @@ const LEGACY_PROJECT_SLUGS: Readonly<Record<string, string>> = {
 const legacyRedirect = ({ params }: { params: Record<string, string | undefined> }): string => {
   const id = params['id'] ?? '';
   return `/work/${LEGACY_PROJECT_SLUGS[id] ?? id}`;
+};
+
+/**
+ * `/journey` (the console) and `/journey/:endpoint` (a room) are ONE route, so the page, and the 3D world inside it,
+ * stay alive while the visitor moves between rooms, and Back and Forward just change the endpoint it is given.
+ */
+export const journeyMatcher: UrlMatcher = (segments) => {
+  const [first, second] = segments;
+  if (first?.path !== 'journey' || segments.length > 2) return null;
+  return second ? { consumed: segments, posParams: { endpoint: second } } : { consumed: segments };
 };
 
 const loadSectionPage = () => import('./features/resume/section.page').then((m) => m.SectionPage);
@@ -69,7 +79,7 @@ export const routes: Routes = [
   },
   // Preview routes for the experience engine (not linked from the site, not indexed).
   {
-    path: 'journey',
+    matcher: journeyMatcher,
     title: "Experience preview — Packet's Journey",
     loadComponent: () => import('./features/journey/journey.page').then((m) => m.JourneyPage),
   },

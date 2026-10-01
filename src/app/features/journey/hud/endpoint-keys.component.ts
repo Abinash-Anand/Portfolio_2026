@@ -15,7 +15,8 @@ export class EndpointKeys {
   readonly endpoints = input.required<readonly EndpointInfo[]>();
   readonly disabled = input(false);
   readonly selected = output<EndpointId>();
-  readonly hovered = output<void>();
+  /** The visitor is looking at (hovering or focusing) a key: its room can start preparing. */
+  readonly hovered = output<EndpointId>();
 
   protected label(info: EndpointInfo): string {
     return keycapLabel(info);

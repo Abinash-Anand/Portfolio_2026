@@ -40,5 +40,20 @@ export const PROFILE: Profile = {
   ],
 };
 
+/**
+ * The records the database vault "materialises" in the About room (CONCEPT.md Act IV). Wording is the owner's, quoted
+ * from the concept; `STATUS` and `SPECIALIZATION` match the Master CV.
+ */
+export const PROFILE_RECORDS: readonly { readonly key: string; readonly value: string }[] = [
+  { key: 'NAME', value: 'Abinash Anand' },
+  { key: 'ROLE', value: 'Full-Stack Software Engineer' },
+  { key: 'LOCATION', value: 'Stuttgart, Germany' },
+  { key: 'STATUS', value: 'Enrolled in M.Sc. Software Technology @ HFT Stuttgart' },
+  {
+    key: 'SPECIALIZATION',
+    value: 'Software Architecture, Distributed Systems & Agentic Workflows',
+  },
+];
+
 /** GitHub account the portfolio is synced from (see scripts/sync-github.ts). */
 export const GITHUB_LOGIN = 'Abinash-Anand';

@@ -131,6 +131,50 @@ describe('JourneyService', () => {
     expect(audio.play).toHaveBeenCalledWith('arrive');
   });
 
+  it('opens a room directly for a link, and leaves it for the console on Back', () => {
+    const { service, track } = setup();
+    service.open('skills');
+    expect(service.kind()).toBe('room');
+    expect(service.endpoint()).toBe('skills');
+    expect(track).toHaveBeenCalledWith({ name: 'room_arrive', endpoint: 'skills', how: 'direct' });
+    expect(track).not.toHaveBeenCalledWith(expect.objectContaining({ name: 'endpoint_select' }));
+
+    service.leave();
+    expect(service.kind()).toBe('console');
+  });
+
+  it('records how each room was reached: journey, skip, or direct', () => {
+    const { service, track } = setup();
+    service.enter();
+    service.select('about');
+    vi.advanceTimersByTime(MOTION.journeyMs.first);
+    expect(track).toHaveBeenCalledWith({ name: 'room_arrive', endpoint: 'about', how: 'journey' });
+
+    service.toConsole();
+    service.select('skills');
+    service.skip();
+    expect(track).toHaveBeenCalledWith({ name: 'room_arrive', endpoint: 'skills', how: 'skip' });
+  });
+
+  it('counts a room reached with no travelling (reduced motion) as direct', () => {
+    const { service, track } = setup(true);
+    service.enter();
+    service.select('projects');
+    expect(service.kind()).toBe('room');
+    expect(track).toHaveBeenCalledWith({
+      name: 'room_arrive',
+      endpoint: 'projects',
+      how: 'direct',
+    });
+  });
+
+  it('counts a room only once it is reached, never while travelling', () => {
+    const { service, track } = setup();
+    service.enter();
+    service.select('about');
+    expect(track).not.toHaveBeenCalledWith(expect.objectContaining({ name: 'room_arrive' }));
+  });
+
   it('reset() returns to boot and clears timers', () => {
     const { service } = setup();
     service.enter();

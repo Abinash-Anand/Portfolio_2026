@@ -3,6 +3,7 @@ import type { Capabilities } from '../motion/capabilities';
 import { CAPABILITY_PROBE, MotionService } from '../motion/motion.service';
 import { SceneCanvas } from './scene-canvas.component';
 import {
+  EMPTY_CONTENT,
   SCENE_HOST_FACTORY,
   type SceneHost,
   type SceneSnapshot,
@@ -29,6 +30,7 @@ class FakeHost implements SceneHost {
   pause = vi.fn();
   resume = vi.fn();
   dispose = vi.fn();
+  setContent = vi.fn();
   stats = vi.fn((): SceneStats => ({
     engine: 'FAKE',
     fps: 60,
@@ -98,6 +100,28 @@ describe('SceneCanvas', () => {
 
     expect(host.setSnapshot).toHaveBeenLastCalledWith({ phase: 'journey', endpoint: 'about' });
     expect(host.setTier).toHaveBeenLastCalledWith('low');
+  });
+
+  it('hands the host its content before it mounts, and again whenever the content changes', async () => {
+    const { host, fixture } = setup();
+    await mounted(host);
+    expect(host.setContent).toHaveBeenCalledWith(EMPTY_CONTENT); // nothing supplied: the empty content
+    expect(host.setContent.mock.invocationCallOrder[0]!).toBeLessThan(
+      host.mount.mock.invocationCallOrder[0]!,
+    );
+
+    const content = { ...EMPTY_CONTENT, records: [{ key: 'NAME', value: 'x' }] };
+    fixture.componentRef.setInput('content', content);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(host.setContent).toHaveBeenLastCalledWith(content);
+  });
+
+  it('works with a host that has no rooms to build (the optional content hook is absent)', async () => {
+    const { host } = setup();
+    (host as { setContent?: unknown }).setContent = undefined;
+    await mounted(host);
+    expect(host.mount).toHaveBeenCalled();
   });
 
   it('pauses when the tab is hidden and resumes when it is visible again', async () => {
