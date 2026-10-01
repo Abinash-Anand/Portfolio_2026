@@ -12,9 +12,9 @@ import {
   PreloadAllModules,
   provideRouter,
   withComponentInputBinding,
+  withEnabledBlockingInitialNavigation,
   withInMemoryScrolling,
   withPreloading,
-  withViewTransitions,
 } from '@angular/router';
 
 import { provideClientHydration } from '@angular/platform-browser';
@@ -35,8 +35,10 @@ export const appConfig: ApplicationConfig = {
     provideBrowserGlobalErrorListeners(),
     provideRouter(
       routes,
+      // Resolves the first (lazy) route before the app starts, so hydration finds the page's content in place
+      // instead of an empty outlet, which blanks the page until the chunk arrives (a layout shift of 1.0).
+      withEnabledBlockingInitialNavigation(),
       withComponentInputBinding(),
-      withViewTransitions(),
       withInMemoryScrolling({ scrollPositionRestoration: 'enabled', anchorScrolling: 'enabled' }),
       withPreloading(PreloadAllModules),
     ),

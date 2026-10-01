@@ -60,6 +60,7 @@ jobs:
           name: lighthouse-reports
           path: .lighthouseci
           if-no-files-found: ignore
+          include-hidden-files: true
 
       - name: Audit production dependencies
         run: npm audit --omit=dev --audit-level=high
