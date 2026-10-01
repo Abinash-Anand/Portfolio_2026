@@ -1,0 +1,25 @@
+name: Scheduled deploy
+
+# The site reads GitHub data at BUILD time (scripts/sync-github.ts), so new or changed repositories
+# appear after the next build. This workflow asks Vercel for one every day, or on demand.
+on:
+  schedule:
+    - cron: '17 5 * * *'
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Vercel deploy hook
+        env:
+          VERCEL_DEPLOY_HOOK: ${{ secrets.VERCEL_DEPLOY_HOOK }}
+        run: |
+          if [ -z "$VERCEL_DEPLOY_HOOK" ]; then
+            echo "::warning::The VERCEL_DEPLOY_HOOK secret is not set; no deploy was triggered."
+            exit 0
+          fi
+          curl --fail --silent --show-error --request POST "$VERCEL_DEPLOY_HOOK"
+          echo "Deploy hook triggered."

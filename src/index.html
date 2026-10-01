@@ -1,14 +1,30 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8">
-  <title>Abinash.Dev</title>
-  <base href="/">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" type="image/x-icon" href="favicon.ico">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
-</head>
-<body>
-  <app-root></app-root>
-</body>
+  <head>
+    <meta charset="utf-8" />
+    <title>Abinash Anand — Full-Stack Software Engineer</title>
+    <base href="/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Portfolio of Abinash Anand — TypeScript-focused full-stack software engineer (React, Angular, Node.js, NestJS) based in Stuttgart."
+    />
+    <meta name="theme-color" content="#0a0d12" />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <script>
+      // Runs before first paint. Hidden/animated initial states in CSS are gated on
+      // `html.motion-ok`, so reduced-motion users and no-JS visitors always see content.
+      (function () {
+        var root = document.documentElement;
+        root.classList.add('js');
+        if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          root.classList.add('motion-ok');
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <app-root></app-root>
+    <noscript>This site needs JavaScript. GitHub: https://github.com/Abinash-Anand</noscript>
+  </body>
 </html>

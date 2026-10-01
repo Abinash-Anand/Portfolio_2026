@@ -1,13 +1,16 @@
-import { Component, signal } from '@angular/core';
-import { Homepage } from './component/homepage/homepage';
-import { RouterOutlet } from '@angular/router';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { PROFILE } from './content/profile';
+import { PortfolioStore } from './data/portfolio.store';
+import { TrackDirective } from './shared/directives/track.directive';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, TrackDirective],
   templateUrl: './app.html',
-  styleUrl: './app.css'
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class App {
-  protected readonly title = signal('Portfolio_2026');
+  protected readonly profile = PROFILE;
+  protected readonly store = inject(PortfolioStore);
 }

@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      # `npm ci` also runs the postinstall sync, which uses the committed fixture (no token needed in CI).
+      - run: npm ci
+
+      - name: Lint (app, templates, scripts, layer boundaries)
+        run: npm run lint
+
+      - name: Type-check build scripts
+        run: npm run typecheck:scripts
+
+      - name: Test build scripts
+        run: npm run test:scripts
+
+      - name: Test app
+        run: npm test -- --no-watch
+
+      # Fails on size-budget errors (angular.json). Uses the fixture, so CI never depends on the GitHub API.
+      - name: Build
+        run: npm run build
+
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --audit-level=high

@@ -42,3 +42,6 @@ __screenshots__/
 # System files
 .DS_Store
 Thumbs.db
+
+# Build-time generated data (scripts/sync-github.ts)
+/src/generated
