@@ -1,0 +1,74 @@
+<article class="mx-auto max-w-4xl px-6 pt-32 pb-24 md:px-10">
+  <header>
+    <h1 class="font-display text-4xl font-bold tracking-tight md:text-6xl">{{ profile.name }}</h1>
+    <p class="mt-3 text-xl">{{ profile.role }}</p>
+    <p class="text-muted mt-1 text-sm tracking-wide">{{ profile.headlineStack }}</p>
+
+    <ul class="mt-6 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm print:hidden" aria-label="Contact" i18n-aria-label>
+      <li>
+        <a
+          [href]="'mailto:' + profile.email"
+          [appTrack]="{ name: 'contact_click', channel: 'email' }"
+          class="text-blue-soft hover:underline"
+        >
+          {{ profile.email }}
+        </a>
+      </li>
+      @for (social of profile.socials; track social.id) {
+        @if (social.id !== 'instagram') {
+          <li>
+            <a
+              [href]="social.href"
+              [appTrack]="{ name: 'contact_click', channel: social.id }"
+              target="_blank"
+              rel="noopener"
+              class="text-blue-soft hover:underline"
+            >
+              {{ social.label }}
+            </a>
+          </li>
+        }
+      }
+      <li>
+        <a
+          [href]="profile.cvPath"
+          [appTrack]="{ name: 'cv_download' }"
+          download
+          class="border-blue text-blue-soft hover:bg-blue/10 rounded-full border px-4 py-1.5"
+          i18n
+        >
+          Download CV (PDF)
+        </a>
+      </li>
+    </ul>
+  </header>
+
+  <section class="mt-14" aria-labelledby="resume-summary">
+    <h2 id="resume-summary" class="text-muted font-mono text-xs tracking-wider uppercase" i18n>Summary</h2>
+    <p class="mt-4 leading-relaxed">{{ resume.summary }}</p>
+  </section>
+
+  <section class="mt-14" aria-labelledby="resume-skills">
+    <h2 id="resume-skills" class="text-muted font-mono text-xs tracking-wider uppercase" i18n>Skills</h2>
+    <div class="mt-6">
+      <app-skills-section [groups]="resume.skills" [spoken]="resume.spoken" [level]="3" />
+    </div>
+  </section>
+
+  <section class="mt-14" aria-labelledby="resume-experience">
+    <h2 id="resume-experience" class="text-muted font-mono text-xs tracking-wider uppercase" i18n>Experience</h2>
+    <div class="mt-6"><app-experience-section [entries]="resume.experience" [level]="3" /></div>
+  </section>
+
+  <section class="mt-14" aria-labelledby="resume-projects">
+    <h2 id="resume-projects" class="text-muted font-mono text-xs tracking-wider uppercase" i18n>Projects</h2>
+    <div class="mt-6">
+      <app-projects-section [entries]="resume.projects" [knownSlugs]="knownSlugs()" [level]="3" />
+    </div>
+  </section>
+
+  <section class="mt-14" aria-labelledby="resume-education">
+    <h2 id="resume-education" class="text-muted font-mono text-xs tracking-wider uppercase" i18n>Education</h2>
+    <div class="mt-6"><app-education-section [entries]="resume.education" [level]="3" /></div>
+  </section>
+</article>

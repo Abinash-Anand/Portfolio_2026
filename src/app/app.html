@@ -1,1 +1,69 @@
-<router-outlet></router-outlet>
+<a
+  href="#main"
+  class="bg-text text-void sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-60 focus:rounded-md focus:px-4 focus:py-2 print:hidden"
+  i18n
+>
+  Skip to content
+</a>
+
+<header class="fixed inset-x-0 top-0 z-40 flex items-center justify-between px-6 py-5 md:px-10 print:hidden">
+  <a routerLink="/" class="font-display text-lg font-bold tracking-tight" aria-label="Home" i18n-aria-label>AA</a>
+  <nav aria-label="Primary" i18n-aria-label class="flex gap-6 text-sm">
+    <a
+      routerLink="/work"
+      routerLinkActive="text-text"
+      ariaCurrentWhenActive="page"
+      class="text-muted hover:text-text"
+      i18n
+    >
+      Work
+    </a>
+    <a
+      routerLink="/resume"
+      routerLinkActive="text-text"
+      ariaCurrentWhenActive="page"
+      class="text-muted hover:text-text"
+      i18n
+    >
+      Resume
+    </a>
+    <a
+      [href]="'mailto:' + profile.email"
+      [appTrack]="{ name: 'contact_click', channel: 'email' }"
+      class="text-muted hover:text-text"
+      i18n
+    >
+      Contact
+    </a>
+  </nav>
+</header>
+
+<main id="main" tabindex="-1">
+  <router-outlet />
+</main>
+
+<footer class="border-line mt-12 border-t px-6 py-10 md:px-10 print:hidden">
+  <div class="text-muted mx-auto flex max-w-6xl flex-col gap-6 text-sm md:flex-row md:items-center md:justify-between">
+    <p>© 2026 {{ profile.name }}</p>
+    <ul class="flex flex-wrap gap-6">
+      @for (social of profile.socials; track social.id) {
+        <li>
+          <a
+            [href]="social.href"
+            [appTrack]="{ name: 'contact_click', channel: social.id }"
+            target="_blank"
+            rel="noopener"
+            class="hover:text-text"
+          >
+            {{ social.label }}
+          </a>
+        </li>
+      }
+    </ul>
+  </div>
+  @if (store.source() === 'fixture') {
+    <p role="status" class="text-yellow mx-auto mt-6 max-w-6xl font-mono text-xs" i18n>
+      Showing sample GitHub data: no token was configured at build time.
+    </p>
+  }
+</footer>

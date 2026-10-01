@@ -1,0 +1,1008 @@
+{
+  "user": {
+    "pinnedItems": {
+      "nodes": []
+    },
+    "repositories": {
+      "nodes": [
+        {
+          "name": "SynthGraph",
+          "description": null,
+          "url": "https://github.com/Abinash-Anand/SynthGraph",
+          "homepageUrl": "synthgraph.dev",
+          "stargazerCount": 1,
+          "pushedAt": "2026-09-30T09:34:26Z",
+          "isArchived": false,
+          "isFork": false,
+          "isPrivate": false,
+          "openGraphImageUrl": "https://opengraph.githubassets.com/8cfe9bdaf63e4465bf205dfec8d236c80ec971acdefc9d942f4b5c6cddaf6ed0/Abinash-Anand/SynthGraph",
+          "usesCustomOpenGraphImage": false,
+          "primaryLanguage": {
+            "name": "TypeScript",
+            "color": "#3178c6"
+          },
+          "languages": {
+            "totalSize": 1928543,
+            "edges": [
+              {
+                "size": 1366758,
+                "node": {
+                  "name": "TypeScript",
+                  "color": "#3178c6"
+                }
+              },
+              {
+                "size": 544747,
+                "node": {
+                  "name": "Python",
+                  "color": "#3572A5"
+                }
+              },
+              {
+                "size": 8984,
+                "node": {
+                  "name": "JavaScript",
+                  "color": "#f1e05a"
+                }
+              },
+              {
+                "size": 5911,
+                "node": {
+                  "name": "CSS",
+                  "color": "#663399"
+                }
+              },
+              {
+                "size": 2143,
+                "node": {
+                  "name": "Dockerfile",
+                  "color": "#384d54"
+                }
+              }
+            ]
+          },
+          "repositoryTopics": {
+            "nodes": []
+          },
+          "readmeUpper": {
+            "text": "# SynthGraph\n\n[![CI](https://github.com/Abinash-Anand/SynthGraph/actions/workflows/ci.yml/badge.svg)](https://github.com/Abinash-Anand/SynthGraph/actions/workflows/ci.yml)\n[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)\n\n**A data lineage system for synthetic training data.**\n\nSynthGraph connects the parts of a synthetic-data pipeline that most tooling never links together: which generator produced a dataset, with which seed and parameters, which training run consumed that dataset, and which evaluation scored the result. When a model misbehaves, you trace it back through that chain instead of guessing.\n\n## Why\n\nWeights & Biases and MLflow track training runs and metrics well. Neither has a concept of what happened *before* the dataset — the procedural generator, the domain-randomization bounds, the seed that produced the data a model trained on. For synthetic-data and simulation-to-real pipelines (robotics, 3D computer vision, procedural generation), that upstream step is often exactly where a sim-to-real failure originates, and it's the gap SynthGraph fills.\n\n## What it does\n\n- **Lineage graph** — generation → dataset version → training run → evaluation, as one connected, queryable graph instead of scattered logs.\n- **Generation comparison** — diff two generations' parameters side by side to see exactly what changed between a working run and a broken one.\n- **Reproduction manifest** — records the git commit, working-tree dirty state, and environment (OS, Python version, installed packages) a generation ran under.\n- **Reports** — capture-completeness, parameter/metric correlation, best-runs leaderboard, and drift detection across training runs.\n\n## What it deliberately doesn't do (yet)\n\n- **No engine integration.** The SDK doesn't hook into Blender, MuJoCo, Isaac Sim, or any other engine — it's a thin client. Your script calls `log_generation(generator=..., parameters={...})` with whatever it wants; SynthGraph never reaches into a running process.\n- **No fixed parameter schema.** `parameters` is a free-form JSON object today, not typed fields for things like camera distortion or physics variables.\n- **No data storage.** SynthGraph never touches dataset bytes, render frames, or model weights. It stores lightweight metadata, caller-supplied checksums, and URIs — where those URIs point (S3, R2, a local disk) is entirely up to you.\n\n## Repository structure\n\n- [`synthgraph-backend/`](synthgraph-backend) - NestJS API (TypeScript, PostgreSQL via TypeORM)\n- [`synthgraph-frontend/`](synthgraph-frontend) - Next.js dashboard and marketing site\n- [`sdk/`](sdk) - Python SDK\n- [`synthgraph-sdk-cli/`](synthgraph-sdk-cli) - Python CLI built on the SDK\n- [`docs/`](docs) - Architecture and design notes\n- `docker-compose.yml` - Postgres + backend + frontend, for a one-command local stack\n\n## Quick start\n\n```bash\ndocker compose up --build\n```\n\nThis starts Postgres, the backend at `http://localhost:3000`, and the\nfrontend at `http://localhost:3001`. The backend's auto-generated API\nreference is at `http://localhost:3000/docs`.\n\nFor running each piece individually, or the test suites, see\n[CONTRIBUTING.md](CONTRIBUTING.md).\n\n## Contributing\n\nContributions are welcome - see [CONTRIBUTING.md](CONTRIBUTING.md) for local\nsetup, testing, and PR conventions.\n\n## Security\n\nFound a vulnerability? Please see [SECURITY.md](SECURITY.md) rather than\nopening a public issue.\n\n## License\n\n[MIT](LICENSE)\n"
+          },
+          "readmeMixed": null,
+          "readmeLower": null,
+          "manifest": null
+        },
+        {
+          "name": "code-sentinel",
+          "description": null,
+          "url": "https://github.com/Abinash-Anand/code-sentinel",
+          "homepageUrl": null,
+          "stargazerCount": 0,
+          "pushedAt": "2026-09-16T20:12:36Z",
+          "isArchived": false,
+          "isFork": false,
+          "isPrivate": false,
+          "openGraphImageUrl": "https://opengraph.githubassets.com/cc1f0decad9e885fe26d61fdd65549d72da029d259fdbc6f3421392ba7cec85a/Abinash-Anand/code-sentinel",
+          "usesCustomOpenGraphImage": false,
+          "primaryLanguage": {
+            "name": "TypeScript",
+            "color": "#3178c6"
+          },
+          "languages": {
+            "totalSize": 237588,
+            "edges": [
+              {
+                "size": 210177,
+                "node": {
+                  "name": "TypeScript",
+                  "color": "#3178c6"
+                }
+              },
+              {
+                "size": 21493,
+                "node": {
+                  "name": "HTML",
+                  "color": "#e34c26"
+                }
+              },
+              {
+                "size": 4418,
+                "node": {
+                  "name": "JavaScript",
+                  "color": "#f1e05a"
+                }
+              },
+              {
+                "size": 1500,
+                "node": {
+                  "name": "CSS",
+                  "color": "#663399"
+                }
+              }
+            ]
+          },
+          "repositoryTopics": {
+            "nodes": []
+          },
+          "readmeUpper": {
+            "text": "# CodeSentinel\n\nAn Angular-based Security Analysis Workbench for exploring static and dynamic\nsecurity-analysis results from external engines such as SonarQube and OWASP ZAP.\n\nThis is the M0 bootstrap: an Angular 21 standalone application with routing,\nTailwind CSS, strict TypeScript, ESLint, and Vitest configured. No business\nfeatures are implemented yet — see `docs/architecture/` for the target\narchitecture.\n\n## Development server\n\n```bash\nnpm start\n```\n\nThen open `http://localhost:4200/`.\n\n## Lint\n\n```bash\nnpm run lint\n```\n\n## Unit tests\n\n```bash\nnpm test\n```\n\n## Production build\n\n```bash\nnpm run build\n```\n\nBuild artifacts are written to `dist/`.\n"
+          },
+          "readmeMixed": null,
+          "readmeLower": null,
+          "manifest": null
+        },
+        {
+          "name": "Stuttgart-Mobility",
+          "description": null,
+          "url": "https://github.com/Abinash-Anand/Stuttgart-Mobility",
+          "homepageUrl": null,
+          "stargazerCount": 0,
+          "pushedAt": "2026-09-14T21:18:08Z",
+          "isArchived": false,
+          "isFork": false,
+          "isPrivate": false,
+          "openGraphImageUrl": "https://opengraph.githubassets.com/310b6f74dc70a12a459215701a50580758b201e04d370212cfb501c82f385de6/Abinash-Anand/Stuttgart-Mobility",
+          "usesCustomOpenGraphImage": false,
+          "primaryLanguage": {
+            "name": "TypeScript",
+            "color": "#3178c6"
+          },
+          "languages": {
+            "totalSize": 1646,
+            "edges": [
+              {
+                "size": 685,
+                "node": {
+                  "name": "TypeScript",
+                  "color": "#3178c6"
+                }
+              },
+              {
+                "size": 591,
+                "node": {
+                  "name": "JavaScript",
+                  "color": "#f1e05a"
+                }
+              },
+              {
+                "size": 370,
+                "node": {
+                  "name": "HTML",
+                  "color": "#e34c26"
+                }
+              }
+            ]
+          },
+          "repositoryTopics": {
+            "nodes": []
+          },
+          "readmeUpper": {
+            "text": "# React + TypeScript + Vite\n\nThis template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.\n\nCurrently, two official plugins are available:\n\n- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)\n- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)\n\n## React Compiler\n\nThe React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).\n\n## Expanding the ESLint configuration\n\nIf you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:\n\n```js\nexport default defineConfig([\n  globalIgnores(['dist']),\n  {\n    files: ['**/*.{ts,tsx}'],\n    extends: [\n      // Other configs...\n\n      // Remove tseslint.configs.recommended and replace with this\n      tseslint.configs.recommendedTypeChecked,\n      // Alternatively, use this for stricter rules\n      tseslint.configs.strictTypeChecked,\n      // Optionally, add this for stylistic rules\n      tseslint.configs.stylisticTypeChecked,\n\n      // Other configs...\n    ],\n    languageOptions: {\n      parserOptions: {\n        project: ['./tsconfig.node.json', './tsconfig.app.json'],\n        tsconfigRootDir: import.meta.dirname,\n      },\n      // other options...\n    },\n  },\n])\n\n```\n\nYou can also install [eslint-plugin-react-x](https://npmx.dev/package/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://npmx.dev/package/eslint-plugin-react-dom) for React-specific lint rules:\n\n```js\n// eslint.config.js\nimport reactX from 'eslint-plugin-react-x'\nimport reactDom from 'eslint-plugin-react-dom'\n\nexport default defineConfig([\n  globalIgnores(['dist']),\n  {\n    files: ['**/*.{ts,tsx}'],\n    extends: [\n      // Other configs...\n      // Enable lint rules for React\n      reactX.configs['recommended-typescript'],\n      // Enable lint rules for React DOM\n      reactDom.configs.recommended,\n    ],\n    languageOptions: {\n      parserOptions: {\n        project: ['./tsconfig.node.json', './tsconfig.app.json'],\n        tsconfigRootDir: import.meta.dirname,\n      },\n      // other options...\n    },\n  },\n])\n\n```\n"
+          },
+          "readmeMixed": null,
+          "readmeLower": null,
+          "manifest": null
+        },
+        {
+          "name": "Abinash-Anand",
+          "description": "My Reedme page.....!",
+          "url": "https://github.com/Abinash-Anand/Abinash-Anand",
+          "homepageUrl": null,
+          "stargazerCount": 0,
+          "pushedAt": "2026-08-19T12:15:10Z",
+          "isArchived": false,
+          "isFork": false,
+          "isPrivate": false,
+          "openGraphImageUrl": "https://opengraph.githubassets.com/0764ececdad3abe1296d6841bf1bbbd841039e02b9851964f401b0cd5801f8d4/Abinash-Anand/Abinash-Anand",
+          "usesCustomOpenGraphImage": false,
+          "primaryLanguage": null,
+          "languages": {
+            "totalSize": 0,
+            "edges": []
+          },
+          "repositoryTopics": {
+            "nodes": []
+          },
+          "readmeUpper": {
+            "text": "<h1 align=\"center\">Hallo, ich heiße Abinash Anand 👋</h1>\n\n<p align=\"center\">\n\n<!-- <img\n  src=\"./sovereign-mutants-and-mastermind.gif\"\n  width=\"100%\"\n  alt=\"Cinematic system transition\"\n/> -->\n\n</p>\n\n<p align=\"center\">\n  <img\n    src=\"./killjoy-thankyou.gif\"\n    width=\"220\"\n    alt=\"Killjoy\"\n  />\n</p>\n\n<p align=\"center\">\n  <img\n    src=\"https://readme-typing-svg.demolab.com?font=JetBrains+Mono&size=17&duration=2200&pause=600&color=D7FF2F&center=true&vCenter=true&width=900&lines=SOFTWARE+ENGINEER+%7C+SYSTEM+BUILDER.;FRONTEND+%C3%97+BACKEND+%C3%97+AI.;FROM+INTERFACES+TO+ARCHITECTURE.;BUILDING+SYSTEMS%2C+NOT+JUST+FEATURES.\"\n    alt=\"Typing animation\"\n  />\n</p>\n\n<p align=\"center\">\n  <img\n    src=\"https://komarev.com/ghpvc/?username=Abinash-Anand&style=for-the-badge&color=D7FF2F&label=VISITORS\"\n    alt=\"Profile views\"\n  />\n</p>\n\n---\n\n<h2>SYSTEM STATUS</h2>\n\n<table>\n<tr>\n\n<td width=\"50%\" valign=\"top\">\n\n```text\n╭────────────────────────────────────╮\n│ USER        ABINASH ANAND          │\n│ ROLE        SOFTWARE ENGINEER      │\n│ BASE        STUTTGART, DE          │\n│ STATUS      ● ONLINE               │\n│ MODE        BUILD                  │\n│ CURRENT     SOFTWARE × AI          │\n╰────────────────────────────────────╯\n```\n\n</td>\n\n<td width=\"50%\" valign=\"top\">\n\n### `MISSION DIRECTIVE`\n\nI build software from the **interface down to the architecture and systems that make it work.**\n\nMy foundation is in frontend and modern web development, with hands-on experience across backend development, APIs, databases, CI/CD and containerized applications.\n\nI'm increasingly interested in the layer beyond individual features:\n\n**How should the whole system be designed?**\n\n</td>\n\n</tr>\n</table>\n\n<!-- <p align=\"center\">\n  <img\n    src=\"./wave.svg\"\n    width=\"100%\"\n    alt=\"Animated telemetry wave\"\n  />\n</p> -->\n\n---\n\n<h2>🧠 CURRENTLY INSIDE THE WORKSHOP</h2>\n\n<table>\n<tr>\n\n<td width=\"33%\" valign=\"top\">\n\n### 🎨 FRONTEND\n\n```text\nREACT\nANGULAR\nTYPESCRIPT\nUI ARCHITECTURE\n```\n\nMy engineering foundation.\n\nI care about building interfaces that are not only usable, but supported by clean architecture and maintainable code.\n\n</td>\n\n<td width=\"33%\" valign=\"top\">\n\n### 🤖 AI ENGINEERING\n\n```text\nLLMs\nAI AGENTS\nRAG\nSTRUCTURED OUTPUTS\n```\n\nI'm exploring how models, data, APIs, tools and agents can become reliable parts of real software instead of another chatbot demo.\n\n</td>\n\n<td width=\"33%\" valign=\"top\">\n\n### ⚙️ SYSTEMS\n\n```text\nNODE.JS\nNESTJS\nDOCKER\nREST APIs\n```\n\nI'm going deeper into software architecture, distributed systems and the engineering decisions that determine how applications behave beyond localhost.\n\n</td>\n\n</tr>\n</table>\n\n<p align=\"center\">\n  <img\n    src=\"./tanjiro-demon-slayer.gif\"\n    width=\"180\"\n    alt=\"Tanjiro checking the workshop\"\n  />\n</p>\n\n<p align=\"center\">\n  <sub>\n    <i>Checking whether the architecture survived the latest experiment...</i>\n  </sub>\n</p>\n\n---\n\n<h2>⚔️ AGENT LOADOUT</h2>\n\n<p align=\"center\">\n\n<img\n  src=\"https://skillicons.dev/icons?i=java,js,ts,html,css,react,angular,nodejs,nestjs,express,mongodb,mysql,docker,git,github,figma&perline=8\"\n  alt=\"Technology stack\"\n/>\n\n</p>\n\n<p align=\"center\">\n\n<code>LANGUAGES</code>\n&nbsp;·&nbsp;\n<code>FRONTEND</code>\n&nbsp;·&nbsp;\n<code>BACKEND</code>\n&nbsp;·&nbsp;\n<code>DATA</code>\n&nbsp;·&nbsp;\n<code>INFRASTRUCTURE</code>\n\n</p>\n\n<p align=\"center\">\n  <img\n    src=\"./zenitsu-demon-slayer.gif\"\n    width=\"300\"\n    alt=\"Zenitsu losing his mind\"\n  />\n</p>\n\n<p align=\"center\">\n  <sub>\n    <i>\n      Me discovering that \"just one more technology\" has somehow become an entire learning roadmap.\n    </i>\n  </sub>\n</p>\n\n---\n\n<h2>🧬 ENGINEERING DNA</h2>\n\n<table>\n\n<tr>\n\n<td width=\"50%\" valign=\"top\">\n\n### `01` LEARN\n\nI don't want to just know how to use a technology.\n\nI want to understand **why it works, where it fits, and what trade-offs come with it.**\n\n</td>\n\n<td width=\"50%\" valign=\"top\">\n\n### `02` BUILD\n\nThe fastest way I learn is by building something real.\n\nProjects expose the gaps that tutorials politely hide.\n\n</td>\n\n</tr>\n\n<tr>\n\n<td width=\"50%\" valign=\"top\">\n\n### `03` QUESTION\n\nA feature can work and still be badly designed.\n\nI care about asking what happens when the system grows, fails, changes, or has to be maintained by someone else.\n\n</td>\n\n<td width=\"50%\" valign=\"top\">\n\n### `04` SHARE\n\nI believe in learning in public.\n\nBuild it. Break it. Understand it. Share what happened and why the decisions mattered.\n\n</td>\n\n</tr>\n\n</table>\n\n---\n\n<p align=\"center\">\n\n<img\n  src=\"./anim.gif\"\n  width=\"320\"\n  alt=\"Locked in\"\n/>\n\n</p>\n\n<p align=\"center\">\n  <sub>\n    <b>MODE SWITCH: ARCHITECTURE BRAIN ONLINE</b>\n  </sub>\n</p>\n\n---\n\n<p align=\"center\">\n\n<!-- <img\n  src=\"./telemetry.svg\"\n  width=\"75%\"\n  alt=\"Killjoy workshop telemetry\"\n/> -->\n\n</p>\n\n---\n\n<h2>🎯 ACTIVE QUESTS</h2>\n\n```text\n╭──────────────────────────────────────────────────────────╮\n│                                                          │\n│  SOFTWARE ENGINEERING     █████████░░   DEEPENING        │\n│                                                          │\n│  FRONTEND ARCHITECTURE    ████████░░░   ACTIVE           │\n│                                                          │\n│  AI ENGINEERING           ███████░░░░   EXPLORING        │\n│                                                          │\n│  SOFTWARE ARCHITECTURE    ██████░░░░░   DEEPENING        │\n│                                                          │\n│  DISTRIBUTED SYSTEMS      █████░░░░░░   LOADING          │\n│                                                          │\n╰──────────────────────────────────────────────────────────╯\n```\n\n<p align=\"center\">\n\n<img\n  src=\"./tokito-yippee.gif\"\n  width=\"190\"\n  alt=\"Tokito celebrating\"\n/>\n\n</p>\n\n<p align=\"center\">\n  <sub>\n    <i>\n      When the trade-off finally makes sense.\n    </i>\n  </sub>\n</p>\n\n---\n\n<h2>🛠️ WORKSHOP PROTOCOL</h2>\n\n<p align=\"center\">\n\n```text\n┌─────────┐      ┌─────────┐      ┌─────────┐      ┌─────────────┐      ┌─────────┐\n│  LEARN  │ ───▶ │  BUILD  │ ───▶ │  TEST   │ ───▶ │  UNDERSTAND │ ───▶ │  SHARE  │\n└─────────┘      └─────────┘      └─────────┘      └─────────────┘      └─────────┘\n     ▲                                                                          │\n     │                                                                          │\n     └──────────────────────────────────────────────────────────────────────────┘\n```\n\n</p>\n\n> My approach is simple: learn → build → understand → test the trade-offs → share.\n\n<p align=\"center\">\n\n<img\n  src=\"./wave.svg\"\n  width=\"100%\"\n  alt=\"Animated telemetry wave\"\n/>\n\n</p>\n\n---\n\n<h2>🌐 OPEN CHANNELS</h2>\n\n<p align=\"center\">\n\n<img\n  src=\"./giphy.gif\"\n  width=\"180\"\n  alt=\"Workshop communication\"\n/>\n\n</p>\n\n<p align=\"center\">\n  <sub>\n    <i>Signal detected. Choose your channel.</i>\n  </sub>\n</p>\n\n<p align=\"center\">\n\n<a href=\"https://www.linkedin.com/in/abinash-anand-064598203/\">\n  <img\n    src=\"https://img.shields.io/badge/LINKEDIN-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white\"\n    alt=\"LinkedIn\"\n  />\n</a>\n\n<a href=\"https://dev.to/abinashanand\">\n  <img\n    src=\"https://img.shields.io/badge/DEV-111111?style=for-the-badge&logo=dev.to&logoColor=white\"\n    alt=\"DEV\"\n  />\n</a>\n\n<a href=\"https://www.leetcode.com/abinash_anand_\">\n  <img\n    src=\"https://img.shields.io/badge/LEETCODE-FFA116?style=for-the-badge&logo=leetcode&logoColor=111111\"\n    alt=\"LeetCode\"\n  />\n</a>\n\n<a href=\"https://instagram.com/abinash_anand_\">\n  <img\n    src=\"https://img.shields.io/badge/INSTAGRAM-E4405F?style=for-the-badge&logo=instagram&logoColor=white\"\n    alt=\"Instagram\"\n  />\n</a>\n\n</p>\n\n<p align=\"center\">\n  📡 <strong>anandabinash25@gmail.com</strong>\n</p>\n\n---\n\n<h2>📡 GITHUB TELEMETRY</h2>\n\n<p align=\"center\">\n\n<img\n  src=\"https://github-readme-stats.vercel.app/api?username=Abinash-Anand&show_icons=true&hide_border=true&bg_color=0B0D0B&title_color=D7FF2F&icon_color=E8C12A&text_color=F2F5EF&rank_icon=github\"\n  height=\"180\"\n  alt=\"GitHub statistics\"\n/>\n\n<img\n  src=\"https://github-readme-stats.vercel.app/api/top-langs/?username=Abinash-Anand&layout=compact&hide_border=true&bg_color=0B0D0B&title_color=D7FF2F&text_color=F2F5EF\"\n  height=\"180\"\n  alt=\"Top languages\"\n/>\n\n</p>\n\n<p align=\"center\">\n\n<img\n  src=\"https://github-readme-activity-graph.vercel.app/graph?username=Abinash-Anand&bg_color=0B0D0B&color=D7FF2F&line=E8C12A&point=FFFFFF&area=true&hide_border=true\"\n  width=\"100%\"\n  alt=\"GitHub activity graph\"\n/>\n\n</p>\n\n---\n\n<p align=\"center\">\n\n<img\n  src=\"./gotcha-killjoy.gif\"\n  width=\"500\"\n  alt=\"Killjoy Gotcha\"\n/>\n\n</p>\n\n<p align=\"center\">\n  <sub>\n    <b>YOU THOUGHT THE README WAS FINISHED.</b>\n  </sub>\n</p>\n\n---\n\n<p align=\"center\">\n\n</p>\n\n<p align=\"center\">\n\n<code>LEARN</code>\n&nbsp;·&nbsp;\n<code>BUILD</code>\n&nbsp;·&nbsp;\n<code>UNDERSTAND</code>\n&nbsp;·&nbsp;\n<code>SHARE</code>\n\n</p>\n\n<p align=\"center\">\n\n<sub>\nSoftware Engineer · Stuttgart, Germany · Building from interfaces to systems\n</sub>\n\n</p>\n"
+          },
+          "readmeMixed": null,
+          "readmeLower": null,
+          "manifest": null
+        },
+        {
+          "name": "ReadMyDamnComments",
+          "description": "**ReadMyDamnComments** is an AI-powered Comment Intelligence Platform built at the Cursor Hackathon. Instead of making creators read thousands of comments, it clusters audience feedback into FAQs, content requests, purchase intent, collaboration opportunities, and key insights, then recommends what they should create next.",
+          "url": "https://github.com/Abinash-Anand/ReadMyDamnComments",
+          "homepageUrl": "https://read-my-damn-comments.vercel.app",
+          "stargazerCount": 0,
+          "pushedAt": "2026-07-25T14:16:35Z",
+          "isArchived": false,
+          "isFork": false,
+          "isPrivate": false,
+          "openGraphImageUrl": "https://opengraph.githubassets.com/4ffe4e471a530dc41dc67e4ec1f0c42fba192f7f1d96a4de8ef6f09c29156319/Abinash-Anand/ReadMyDamnComments",
+          "usesCustomOpenGraphImage": false,
+          "primaryLanguage": {
+            "name": "TypeScript",
+            "color": "#3178c6"
+          },
+          "languages": {
+            "totalSize": 84713,
+            "edges": [
+              {
+                "size": 82828,
+                "node": {
+                  "name": "TypeScript",
+                  "color": "#3178c6"
+                }
+              },
+              {
+                "size": 899,
+                "node": {
+                  "name": "JavaScript",
+                  "color": "#f1e05a"
+                }
+              },
+              {
+                "size": 616,
+                "node": {
+                  "name": "CSS",
+                  "color": "#663399"
+                }
+              },
+              {
+                "size": 370,
+                "node": {
+                  "name": "HTML",
+                  "color": "#e34c26"
+                }
+              }
+            ]
+          },
+          "repositoryTopics": {
+            "nodes": []
+          },
+          "readmeUpper": {
+            "text": "# ReadMyDamnComments\n\nAI Audience Intelligence Platform for content creators. Turns thousands of audience\ncomments into an evidence-backed Audience Intelligence Brief: clusters, insights,\nand recommended next actions with confidence scores.\n\n## Status\n\n**Phase 1 complete**: project scaffolding, folder structure, and backend module\nskeletons are in place and wired end-to-end. The AI pipeline is not implemented\nyet -- `POST /analyze/:datasetId` currently returns a structurally-correct\nplaceholder response.\n\n## Stack\n\n- **Backend**: NestJS + TypeScript\n- **Frontend**: React (Vite) + TypeScript + Tailwind CSS + shadcn/ui\n- **AI**: OpenAI API (structured JSON output)\n\n## Project structure\n\n```\nbackend/    NestJS API (case studies, analyze, AI pipeline)\n  data/     Predefined creator comment datasets (the only input source for the MVP)\nfrontend/   React dashboard\n```\n\n## Running locally\n\n**Backend**\n\n```bash\ncd backend\nnpm install\ncp .env.example .env\nnpm run start:dev\n```\n\nRuns on `http://localhost:3000`.\n\n- `GET /datasets` -- list available creator case studies\n- `POST /analyze/:datasetId` -- run the audience intelligence pipeline for a dataset\n\n**Frontend**\n\n```bash\ncd frontend\nnpm install\ncp .env.example .env\nnpm run dev\n```\n\nRuns on `http://localhost:5173`.\n\n## Deployment\n\n**Backend** (any Node host -- Render, Railway, Fly, etc.)\n\nEnvironment variables:\n\n| Variable         | Required | Example                                                              | Notes                                                                                   |\n| ---------------- | -------- | --------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |\n| `PORT`           | No       | `3000`                                                                 | Most hosts inject this automatically.                                                    |\n| `CORS_ORIGIN`    | Yes (prod) | `https://your-app.vercel.app,https://your-app-git-branch.vercel.app` | Comma-separated exact origins, no trailing slash, no `*`. Defaults to `http://localhost:5173` if unset -- that default is dev-only. |\n| `OPENAI_API_KEY` | Yes      | `sk-...`                                                               | Never exposed to the frontend. Falls back to a stub `MockAiProvider` if unset.            |\n| `OPENAI_MODEL`   | No       | `gpt-4o-mini`                                                          | Must support Structured Outputs (`json_schema` + `strict` mode).                          |\n\nThe root health check is `GET /` (returns `{ status: 'ok', service: 'ReadMyDamnComments API' }`) -- point your host's health check at that path.\n\n**Frontend** (Vercel)\n\n- Set the project's **Root Directory** to `frontend`.\n- Environment variable: `VITE_API_BASE_URL` = your deployed backend's URL (e.g. `https://your-backend.onrender.com`), set for Production, Preview, and Development in Vercel's Environment Variables settings. Never commit a real backend URL to `.env.production` -- it belongs in Vercel's dashboard, not the repo.\n- The backend must be served over HTTPS -- an `http://` backend URL will be blocked as mixed content on an `https://` Vercel deployment.\n- Whenever you add a new Vercel preview URL you want to hit the real backend, add it to the backend's `CORS_ORIGIN` list and redeploy the backend.\n\n## Architecture\n\n- Input is exclusively predefined local datasets in `backend/data/*.json` -- no\n  URL scraping, no free-text paste input.\n- The backend owns all AI logic. The frontend only ever renders the structured\n  JSON returned by `POST /analyze/:datasetId`; no raw LLM output is rendered directly.\n- `OpenAiProvider` is the default and only AI provider used in the normal\n  application flow. `MockAiProvider` is an automatic fallback used only when\n  `OPENAI_API_KEY` is not configured, so the app still boots without a key.\n"
+          },
+          "readmeMixed": null,
+          "readmeLower": null,
+          "manifest": null
+        },
+        {
+          "name": "FounderX",
+          "description": null,
+          "url": "https://github.com/Abinash-Anand/FounderX",
+          "homepageUrl": "https://founder-x-beta.vercel.app/",
+          "stargazerCount": 0,
+          "pushedAt": "2026-07-22T14:49:33Z",
+          "isArchived": false,
+          "isFork": false,
+          "isPrivate": false,
+          "openGraphImageUrl": "https://opengraph.githubassets.com/20884bef595e9e348b70aef2fcf2c80cad04b0a854b73ed5f1f6d1e818eb7ab6/Abinash-Anand/FounderX",
+          "usesCustomOpenGraphImage": false,
+          "primaryLanguage": {
+            "name": "Python",
+            "color": "#3572A5"
+          },
+          "languages": {
+            "totalSize": 443520,
+            "edges": [
+              {
+                "size": 268340,
+                "node": {
+                  "name": "Python",
+                  "color": "#3572A5"
+                }
+              },
+              {
+                "size": 129791,
+                "node": {
+                  "name": "TypeScript",
+                  "color": "#3178c6"
+                }
+              },
+              {
+                "size": 42563,
+                "node": {
+                  "name": "CSS",
+                  "color": "#663399"
+                }
+              },
+              {
+                "size": 1445,
+                "node": {
+                  "name": "Dockerfile",
+                  "color": "#384d54"
+                }
+              },
+              {
+                "size": 996,
+                "node": {
+                  "name": "JavaScript",
+                  "color": "#f1e05a"
+                }
+              },
+              {
+                "size": 385,
+                "node": {
+                  "name": "HTML",
+                  "color": "#e34c26"
+                }
+              }
+            ]
+          },
+          "repositoryTopics": {
+            "nodes": []
+          },
+          "readmeUpper": {
+            "text": "# VC Brain\n\nVC Brain is a full-stack monorepo for an autonomous venture workflow designed to move from sourcing to a $100K investment decision within 24 hours.\n\nThe repository has two intentionally separate deployment units:\n\n- `frontend/`: TanStack Start + React + TypeScript, containerized as a Node/Nitro runtime.\n- `backend/`: FastAPI intelligence, memory, and media modules, containerized with Python and uv.\n\nMongoDB runs in Compose with the named `mongodb-data` volume. Configure the optional API keys in `.env` for research, intelligence, and media integrations.\n\n## Quick start\n\n1. Copy local environment files:\n\n   ```bash\n   cp .env.example .env\n   cp frontend/.env.example frontend/.env.local\n   cp backend/.env.example backend/.env\n   ```\n\n2. Start the frontend, backend, and MongoDB services:\n\n   ```bash\n   docker compose up --build\n   ```\n\nLocal endpoints:\n\n- Frontend: `http://localhost:3000`\n- FastAPI/OpenAPI: `http://localhost:9000/docs`\n- MongoDB: `mongodb://localhost:27017`\n\nMongoDB runs in Compose with the named `mongodb-data` volume. Configure the optional API keys in `.env` for research, intelligence, and media integrations.\n\n## Development commands\n\n```bash\ncd frontend && npm run build\ncd backend && uv sync --all-groups && uv run pytest\ncd backend && uv run ruff check .\n```\n\nAll Python dependency changes must use `uv add`, `uv remove`, or `uv lock`; do not add pip requirements files.\n\n## Deployment\n\nThe root Compose file runs the complete local stack. Production uses separate deployment units:\n\n- Render must deploy the backend from the repository Blueprint in `render.yaml`. The service is Docker-based, with `backend` as both its root directory and Docker build context. Do not create it as a native auto-detected service at the repository root, or Railpack will see both applications and fail to choose a build.\n- Vercel must deploy the `frontend` directory. Configure the Vercel project environment variable `VITE_BACKEND_URL` to the public Render backend URL, for example `https://vc-brain-backend.onrender.com`.\n\nThe frontend GitHub Actions workflow requires these repository Actions secrets:\n\n- `VERCEL_TOKEN`\n- `VERCEL_ORG_ID`\n- `VERCEL_PROJECT_ID`\n\nThe workflow now stops with a clear error if any of these values is missing. Render still requires `MONGODB_URI` and the optional integration API keys to be configured in the service environment.\n\n"
+          },
+          "readmeMixed": null,
+          "readmeLower": null,
+          "manifest": null
+        },
+        {
+          "name": "Smart-Building-Reinforcement-Learning",
+          "description": null,
+          "url": "https://github.com/Abinash-Anand/Smart-Building-Reinforcement-Learning",
+          "homepageUrl": null,
+          "stargazerCount": 0,
+          "pushedAt": "2026-06-19T07:46:18Z",
+          "isArchived": false,
+          "isFork": false,
+          "isPrivate": false,
+          "openGraphImageUrl": "https://opengraph.githubassets.com/d469efcf9c60abd029e7c2b465593c8383f163a882490a9efc303e502a0f1f61/Abinash-Anand/Smart-Building-Reinforcement-Learning",
+          "usesCustomOpenGraphImage": false,
+          "primaryLanguage": {
+            "name": "Python",
+            "color": "#3572A5"
+          },
+          "languages": {
+            "totalSize": 16274,
+            "edges": [
+              {
+                "size": 16274,
+                "node": {
+                  "name": "Python",
+                  "color": "#3572A5"
+                }
+              }
+            ]
+          },
+          "repositoryTopics": {
+            "nodes": []
+          },
+          "readmeUpper": null,
+          "readmeMixed": null,
+          "readmeLower": null,
+          "manifest": null
+        },
+        {
+          "name": "Hybrid-PPM",
+          "description": null,
+          "url": "https://github.com/Abinash-Anand/Hybrid-PPM",
+          "homepageUrl": null,
+          "stargazerCount": 0,
+          "pushedAt": "2026-06-11T22:09:41Z",
+          "isArchived": false,
+          "isFork": false,
+          "isPrivate": false,
+          "openGraphImageUrl": "https://opengraph.githubassets.com/078e6a64bdabf58421f991ab3dc3572589ef9b8ca4a879f410586365dd138240/Abinash-Anand/Hybrid-PPM",
+          "usesCustomOpenGraphImage": false,
+          "primaryLanguage": {
+            "name": "Java",
+            "color": "#b07219"
+          },
+          "languages": {
+            "totalSize": 63859,
+            "edges": [
+              {
+                "size": 63859,
+                "node": {
+                  "name": "Java",
+                  "color": "#b07219"
+                }
+              }
+            ]
+          },
+          "repositoryTopics": {
+            "nodes": []
+          },
+          "readmeUpper": null,
+          "readmeMixed": null,
+          "readmeLower": null,
+          "manifest": null
+        },
+        {
+          "name": "LocaFi",
+          "description": null,
+          "url": "https://github.com/Abinash-Anand/LocaFi",
+          "homepageUrl": null,
+          "stargazerCount": 0,
+          "pushedAt": "2026-04-25T22:30:20Z",
+          "isArchived": false,
+          "isFork": false,
+          "isPrivate": false,
+          "openGraphImageUrl": "https://opengraph.githubassets.com/fe95ae6e8a53e08fe46e165a2ffc0915175c95d6ede38226383296cad9e8b205/Abinash-Anand/LocaFi",
+          "usesCustomOpenGraphImage": false,
+          "primaryLanguage": {
+            "name": "TypeScript",
+            "color": "#3178c6"
+          },
+          "languages": {
+            "totalSize": 78134,
+            "edges": [
+              {
+                "size": 76265,
+                "node": {
+                  "name": "TypeScript",
+                  "color": "#3178c6"
+                }
+              },
+              {
+                "size": 1273,
+                "node": {
+                  "name": "JavaScript",
+                  "color": "#f1e05a"
+                }
+              },
+              {
+                "size": 318,
+                "node": {
+                  "name": "HTML",
+                  "color": "#e34c26"
+                }
+              },
+              {
+                "size": 278,
+                "node": {
+                  "name": "SCSS",
+                  "color": "#c6538c"
+                }
+              }
+            ]
+          },
+          "repositoryTopics": {
+            "nodes": []
+          },
+          "readmeUpper": null,
+          "readmeMixed": null,
+          "readmeLower": null,
+          "manifest": null
+        },
+        {
+          "name": "Portfolio_2026",
+          "description": null,
+          "url": "https://github.com/Abinash-Anand/Portfolio_2026",
+          "homepageUrl": "https://abinashanand.vercel.app/",
+          "stargazerCount": 0,
+          "pushedAt": "2026-04-10T15:46:06Z",
+          "isArchived": false,
+          "isFork": false,
+          "isPrivate": false,
+          "openGraphImageUrl": "https://opengraph.githubassets.com/bb04fe9907ec47219b625bff9dd5157dcdd1d3415c5bc0281ce720c5d3377b98/Abinash-Anand/Portfolio_2026",
+          "usesCustomOpenGraphImage": false,
+          "primaryLanguage": {
+            "name": "TypeScript",
+            "color": "#3178c6"
+          },
+          "languages": {
+            "totalSize": 101699,
+            "edges": [
+              {
+                "size": 61320,
+                "node": {
+                  "name": "TypeScript",
+                  "color": "#3178c6"
+                }
+              },
+              {
+                "size": 21073,
+                "node": {
+                  "name": "CSS",
+                  "color": "#663399"
+                }
+              },
+              {
+                "size": 19306,
+                "node": {
+                  "name": "HTML",
+                  "color": "#e34c26"
+                }
+              }
+            ]
+          },
+          "repositoryTopics": {
+            "nodes": []
+          },
+          "readmeUpper": {
+            "text": "# Portfolio2026\n\nThis project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.2.1.\n\n## Development server\n\nTo start a local development server, run:\n\n```bash\nng serve\n```\n\nOnce the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.\n\n## Code scaffolding\n\nAngular CLI includes powerful code scaffolding tools. To generate a new component, run:\n\n```bash\nng generate component component-name\n```\n\nFor a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:\n\n```bash\nng generate --help\n```\n\n## Building\n\nTo build the project run:\n\n```bash\nng build\n```\n\nThis will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.\n\n## Running unit tests\n\nTo execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:\n\n```bash\nng test\n```\n\n## Running end-to-end tests\n\nFor end-to-end (e2e) testing, run:\n\n```bash\nng e2e\n```\n\nAngular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.\n\n## Additional Resources\n\nFor more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.\n"
+          },
+          "readmeMixed": null,
+          "readmeLower": null,
+          "manifest": null
+        },
+        {
+          "name": "ParkRabbit",
+          "description": "Modern Distributed Systems Assignment",
+          "url": "https://github.com/Abinash-Anand/ParkRabbit",
+          "homepageUrl": null,
+          "stargazerCount": 1,
+          "pushedAt": "2026-01-05T23:25:46Z",
+          "isArchived": false,
+          "isFork": false,
+          "isPrivate": false,
+          "openGraphImageUrl": "https://opengraph.githubassets.com/6ef1a0589639a88493be8c72b59d26484e674c66f5f890e951a6f425d9ded658/Abinash-Anand/ParkRabbit",
+          "usesCustomOpenGraphImage": false,
+          "primaryLanguage": {
+            "name": "Java",
+            "color": "#b07219"
+          },
+          "languages": {
+            "totalSize": 132921,
+            "edges": [
+              {
+                "size": 92139,
+                "node": {
+                  "name": "Java",
+                  "color": "#b07219"
+                }
+              },
+              {
+                "size": 40093,
+                "node": {
+                  "name": "JavaScript",
+                  "color": "#f1e05a"
+                }
+              },
+              {
+                "size": 359,
+                "node": {
+                  "name": "HTML",
+                  "color": "#e34c26"
+                }
+              },
+              {
+                "size": 309,
+                "node": {
+                  "name": "Dockerfile",
+                  "color": "#384d54"
+                }
+              },
+              {
+                "size": 21,
+                "node": {
+                  "name": "CSS",
+                  "color": "#663399"
+                }
+              }
+            ]
+          },
+          "repositoryTopics": {
+            "nodes": []
+          },
+          "readmeUpper": {
+            "text": "# Topic: 1. **Event-driven notification system** – Services communicate via RabbitMQ/NATS/Kafka to send notifications based on user actions.\n# 🚗 Parking Management System (Event-Driven Architecture)\n\nA production-style **event-driven parking management system** built using **Spring Boot**, **React**, **RabbitMQ**, **PostgreSQL**, and **Docker**.\n\nThis project demonstrates how backend services communicate **asynchronously** using a message broker to generate and manage notifications without direct frontend involvement.\n\n---\n\n## 📌 Project Goal\n\nThe primary goal of this project is to demonstrate:\n\n> **An event-driven notification management system where backend services communicate via RabbitMQ.**\n\nThe system focuses on **backend-driven workflows**, scheduled jobs, and message-based communication, while keeping the frontend lightweight and simple.\n\n\n---\n\n## 🧠 Core Concepts Demonstrated\n\n- Event-Driven Architecture\n- Publish–Subscribe pattern (RabbitMQ)\n- Backend-triggered notifications\n- Decoupled services\n- Scheduler / cron-based events\n- Containerized deployment (Docker)\n\n---\n\n## 🚀 Getting Started — Running ParkRabbit Locally\n\nFollow the steps below to build and run the entire ParkRabbit system using Docker.\n\n---\n\n### ✅ Prerequisites\n\nMake sure the following are installed on your system:\n\n- Git\n- Docker & Docker Compose\n- Java 17+ (required only for building the backend JAR)\n- Maven Wrapper (included in the repository)\n\n---\n\n## 🧱 Step 0 — Clone the Repository\n```text\ngit clone <remote repo>\n```\n## ⚙️ Step 1 — Build the Backend JAR\n- Navigate to the backend directory and build the Spring Boot application.\n- This step generates a JAR file that will be used by Docker to build the backend container.\n```text\ncd backend\n./mvnw clean package -DskipTests\n```\n### Output JAR will be created inside:\n```text\nbackend/target/\n```\n## 🐳 Step 2 — Start the Full System with Docker Compose\n- Go back to the root directory and start all services.\n```text\ncd ..\ndocker compose up --build\n```\n### This will start:\n\n- Spring Boot backend\n- React frontend (served via Nginx)\n- PostgreSQL database\n- RabbitMQ message broker\n\n## Access the Application\n### Once all containers are running:\n\n- Frontend: http://localhost:3000\n- Backend API: http://localhost:8080\n- RabbitMQ Management UI: http://localhost:15672\n- (Default RabbitMQ credentials are defined in docker-compose.yml)\n---\n\n## 🔧 Technology Stack\n\n### Backend\n- Java 17\n- Spring Boot\n- RabbitMQ\n- PostgreSQL\n- Spring Scheduler\n\n### Frontend\n- React (Vite)\n- React Router\n- Simple in-app notifications (toasts + list)\n\n### Infrastructure\n- Docker\n- Docker Compose\n- GitHub (mono-repo)\n\n---\n\n## 🏗️ System Architecture (High Level)\n\n## ParkRabbit — Event-Driven Parking & Notification System\n\n## 1. Overview of User Workflow\n\nThis section describes how a user interacts with the **ParkRabbit** system and how backend services communicate **asynchronously** using an **event-driven architecture**.\n\nThe workflow focuses on **backend-triggered events and notifications**, where **RabbitMQ** enables communication between services without any direct coupling to the frontend.  \nAll notifications originate from backend services and are delivered to users via **WebSockets** after being processed asynchronously.\n\n---\n\n## 2. User Role\n\nThe system currently supports a **single user role**.\n\n| Role | Description |\n|------|-------------|\n| User | Can register, log in, reserve parking slots, start parking sessions, and receive notifications throughout the entire parking lifecycle |\n\n\n\nUser\n\n→ Sign Up / Login\n\n→ Dashboard\n\n→ Select Parking (Sidebar)\n\n→ Select Parking Lot\n\n→ Reservation Confirmed\n\n→ Park Car Within Time Limit\n\n→ Notification Updates\n\n\n> **Important:**  \n> All notifications are generated by **backend services** using **RabbitMQ events**, not by frontend logic.\n\n---\n\n## 4. Detailed User Workflow\n\n### Step 1: User Registration and Login\n\n- The user registers using valid credentials.\n- After successful registration, the user logs in.\n- The system authenticates the user and redirects them to the dashboard.\n\n**Backend Actions**\n\n- Authentication handled by **Spring Boot Security**.\n- JWT token is issued and used for subsequent requests.\n- User session context is established.\n\n---\n\n### Step 2: Dashboard Access\n\n- After login, the user lands on the dashboard.\n- A **“P” (Parking)** icon is displayed in the sidebar.\n- Clicking this icon initiates the parking reservation flow.\n\n---\n\n### Step 3: Parking Location Selection\n\nWhen the user clicks the **Park** button, three parking locations are displayed:\n\n- In Der Au  \n- Stadtmitte  \n- Hauptbahnhof  \n\nThe user selects one parking location.\n\n---\n\n### Step 4: Slot Availability Check (Branching Path)\n\nUpon selecting a parking location, the system performs a **real-time slot availability check**, resulting in one of two scenarios.\n\n---\n\n#### Scenario A: Slot Is Available\n\n- A free slot exists at the selected parking location.\n- The system bypasses the queue and proceeds directly to reservation.\n\n**User Experience**\n\n- Reservation is immediately confirmed.\n- Notification displayed:\n\n  > *“Parking reservation confirmed. Please park your car within 1 minute.”*\n\n**Backend Actions**\n\n- Slot availability validated in the database.\n- Reservation event is published to **RabbitMQ**.\n- A **Spring Scheduler** starts a 1-minute expiration countdown.\n\n---\n\n#### Scenario B: Slot Is Not Available (Queueing)\n\n- All slots at the selected parking location are occupied.\n- The user is added to a waiting queue.\n\n**User Experience**\n\n- Notification page displays a waitlisted status.\n- Notification displayed:\n\n  > *“All slots are currently full. You have been added to the queue.”*\n\n**Backend Actions**\n\n- User ID is added to the **reservation queue**.\n- Queue state is managed asynchronously using RabbitMQ.\n\n---\n\n## 5. Reservation Expiry Handling\n\nIf the user fails to park the car within **1 minute**, the reservation expires.\n\n**User Notification**\n\n> *“Your parking reservation has expired.”*\n\n**Backend Actions**\n\n- Spring Scheduler triggers a timeout event.\n- A **reservation-expired event** is published to RabbitMQ.\n- The reserved slot is released and marked available.\n- If a user is waiting in the queue, the slot is automatically reassigned.\n\n---\n\n## 6. Successful Parking Confirmation\n\nIf the user parks the car within the reservation window:\n\n- The parking slot status changes to **OCCUPIED**.\n- A parking session is started.\n- The user receives the notification:\n\n> *“Your parking session has started.”*\n\n**Backend Actions**\n\n- Reservation is confirmed.\n- Parking session is created in the database.\n- Parking confirmation event is published to RabbitMQ.\n- Notification is delivered via WebSocket.\n\n> **Note:**  \n> For testing purposes, the parking session duration is set to **2 minutes**.\n\n---\n\n## 7. Parking Session Expiry Handling\n\nThis step handles the transition from an active parking session to its conclusion.\n\n### Reminder Notification\n\n- Before the session ends, the user receives a reminder:\n\n  > *“Your parking session is ending soon.”*\n\n### Session End Notification\n\n- Once the 2-minute session duration expires, the system automatically ends the session.\n- The user receives the final notification:\n\n  > *“Your parking session has ended.”*\n\n**Backend Actions**\n\n- Spring Scheduler triggers a session timeout.\n- A **session-ended event** is published to RabbitMQ.\n- Parking slot is freed.\n- Reservation is marked as completed.\n- Next queued user (if any) is auto-assigned the slot.\n\n---\n\n## 8. Key Highlights of the System\n\n- No direct frontend-triggered notifications\n- Fully **backend-driven notification system**\n- Time-based logic implemented using **Spring Scheduler**\n- **RabbitMQ** enables reliable, decoupled event communication\n- Notifications are persisted in the database before delivery\n- Real-time delivery handled via **WebSockets**\n- Entire system is **fully containerized using Docker**\n\n---\n\n# 🅿️ ParkRabbit — Monorepo Structure\n\nThis document describes the **monorepo layout** of **ParkRabbit**, a backend-heavy, event-driven parking management system built using **Spring Boot**, **RabbitMQ**, **PostgreSQL**, and **React**.\n\nThe repository is structured to clearly separate **concerns**, **runtime boundaries**, and **deployment responsibilities**, while still allowing unified versioning and local orchestration.\n\n---\n\n## 📦 Repository Overview\n\n```text\nParkRabbit/\n├── backend/                         # Spring Boot backend service\n├── frontend/                        # React frontend application\n├── docker-compose.yml               # Multi-container orchestration\n├── .env                             # Global environment variables\n├── README.md                        # Project overview & documentation\n```\n### The backend is designed as a layered, event-driven system with strict separation between API contracts, business logic, persistence, and asynchronous messaging.\n```text\nbackend/\n├── .vscode/                         # IDE-specific settings\n├── src/\n│   ├── main/\n│   │   ├── java/\n│   │   │   └── com/parkrabbit/backend/\n│   │   │       ├── config/           # Application, RabbitMQ, WebSocket, security configs\n│   │   │       ├── controller/       # REST API controllers (HTTP boundary)\n│   │   │       ├── dto/              # DTOs for API contracts & domain events\n│   │   │       ├── entity/           # JPA entities (User, Reservation, Session, Notification)\n│   │   │       ├── exception/        # Global & custom exception handling\n│   │   │       ├── mapper/           # Entity ↔ DTO mapping layer\n│   │   │       ├── messaging/        # RabbitMQ producers & consumers\n│   │   │       ├── repository/       # JPA repositories (database access)\n│   │   │       ├── scheduler/        # Time-based jobs (reservation/session expiry)\n│   │   │       ├── security/         # Authentication & authorization (JWT, filters)\n│   │   │       ├── service/          # Core business logic\n│   │   │       ├── websocket/        # WebSocket handlers for real-time notifications\n│   │   │       └── BackendApplication.java\n│   │   └── resources/                # application.yml, environment configs\n│   └── test/                         # Unit & integration tests\n├── target/                           # Maven build output\n├── Dockerfile                        # Backend Docker image definition\n├── pom.xml                           # Maven dependencies & build configuration\n├── mvnw / mvnw.cmd                   # Maven wrapper\n├── .gitignore\n└── README.md\n\n\n```\n## Backend Design Principles\n\n- Layered architecture\n\n- Controller → Service → Repository → Database\n\n- DTO-based API contracts (no entity leakage)\n\n- Asynchronous communication via RabbitMQ\n\n- Real-time user feedback via WebSockets\n\n- Time-driven domain logic using schedulers\n\n- Stateless authentication with JWT\n\n- Production-ready configuration using environment variables\n\n## The frontend is structured to support real-time updates, clean UI composition, and clear separation between API, state, and presentation layers.\n\n```text\nfrontend/\n├── node_modules/                     # Frontend dependencies\n├── public/                           # Static assets\n├── src/\n│   ├── api/                          # API abstraction layer (Axios services)\n│   ├── assets/                       # Images, animations (SVG, Lottie)\n│   ├── components/                  # Reusable UI components\n│   ├── hooks/                       # Custom hooks (WebSocket, auth, etc.)\n│   ├── imports/                     # Centralized imports / utilities\n│   ├── layouts/                     # Page layouts (Dashboard, Sidebar)\n│   ├── notifications/               # Notification models & state handling\n│   ├── routers/                     # Application routing\n│   ├── services/                    # Utility services (time, formatting)\n│   ├── index.css                    # Global styles\n│   └── main.jsx                     # Application entry point\n├── .env                              # Frontend environment variables\n├── Dockerfile                        # Frontend Docker image definition\n├── nginx.conf                        # Nginx config for frontend container\n├── index.html\n├── package.json\n├── package-lock.json\n├── vite.config.js\n└── README.md\n```\n## Frontend Design Principles\n\n- API abstraction layer (no direct fetch calls in UI)\n\n- WebSocket-driven notifications\n\n- Reusable, composable components\n\n- Separation of layout and business logic\n\n- Containerized production build using Nginx\n---\n\n## The project uses Docker Compose to orchestrate:\n\n- Spring Boot backend\n\n- React frontend (served via Nginx)\n\n- PostgreSQL database\n\n- RabbitMQ message broker\n\n## This enables:\n\n- Local development parity with production\n\n- Clear service boundaries\n\n- One-command startup for the entire system\n  \n\n# ===============END================\n\n"
+          },
+          "readmeMixed": null,
+          "readmeLower": null,
+          "manifest": null
+        },
+        {
+          "name": "Eber-app",
+          "description": null,
+          "url": "https://github.com/Abinash-Anand/Eber-app",
+          "homepageUrl": "https://eber-app.vercel.app",
+          "stargazerCount": 1,
+          "pushedAt": "2025-06-19T06:34:46Z",
+          "isArchived": false,
+          "isFork": false,
+          "isPrivate": false,
+          "openGraphImageUrl": "https://opengraph.githubassets.com/e62e483423a67b083ae18e965514a9f349bbb601ec608d1b072d2edd143402e5/Abinash-Anand/Eber-app",
+          "usesCustomOpenGraphImage": false,
+          "primaryLanguage": {
+            "name": "JavaScript",
+            "color": "#f1e05a"
+          },
+          "languages": {
+            "totalSize": 663802,
+            "edges": [
+              {
+                "size": 253222,
+                "node": {
+                  "name": "JavaScript",
+                  "color": "#f1e05a"
+                }
+              },
+              {
+                "size": 247967,
+                "node": {
+                  "name": "TypeScript",
+                  "color": "#3178c6"
+                }
+              },
+              {
+                "size": 137208,
+                "node": {
+                  "name": "HTML",
+                  "color": "#e34c26"
+                }
+              },
+              {
+                "size": 25405,
+                "node": {
+                  "name": "CSS",
+                  "color": "#663399"
+                }
+              }
+            ]
+          },
+          "repositoryTopics": {
+            "nodes": []
+          },
+          "readmeUpper": {
+            "text": "---\n\n## 🌐 Eber Frontend (Angular)\n\nThe frontend of **Eber** is built using the **Angular framework** and provides a responsive, user-friendly interface for riders, drivers, and admins. It integrates real-time updates, maps, secure authentication, and payment systems to deliver a seamless ride-booking experience.\n\n---\n\n## 🧩 Key Features\n\n- 🔐 **User & Admin Authentication**\n- 🗺️ **Google Maps Integration** (Pickup/Drop Marker, Polyline routes)\n- 🚘 **Live Ride Tracking** via WebSockets\n- 🔔 **Browser Push Notifications** using Service Workers\n- 💳 **Stripe Payment Gateway**\n- 📦 **Real-time ride request/response via Socket.IO**\n- 📬 **Email & SMS alert triggers (Twilio, Nodemailer)**\n- 📱 **PWA (Progressive Web App) Support**\n- 🌙 **Angular Material for UI** with responsive design\n- 🔍 **Search & Filter** for bookings, users, trips\n\n---\n\n## 🛠️ Frontend Tech Stack\n\n| Layer            | Technology                             |\n|------------------|-----------------------------------------|\n| Framework        | Angular 18 (CLI, Animations, Router)    |\n| UI Library       | Angular Material, Bootstrap 5           |\n| Maps             | @angular/google-maps, Google Maps API   |\n| State & Events   | RxJS, NgRx-like patterns                |\n| Real-Time Comm.  | Socket.IO & ngx-socket-io               |\n| Notifications    | ng-push, Service Workers (Web Push)     |\n| Payment          | Stripe JS, Razorpay, Omise             |\n| Graphics/Icons   | Lottie, SweetAlert2, Bootstrap Icons    |\n| PWA Support      | @angular/pwa, Angular SSR               |\n| Utilities        | JWT Decode, Validator, uuid             |\n\n---\n\n## 📦 Notable Packages Used\n\n- `@angular/material`, `@angular/google-maps`, `ngx-socket-io`\n- `@stripe/stripe-js`, `razorpay`, `omise`\n- `sweetalert2`, `ng-lottie`, `ng-push`\n- `jwt-decode`, `validator`, `uuid`\n- `bn-ng-idle` for session tracking\n- `node-cron` for background tasks\n\n---\n\n## 🚀 Deployment\n\n- **Deployed On**: [Vercel](https://vercel.com)\n- To run locally:\n  ```bash\n  npm install\n  npm start\n\n# 🚖 Eber - On-Demand Ride Booking Backend\n\n**Eber** is a full-stack ride-booking platform backend, built using **Node.js**, **Express**, **MongoDB**, and third-party services like **Stripe**, **Twilio**, and **Nodemailer**. It offers a comprehensive admin and driver management system along with ride request tracking, billing, notifications, and history management.\n\n---\n\n## 🌐 Deployment\n\n- **Backend**: Deployed on [Render](https://render.com)\n- **Frontend**: Deployed on [Vercel] https://eber-app.vercel.app/\n\n---\n\n## 📦 Features Overview\n\n### 🔔 Push Notifications\n\n- Real-time **browser push notifications** with sound alerts for admins when a driver is not found.\n- A **notification counter** updates dynamically on the admin dashboard.\n- The counter decreases when the issue is resolved (i.e., a driver is assigned).\n\n> Planned: Integration for **push notifications on Android and iOS**, each handled according to the native delivery mechanism (Firebase for Android, APNs for iOS).\n\n---\n\n## 🧾 Ride Lifecycle APIs\n\nThe system tracks every ride with distinct phases:\n\n1. **Driver Assigned**: Request is created and a driver is assigned.\n2. **En Route to Pickup**: Driver starts moving toward the passenger.\n3. **Arrived at Pickup**: Driver reaches the pickup location.\n4. **Trip Started**: Ride begins.\n5. **Trip Ended**: Ride completes, and billing is triggered.\n6. **Invoice Generation**:\n   - Calculates total cost based on start and end location distance.\n   - Applies dynamic pricing set during configuration.\n7. **Feedback Collection**: Riders can submit post-trip ratings and reviews.\n\nAll APIs are tested and verified using **Postman**.\n\n---\n\n## 📊 Ride History Module\n\nAdmins can view detailed ride records:\n\n- Table view showing **completed** and **cancelled** rides.\n- Filter options:\n  - **Trip status**, **date range**\n  - **Pickup & drop-off location**\n  - **Search bar** for keywords\n- Export feature to download ride logs in **CSV format**\n- Click on a ride entry to view:\n  - Ride request details\n  - Live travel path displayed using **Google Maps Polylines**\n\n---\n\n## ⚙️ System Settings\n\nManage all third-party service configurations via the admin panel:\n\n- **Stripe Settings** (for payments)\n- **Email Settings** (SMTP/Nodemailer setup)\n- **SMS Settings** (Twilio configuration)\n\n---\n\n## 💳 Stripe Payment Gateway Integration\n\n- Set up Stripe (US account recommended for full feature access).\n- Securely store user cards using Stripe’s tokenization (including 3D Secure cards).\n- Charge the user's card at the end of the trip and transfer funds to the **admin's** Stripe account.\n- Link **driver’s bank account** to receive payouts.\n- API keys and settings are configurable via the admin settings section.\n\n---\n\n## 📧 Email Notification System (Nodemailer)\n\n- Emails sent directly from the backend server (free SMTP)\n- Events triggering emails:\n  - **Welcome email** on registration\n  - **Invoice email** upon ride completion\n- Email templates are designed to resemble professional formats like those used by Uber.\n- All email server credentials can be managed via the admin interface.\n\n---\n\n## 📱 SMS Alerts with Twilio\n\n- SMS messages triggered by key ride events:\n  - Driver accepted a ride\n  - Ride started\n  - Ride completed\n  - Payment confirmation\n- SMS settings are configurable from the admin dashboard.\n\n---\n\n## 🧪 API Development & Testing\n\n- All backend routes follow REST standards.\n- APIs are tested thoroughly in **Postman**.\n- Flags or status indicators are used to track the progress of each trip.\n- Designed to be consumed by mobile apps (iOS/Android) and admin panels.\n\n---\n\n## 🏗️ Tech Stack\n\n| Layer        | Technology               |\n|--------------|---------------------------|\n| Backend      | Node.js, Express.js       |\n| Database     | MongoDB (Mongoose)        |\n| Templates    | EJS (optional admin panel)|\n| Payment      | Stripe API                |\n| Email        | Nodemailer (SMTP)         |\n| SMS          | Twilio                    |\n| Push Alerts  | Web Push (Service Workers), FCM/APNs (planned) |\n| Mapping      | Google Maps API (Polyline, Geolocation) |\n\n---\n\n## 📁 Project Folder Structure\n\n```text\nbackend/\n└── src/\n    ├── controllers/         # Business logic for each route\n    ├── models/              # Mongoose schemas\n    ├── routes/              # API route definitions\n    ├── middlewares/         # Auth, error handling, etc.\n    ├── services/            # Stripe, email, SMS, push, etc.\n    ├── utils/               # Helper functions\n    ├── config/              # Environment/config loading\n    ├── public/              # Static files (if needed)\n    ├── app.js               # Express app setup\n    └── server.js            # Server entry point\n"
+          },
+          "readmeMixed": null,
+          "readmeLower": null,
+          "manifest": null
+        },
+        {
+          "name": "Eber_Server",
+          "description": null,
+          "url": "https://github.com/Abinash-Anand/Eber_Server",
+          "homepageUrl": null,
+          "stargazerCount": 0,
+          "pushedAt": "2024-11-10T09:25:22Z",
+          "isArchived": false,
+          "isFork": false,
+          "isPrivate": false,
+          "openGraphImageUrl": "https://opengraph.githubassets.com/7e0f5509b978a1dcd0989f91d6bf5ecc3cfb859ad9634fe34d22f2ea31428b85/Abinash-Anand/Eber_Server",
+          "usesCustomOpenGraphImage": false,
+          "primaryLanguage": {
+            "name": "JavaScript",
+            "color": "#f1e05a"
+          },
+          "languages": {
+            "totalSize": 233054,
+            "edges": [
+              {
+                "size": 233054,
+                "node": {
+                  "name": "JavaScript",
+                  "color": "#f1e05a"
+                }
+              }
+            ]
+          },
+          "repositoryTopics": {
+            "nodes": []
+          },
+          "readmeUpper": null,
+          "readmeMixed": null,
+          "readmeLower": null,
+          "manifest": null
+        },
+        {
+          "name": "Eber_frontend",
+          "description": null,
+          "url": "https://github.com/Abinash-Anand/Eber_frontend",
+          "homepageUrl": null,
+          "stargazerCount": 0,
+          "pushedAt": "2024-10-25T06:43:42Z",
+          "isArchived": false,
+          "isFork": false,
+          "isPrivate": false,
+          "openGraphImageUrl": "https://opengraph.githubassets.com/b4d7d07aca4aa672dcc48e611bd817066634a039817e60679809059b51116498/Abinash-Anand/Eber_frontend",
+          "usesCustomOpenGraphImage": false,
+          "primaryLanguage": {
+            "name": "TypeScript",
+            "color": "#3178c6"
+          },
+          "languages": {
+            "totalSize": 411846,
+            "edges": [
+              {
+                "size": 247841,
+                "node": {
+                  "name": "TypeScript",
+                  "color": "#3178c6"
+                }
+              },
+              {
+                "size": 137208,
+                "node": {
+                  "name": "HTML",
+                  "color": "#e34c26"
+                }
+              },
+              {
+                "size": 25405,
+                "node": {
+                  "name": "CSS",
+                  "color": "#663399"
+                }
+              },
+              {
+                "size": 1392,
+                "node": {
+                  "name": "JavaScript",
+                  "color": "#f1e05a"
+                }
+              }
+            ]
+          },
+          "repositoryTopics": {
+            "nodes": []
+          },
+          "readmeUpper": {
+            "text": "# EberApp\n\nThis project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 17.1.2.\n\n## Development server\n\nRun `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.\n\n## Code scaffolding\n\nRun `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.\n\n## Build\n\nRun `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.\n\n## Running unit tests\n\nRun `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).\n\n## Running end-to-end tests\n\nRun `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.\n\n## Further help\n\nTo get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.\n\n## In Case when dependencies gives version conflicts\n\nnpm install package_name --legacy-peer-deps\n"
+          },
+          "readmeMixed": null,
+          "readmeLower": null,
+          "manifest": null
+        },
+        {
+          "name": "express-task-app",
+          "description": null,
+          "url": "https://github.com/Abinash-Anand/express-task-app",
+          "homepageUrl": null,
+          "stargazerCount": 0,
+          "pushedAt": "2024-01-14T05:00:00Z",
+          "isArchived": false,
+          "isFork": false,
+          "isPrivate": false,
+          "openGraphImageUrl": "https://opengraph.githubassets.com/e5cdef319dd411284fd85096c78eb6ffe72d11dd8911c3dc6fcb34cdc8e27e44/Abinash-Anand/express-task-app",
+          "usesCustomOpenGraphImage": false,
+          "primaryLanguage": {
+            "name": "JavaScript",
+            "color": "#f1e05a"
+          },
+          "languages": {
+            "totalSize": 13631,
+            "edges": [
+              {
+                "size": 13631,
+                "node": {
+                  "name": "JavaScript",
+                  "color": "#f1e05a"
+                }
+              }
+            ]
+          },
+          "repositoryTopics": {
+            "nodes": []
+          },
+          "readmeUpper": null,
+          "readmeMixed": null,
+          "readmeLower": null,
+          "manifest": null
+        },
+        {
+          "name": "Node-weatherApp",
+          "description": null,
+          "url": "https://github.com/Abinash-Anand/Node-weatherApp",
+          "homepageUrl": null,
+          "stargazerCount": 0,
+          "pushedAt": "2023-12-28T17:59:04Z",
+          "isArchived": false,
+          "isFork": false,
+          "isPrivate": false,
+          "openGraphImageUrl": "https://opengraph.githubassets.com/5c356dad80ba4dd75654771902a9d61e3e15524c7640cc39f77578e7ae8df15e/Abinash-Anand/Node-weatherApp",
+          "usesCustomOpenGraphImage": false,
+          "primaryLanguage": {
+            "name": "JavaScript",
+            "color": "#f1e05a"
+          },
+          "languages": {
+            "totalSize": 8928,
+            "edges": [
+              {
+                "size": 6208,
+                "node": {
+                  "name": "JavaScript",
+                  "color": "#f1e05a"
+                }
+              },
+              {
+                "size": 2055,
+                "node": {
+                  "name": "Handlebars",
+                  "color": "#f7931e"
+                }
+              },
+              {
+                "size": 665,
+                "node": {
+                  "name": "CSS",
+                  "color": "#663399"
+                }
+              }
+            ]
+          },
+          "repositoryTopics": {
+            "nodes": []
+          },
+          "readmeUpper": null,
+          "readmeMixed": null,
+          "readmeLower": null,
+          "manifest": null
+        },
+        {
+          "name": "back-End-Development",
+          "description": null,
+          "url": "https://github.com/Abinash-Anand/back-End-Development",
+          "homepageUrl": null,
+          "stargazerCount": 0,
+          "pushedAt": "2023-11-28T16:19:41Z",
+          "isArchived": false,
+          "isFork": false,
+          "isPrivate": false,
+          "openGraphImageUrl": "https://opengraph.githubassets.com/c8b6fcc2156aac04b4d82dddb7d4dc537b0fc125e7f679f0b286e11daf08d198/Abinash-Anand/back-End-Development",
+          "usesCustomOpenGraphImage": false,
+          "primaryLanguage": {
+            "name": "JavaScript",
+            "color": "#f1e05a"
+          },
+          "languages": {
+            "totalSize": 156,
+            "edges": [
+              {
+                "size": 156,
+                "node": {
+                  "name": "JavaScript",
+                  "color": "#f1e05a"
+                }
+              }
+            ]
+          },
+          "repositoryTopics": {
+            "nodes": []
+          },
+          "readmeUpper": null,
+          "readmeMixed": null,
+          "readmeLower": null,
+          "manifest": null
+        },
+        {
+          "name": "phase-1-task",
+          "description": null,
+          "url": "https://github.com/Abinash-Anand/phase-1-task",
+          "homepageUrl": null,
+          "stargazerCount": 0,
+          "pushedAt": "2023-11-22T11:57:39Z",
+          "isArchived": false,
+          "isFork": false,
+          "isPrivate": false,
+          "openGraphImageUrl": "https://opengraph.githubassets.com/1a4116aaeb8ac79b75460d99216e3fec28853a9a62aba951554d0e1aefc3a033/Abinash-Anand/phase-1-task",
+          "usesCustomOpenGraphImage": false,
+          "primaryLanguage": {
+            "name": "CSS",
+            "color": "#663399"
+          },
+          "languages": {
+            "totalSize": 20876,
+            "edges": [
+              {
+                "size": 11487,
+                "node": {
+                  "name": "CSS",
+                  "color": "#663399"
+                }
+              },
+              {
+                "size": 9389,
+                "node": {
+                  "name": "HTML",
+                  "color": "#e34c26"
+                }
+              }
+            ]
+          },
+          "repositoryTopics": {
+            "nodes": []
+          },
+          "readmeUpper": null,
+          "readmeMixed": null,
+          "readmeLower": null,
+          "manifest": null
+        },
+        {
+          "name": "dom-project-chaiaurcode-craqsr",
+          "description": "Created with StackBlitz ⚡️",
+          "url": "https://github.com/Abinash-Anand/dom-project-chaiaurcode-craqsr",
+          "homepageUrl": "https://stackblitz.com/edit/dom-project-chaiaurcode-craqsr",
+          "stargazerCount": 0,
+          "pushedAt": "2023-09-05T03:51:55Z",
+          "isArchived": false,
+          "isFork": false,
+          "isPrivate": false,
+          "openGraphImageUrl": "https://opengraph.githubassets.com/8ed63a514f176bfc58a0a5ca119ce60d7d19ab867432764bf05af99321367045/Abinash-Anand/dom-project-chaiaurcode-craqsr",
+          "usesCustomOpenGraphImage": false,
+          "primaryLanguage": {
+            "name": "HTML",
+            "color": "#e34c26"
+          },
+          "languages": {
+            "totalSize": 15893,
+            "edges": [
+              {
+                "size": 8215,
+                "node": {
+                  "name": "HTML",
+                  "color": "#e34c26"
+                }
+              },
+              {
+                "size": 4508,
+                "node": {
+                  "name": "JavaScript",
+                  "color": "#f1e05a"
+                }
+              },
+              {
+                "size": 3170,
+                "node": {
+                  "name": "CSS",
+                  "color": "#663399"
+                }
+              }
+            ]
+          },
+          "repositoryTopics": {
+            "nodes": []
+          },
+          "readmeUpper": {
+            "text": "# dom-project-chaiaurcode-craqsr\n\n[Edit on StackBlitz ⚡️](https://stackblitz.com/edit/dom-project-chaiaurcode-craqsr)"
+          },
+          "readmeMixed": null,
+          "readmeLower": null,
+          "manifest": null
+        },
+        {
+          "name": "Complete-Js-course-zero-to-mastery",
+          "description": null,
+          "url": "https://github.com/Abinash-Anand/Complete-Js-course-zero-to-mastery",
+          "homepageUrl": null,
+          "stargazerCount": 0,
+          "pushedAt": "2023-08-04T18:27:46Z",
+          "isArchived": false,
+          "isFork": false,
+          "isPrivate": false,
+          "openGraphImageUrl": "https://opengraph.githubassets.com/659747141850cf625c54ff8f0beb0c2c0e20f13de1d55591f79479666e7fae88/Abinash-Anand/Complete-Js-course-zero-to-mastery",
+          "usesCustomOpenGraphImage": false,
+          "primaryLanguage": {
+            "name": "JavaScript",
+            "color": "#f1e05a"
+          },
+          "languages": {
+            "totalSize": 21873,
+            "edges": [
+              {
+                "size": 18738,
+                "node": {
+                  "name": "JavaScript",
+                  "color": "#f1e05a"
+                }
+              },
+              {
+                "size": 3135,
+                "node": {
+                  "name": "HTML",
+                  "color": "#e34c26"
+                }
+              }
+            ]
+          },
+          "repositoryTopics": {
+            "nodes": []
+          },
+          "readmeUpper": null,
+          "readmeMixed": null,
+          "readmeLower": null,
+          "manifest": null
+        }
+      ]
+    }
+  }
+}

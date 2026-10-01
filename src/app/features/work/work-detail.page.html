@@ -1,0 +1,105 @@
+<article class="mx-auto max-w-6xl px-6 pt-32 pb-24 md:px-10">
+  <a routerLink="/work" class="text-muted text-sm hover:text-text" i18n>← All work</a>
+
+  <header class="mt-6 max-w-3xl">
+    <h1 class="font-display text-4xl font-bold tracking-tight md:text-6xl">{{ page().project.title }}</h1>
+    @if (page().project.summary) {
+      <p class="text-muted mt-4 text-lg leading-relaxed">{{ page().project.summary }}</p>
+    }
+  </header>
+
+  <div class="mt-12 grid gap-12 lg:grid-cols-[minmax(0,1fr)_18rem]">
+    <div class="min-w-0">
+      @if (page().project.highlights.length) {
+        <h2 class="text-muted font-mono text-xs tracking-wider uppercase" i18n>Highlights</h2>
+        <ul class="mt-4 mb-12 flex list-disc flex-col gap-2 pl-5 leading-relaxed marker:text-blue">
+          @for (highlight of page().project.highlights; track $index) {
+            <li>{{ highlight }}</li>
+          }
+        </ul>
+      }
+
+      @if (page().detail; as detail) {
+        <!-- A label, not a heading: the README's own headings are h2 and form the page outline. -->
+        <p class="text-muted font-mono text-xs tracking-wider uppercase" i18n>README</p>
+        <div class="readme mt-6" [innerHTML]="detail.readmeHtml | safeHtml"></div>
+      } @else {
+        <p class="text-muted" i18n>No README is published for this project. See the repository for details.</p>
+      }
+    </div>
+
+    <aside class="flex flex-col gap-8 lg:sticky lg:top-24 lg:self-start" aria-label="Project facts" i18n-aria-label>
+      <ul class="flex flex-col gap-3 text-sm">
+        <li>
+          <a
+            [href]="page().project.repoUrl"
+            target="_blank"
+            rel="noopener"
+            class="text-blue-soft hover:underline"
+            i18n
+          >
+            Repository on GitHub ↗
+          </a>
+        </li>
+        @if (page().project.liveUrl; as liveUrl) {
+          <li>
+            <a [href]="liveUrl" target="_blank" rel="noopener" class="text-blue-soft hover:underline" i18n>Live site ↗</a>
+          </li>
+        }
+      </ul>
+
+      <dl class="flex flex-col gap-4 text-sm">
+        @if (page().project.role) {
+          <div>
+            <dt class="text-muted font-mono text-xs tracking-wider uppercase" i18n>Role</dt>
+            <dd class="mt-1">{{ page().project.role }}</dd>
+          </div>
+        }
+        <div>
+          <dt class="text-muted font-mono text-xs tracking-wider uppercase" i18n>Last updated</dt>
+          <dd class="mt-1">{{ page().project.pushedAt | date: 'MMM d, y' }}</dd>
+        </div>
+        <div>
+          <dt class="text-muted font-mono text-xs tracking-wider uppercase" i18n>Stars</dt>
+          <dd class="mt-1">{{ page().project.stars }}</dd>
+        </div>
+      </dl>
+
+      @if (page().project.languages.length) {
+        <div>
+          <h2 class="text-muted font-mono text-xs tracking-wider uppercase" i18n>Languages</h2>
+          <div class="bg-raised mt-3 flex h-2 overflow-hidden rounded-full" aria-hidden="true">
+            @for (language of page().project.languages; track language.name) {
+              <span
+                class="h-full"
+                [style.width.%]="language.percent"
+                [style.background-color]="language.color ?? 'var(--color-faint)'"
+              ></span>
+            }
+          </div>
+          <ul class="mt-3 flex flex-col gap-1 text-sm">
+            @for (language of page().project.languages; track language.name) {
+              <li class="flex items-center justify-between gap-4">
+                <span>{{ language.name }}</span>
+                <span class="text-muted font-mono text-xs">{{ language.percent }}%</span>
+              </li>
+            }
+          </ul>
+        </div>
+      }
+
+      @if (page().detail?.toc?.length) {
+        <nav aria-label="On this page" i18n-aria-label class="hidden lg:block">
+          <h2 class="text-muted font-mono text-xs tracking-wider uppercase" i18n>On this page</h2>
+          <ul class="mt-3 flex max-h-72 flex-col gap-1.5 overflow-y-auto text-sm">
+            @for (item of page().detail?.toc ?? []; track item.id) {
+              <li [class.pl-4]="item.depth === 3">
+                <a [href]="'#' + item.id" class="text-muted hover:text-text line-clamp-2">{{ item.text }}</a>
+              </li>
+            }
+          </ul>
+        </nav>
+      }
+    </aside>
+  </div>
+</article>

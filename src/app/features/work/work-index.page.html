@@ -1,0 +1,61 @@
+<section class="mx-auto max-w-6xl px-6 pt-32 pb-24 md:px-10">
+  <h1 class="font-display text-4xl font-bold tracking-tight md:text-7xl" i18n>Work</h1>
+  <p class="text-muted mt-4 max-w-xl" i18n>Featured projects first, then every public repository.</p>
+
+  <div class="mt-10" role="group" aria-label="Filter by language" i18n-aria-label>
+    <ul class="flex flex-wrap gap-2">
+      @for (name of languageOptions(); track name) {
+        <li>
+          <button
+            type="button"
+            class="border-line hover:border-blue aria-pressed:border-blue aria-pressed:text-blue-soft rounded-full border px-3 py-1 font-mono text-xs"
+            [attr.aria-pressed]="language() === name"
+            (click)="select(name)"
+          >
+            {{ name }}
+          </button>
+        </li>
+      }
+    </ul>
+  </div>
+
+  @if (featured().length) {
+    <h2 class="text-muted mt-14 font-mono text-xs tracking-wider uppercase" i18n>Featured</h2>
+    <ul class="mt-6 grid gap-6 md:grid-cols-3">
+      @for (project of featured(); track project.slug) {
+        <li>
+          <app-project-card
+            [slug]="project.slug"
+            [title]="project.title"
+            [summary]="project.summary"
+            [stack]="project.stack"
+            [featured]="true"
+          />
+        </li>
+      }
+    </ul>
+  }
+
+  <h2 class="text-muted mt-14 font-mono text-xs tracking-wider uppercase" i18n>All projects</h2>
+  @if (archive().length) {
+    <ul class="divide-line border-line mt-6 divide-y border-y">
+      @for (project of archive(); track project.slug) {
+        <li class="flex flex-col gap-1 py-4 md:flex-row md:items-baseline md:gap-6">
+          <a [routerLink]="['/work', project.slug]" class="hover:text-blue-soft font-semibold md:w-72 md:shrink-0">
+            {{ project.title }}
+          </a>
+          <span class="text-muted flex-1 text-sm">{{ project.summary }}</span>
+          <span class="text-muted font-mono text-xs">
+            {{ project.stack[0] }}
+            @if (project.stack[0]) {
+              <span aria-hidden="true"> · </span>
+            }
+            {{ project.pushedAt | date: 'MMM y' }}
+          </span>
+        </li>
+      }
+    </ul>
+  } @else {
+    <p class="text-muted mt-6" i18n>No projects match this filter.</p>
+  }
+</section>
