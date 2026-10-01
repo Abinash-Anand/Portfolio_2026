@@ -1,12 +1,12 @@
 {
   "schemaVersion": 2,
-  "fixture": true,
+  "fixture": false,
   "person": {
-    "name": "Alex Morgan",
-    "role": "Software Engineer",
+    "name": "Abinash Anand",
+    "role": "Full-Stack Software Engineer",
     "location": "Stuttgart / Germany",
     "statement": "Building software\nwith clarity,\ndepth & motion.",
-    "summary": "Building reliable software across interfaces, APIs, backend systems and AI-assisted engineering."
+    "summary": "TypeScript-focused full-stack engineer building production software, from architecture and APIs to deployment."
   },
   "navigation": {
     "label": "Primary navigation",
@@ -70,203 +70,7 @@
       "title": "From product intent to working system."
     }
   },
-  "projects": [
-    {
-      "slug": "code-sentinel",
-      "metadata": {
-        "schemaVersion": 1,
-        "title": "Code Sentinel",
-        "summary": "A review environment that turns repository context into precise, traceable engineering feedback.",
-        "year": "2026",
-        "category": "AI engineering platform",
-        "role": "Product engineering · System architecture",
-        "stack": [
-          "Angular",
-          "TypeScript",
-          "Node.js",
-          "PostgreSQL"
-        ],
-        "order": 0,
-        "featured": false,
-        "hidden": false,
-        "visual": {
-          "kind": "nodes",
-          "label": "CONTEXT / 04"
-        },
-        "narrative": {
-          "problem": "Code review signals were fragmented across tools, leaving teams to reconstruct context by hand.",
-          "constraints": "Repository-scale context, strict data boundaries, and explainable AI output.",
-          "decision": "A retrieval layer assembles scoped code context before specialized review agents evaluate each change.",
-          "result": "A coherent review workflow with transparent sources and repeatable engineering decisions.",
-          "architecture": [
-            "Angular",
-            "API Gateway",
-            "Review Agents",
-            "pgvector",
-            "Git Providers"
-          ]
-        }
-      },
-      "repositoryUrl": null,
-      "liveUrl": null
-    },
-    {
-      "slug": "facility-importer",
-      "metadata": {
-        "schemaVersion": 1,
-        "title": "Facility Importer",
-        "summary": "A resilient import workflow for validating and reconciling complex operational datasets.",
-        "year": "2025",
-        "category": "Data operations system",
-        "role": "Lead frontend · API design",
-        "stack": [
-          "TypeScript",
-          "NestJS",
-          "PostgreSQL",
-          "Redis"
-        ],
-        "order": 1,
-        "featured": false,
-        "hidden": false,
-        "visual": {
-          "kind": "pipeline",
-          "labels": [
-            "INGEST",
-            "VERIFY",
-            "COMMIT"
-          ]
-        },
-        "narrative": {
-          "problem": "Large facility imports failed opaquely and required expensive manual reconciliation.",
-          "constraints": "Inconsistent source schemas, partial failures, and long-running background operations.",
-          "decision": "A staged, idempotent pipeline separates parsing, validation, review, and commit.",
-          "result": "Operators can understand failures, correct source data, and safely resume an import.",
-          "architecture": [
-            "Upload UI",
-            "Validation API",
-            "Job Queue",
-            "PostgreSQL",
-            "Audit Log"
-          ]
-        },
-        "caseStudyContent": {
-          "projectSlug": "facility-importer",
-          "problem": {
-            "paragraphs": [
-              "Large facility imports failed opaquely and required expensive manual reconciliation."
-            ]
-          },
-          "constraints": [
-            {
-              "paragraphs": [
-                "Inconsistent source schemas, partial failures, and long-running background operations."
-              ]
-            }
-          ],
-          "technicalDecisions": [
-            {
-              "id": "staged-import",
-              "title": "Decision",
-              "decision": {
-                "paragraphs": [
-                  "A staged, idempotent pipeline separates parsing, validation, review, and commit."
-                ]
-              }
-            }
-          ],
-          "results": {
-            "status": "not-documented",
-            "note": "No verified outcome evidence has been supplied for this baseline content."
-          }
-        }
-      },
-      "repositoryUrl": null,
-      "liveUrl": null
-    },
-    {
-      "slug": "northstar",
-      "metadata": {
-        "schemaVersion": 1,
-        "title": "Northstar",
-        "summary": "A technical control surface for understanding events moving through distributed services.",
-        "year": "2025",
-        "category": "Distributed observability",
-        "role": "Architecture · Interaction design",
-        "stack": [
-          "Go",
-          "Kafka",
-          "gRPC",
-          "React"
-        ],
-        "order": 2,
-        "featured": false,
-        "hidden": false,
-        "visual": {
-          "kind": "radar",
-          "label": "N 48.7"
-        },
-        "narrative": {
-          "problem": "Operational events were technically available but difficult to connect into a system narrative.",
-          "constraints": "High event volume, asynchronous services, and multiple ownership boundaries.",
-          "decision": "A normalized event model and streaming gateway power a focused investigation interface.",
-          "result": "Teams gain a shared, navigable view of service behavior without masking system complexity.",
-          "architecture": [
-            "React",
-            "gRPC Gateway",
-            "Go Services",
-            "Kafka",
-            "Event Store"
-          ]
-        }
-      },
-      "repositoryUrl": null,
-      "liveUrl": null
-    },
-    {
-      "slug": "vc-brain",
-      "metadata": {
-        "schemaVersion": 1,
-        "title": "VC Brain",
-        "summary": "A research workspace that connects company knowledge, market context, and sourced analysis.",
-        "year": "2024",
-        "category": "Retrieval workspace",
-        "role": "Full-stack engineering",
-        "stack": [
-          "Python",
-          "RAG",
-          "PostgreSQL",
-          "React"
-        ],
-        "order": 3,
-        "featured": false,
-        "hidden": false,
-        "visual": {
-          "kind": "retrieval",
-          "labels": [
-            "QUERY",
-            "ROUTER",
-            "CONTEXT",
-            "SYNTHESIS"
-          ]
-        },
-        "narrative": {
-          "problem": "Research lived across documents and personal notes, making evidence hard to retrieve.",
-          "constraints": "Mixed document formats, access control, and the need for source-grounded answers.",
-          "decision": "Hybrid retrieval combines structured company data with semantically indexed documents.",
-          "result": "Research becomes reusable and every generated synthesis remains connected to evidence.",
-          "architecture": [
-            "Research UI",
-            "Query Router",
-            "RAG Pipeline",
-            "pgvector",
-            "Source Library"
-          ]
-        }
-      },
-      "repositoryUrl": null,
-      "liveUrl": null
-    }
-  ],
+  "projects": [],
   "projectDetail": {
     "storySteps": [
       "Overview",
@@ -289,11 +93,9 @@
     ],
     "implementation": {
       "lines": [
-        "request → scope_context()",
-        "context → evaluate(change)",
-        "result → persist_with_sources()"
+        "see repository → implementation details"
       ],
-      "summary": "Interfaces expose system state without concealing the underlying data flow."
+      "summary": "Implementation details for this project are documented in its repository."
     },
     "architecture": {
       "activeLabel": "Active node",
@@ -302,28 +104,28 @@
   },
   "experience": [
     {
-      "company": "Aperture Systems",
-      "role": "Senior Software Engineer",
-      "period": "2023—Now",
-      "tech": "Angular · Node.js · PostgreSQL",
-      "id": "aperture-systems",
-      "description": "Working across product definition, system architecture, and implementation to deliver software that remains understandable as it grows."
+      "id": "hft-stuttgart",
+      "company": "HFT Stuttgart",
+      "role": "Student Assistant, Facility Data Systems",
+      "period": "2026",
+      "tech": "Python · Automation · Automated testing",
+      "description": "Built and shipped a Python automation tool that replaced manual facility-data entry, processing 200+ records across 10+ buildings in a live production run with zero errors. Added a hierarchical resolution and verification pipeline with automatic detection of missing records, an automated test suite (100% passing) and independent post-import verification."
     },
     {
-      "company": "Fieldwork Labs",
-      "role": "Software Engineer",
-      "period": "2021—2023",
-      "tech": "TypeScript · NestJS · Kafka",
-      "id": "fieldwork-labs",
-      "description": "Working across product definition, system architecture, and implementation to deliver software that remains understandable as it grows."
+      "id": "letstream",
+      "company": "Letstream",
+      "role": "Software Development Engineer I",
+      "period": "2024—2025",
+      "tech": "Angular · GraphQL · Lazy loading",
+      "description": "Built a reactive Angular dashboard for logistics tracking that improved real-time data sync speed by 25%, and cut initial load times by 40% through custom lazy-loading and GraphQL fragment optimization. Led the migration of two developers from Vue.js to Angular, reducing code-review cycle time by 15%, and collaborated with backend engineers on end-to-end testing before release."
     },
     {
-      "company": "Independent",
-      "role": "Product Engineer",
-      "period": "2019—2021",
-      "tech": "React · Python · Prototyping",
-      "id": "independent",
-      "description": "Working across product definition, system architecture, and implementation to deliver software that remains understandable as it grows."
+      "id": "elluminati-ventures",
+      "company": "Elluminati Ventures",
+      "role": "Software Engineer, Full Stack Intern (MEAN)",
+      "period": "2023—2024",
+      "tech": "Angular · Node.js · MongoDB",
+      "description": "Built a full-stack ride-booking platform with an Angular frontend and a Node.js, Express and MongoDB backend, including real-time tracking, Stripe payments and multi-channel notifications. Developed the REST APIs for the complete ride lifecycle, WebSocket live tracking, browser push notifications, PWA support and an admin dashboard with ride history, filtering, export and live trip visualization via Google Maps."
     }
   ],
   "technologies": [
@@ -331,28 +133,24 @@
       "label": "Frontend",
       "items": [
         {
-          "name": "Angular",
-          "usedIn": "Code Sentinel"
+          "name": "TypeScript",
+          "usedIn": "SynthGraph"
         },
         {
-          "name": "TypeScript",
-          "usedIn": "Code Sentinel"
+          "name": "Angular",
+          "usedIn": "Eber · Letstream"
+        },
+        {
+          "name": "React",
+          "usedIn": "ParkRabbit"
+        },
+        {
+          "name": "Next.js",
+          "usedIn": "SynthGraph"
         },
         {
           "name": "RxJS",
-          "usedIn": "Facility Importer"
-        },
-        {
-          "name": "Signals",
-          "usedIn": "Code Sentinel"
-        },
-        {
-          "name": "HTML / CSS",
-          "usedIn": "All projects"
-        },
-        {
-          "name": "Tailwind",
-          "usedIn": "VC Brain"
+          "usedIn": "Eber"
         }
       ]
     },
@@ -361,23 +159,23 @@
       "items": [
         {
           "name": "Node.js",
-          "usedIn": "Code Sentinel"
+          "usedIn": "Eber"
         },
         {
           "name": "Express",
-          "usedIn": "Internal APIs"
+          "usedIn": "Eber"
         },
         {
           "name": "NestJS",
-          "usedIn": "Facility Importer"
+          "usedIn": "SynthGraph"
         },
         {
-          "name": "Go",
-          "usedIn": "Northstar"
+          "name": "Spring Boot",
+          "usedIn": "ParkRabbit"
         },
         {
           "name": "Python",
-          "usedIn": "VC Brain"
+          "usedIn": "SynthGraph SDK · HFT Stuttgart"
         }
       ]
     },
@@ -386,105 +184,104 @@
       "items": [
         {
           "name": "PostgreSQL",
-          "usedIn": "Facility Importer"
-        },
-        {
-          "name": "Redis",
-          "usedIn": "Facility Importer"
+          "usedIn": "SynthGraph · ParkRabbit"
         },
         {
           "name": "MongoDB",
-          "usedIn": "Internal tools"
+          "usedIn": "Eber"
         },
         {
-          "name": "Kafka",
-          "usedIn": "Northstar"
+          "name": "RabbitMQ",
+          "usedIn": "ParkRabbit"
         },
         {
-          "name": "gRPC",
-          "usedIn": "Northstar"
+          "name": "WebSockets",
+          "usedIn": "ParkRabbit · Eber"
+        },
+        {
+          "name": "GraphQL",
+          "usedIn": "Letstream"
         }
       ]
     },
     {
-      "label": "AI / Systems",
+      "label": "Engineering",
       "items": [
         {
-          "name": "RAG",
-          "usedIn": "VC Brain"
-        },
-        {
-          "name": "pgvector",
-          "usedIn": "Code Sentinel"
-        },
-        {
-          "name": "AI agents",
-          "usedIn": "Code Sentinel"
-        },
-        {
           "name": "Docker",
-          "usedIn": "All projects"
+          "usedIn": "SynthGraph · ParkRabbit"
         },
         {
           "name": "CI / CD",
-          "usedIn": "All projects"
+          "usedIn": "SynthGraph"
+        },
+        {
+          "name": "Automated testing",
+          "usedIn": "SynthGraph · HFT Stuttgart"
+        },
+        {
+          "name": "REST APIs",
+          "usedIn": "Eber · SynthGraph"
         }
       ]
     }
   ],
   "education": [
     {
-      "qualification": "MSc · Computer Science"
+      "qualification": "M.Sc. · Software Technology, HFT Stuttgart"
+    },
+    {
+      "qualification": "B.Tech. · Information Technology, Pune"
     }
   ],
   "about": {
-    "description": "I build software as a connected system: interface, state, service boundaries, data, and the people operating it. The goal is not novelty. It is clarity that survives complexity.",
+    "description": "I design, build and ship production software end to end, from architecture and backend APIs through testing and deployment, across React and Angular frontends and Node.js and NestJS backends.",
     "location": "Based in Stuttgart, Germany",
-    "exploration": "Currently exploring reliable AI-assisted software",
+    "exploration": "Currently exploring architecture-driven, agentic engineering workflows",
     "interestsLabel": "Areas of interest",
     "interests": [
-      "Frontend engineering",
+      "Software architecture",
       "Distributed systems",
-      "Developer tooling",
-      "Product engineering"
+      "Agentic workflows",
+      "Full-stack TypeScript"
     ]
   },
   "services": [
     {
-      "id": "product-engineering",
-      "title": "Product Engineering",
-      "description": "From ambiguous product problem to resilient software system."
+      "id": "full-stack-development",
+      "title": "Full-stack Development",
+      "description": "TypeScript applications from interface to API and database, shipped with automated tests and CI/CD."
     },
     {
       "id": "frontend-engineering",
       "title": "Frontend Engineering",
-      "description": "Complex interfaces with clear state, motion, and accessibility."
+      "description": "Reactive Angular and React interfaces with real-time data and attention to load performance."
     },
     {
-      "id": "full-stack-development",
-      "title": "Full-stack Development",
-      "description": "Cohesive products across data, services, and user experience."
+      "id": "backend-and-api-design",
+      "title": "Backend & API Design",
+      "description": "NestJS and Node.js services with explicit domain boundaries, API contracts and migration discipline."
     },
     {
-      "id": "ai-assisted-software",
-      "title": "AI-assisted Software",
-      "description": "Grounded AI features with deliberate context and evaluation."
+      "id": "software-architecture",
+      "title": "Software Architecture",
+      "description": "Event-driven and distributed system design, the focus of my M.Sc. studies."
     },
     {
-      "id": "technical-prototyping",
-      "title": "Technical Prototyping",
-      "description": "Fast, production-aware exploration of critical product ideas."
+      "id": "ai-assisted-engineering",
+      "title": "AI-assisted Engineering",
+      "description": "Agentic coding workflows guided by explicit architecture and engineering guardrails."
     }
   ],
   "contact": {
-    "email": "alex@example.com",
+    "email": "anandabinash25@gmail.com",
     "calendly": "https://calendly.com/abinashanandab/15min",
     "booking": {
       "label": "BOOK A CONVERSATION",
       "detail": "15 MIN · CALENDLY",
       "accessibleLabel": "Book a 15-minute conversation (opens in a new tab)"
     },
-    "availability": "Available for selected projects",
+    "availability": "Open to new opportunities",
     "location": "Stuttgart · CET",
     "headingLines": [
       "Let’s build",
@@ -494,11 +291,11 @@
     "socials": [
       {
         "label": "LinkedIn",
-        "href": "https://linkedin.com"
+        "href": "https://www.linkedin.com/in/abinash-anand-064598203/"
       },
       {
         "label": "GitHub",
-        "href": "https://github.com"
+        "href": "https://github.com/Abinash-Anand"
       }
     ]
   },

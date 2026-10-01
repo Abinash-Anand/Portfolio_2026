@@ -3,7 +3,7 @@ import { createPortfolioRepository } from "./portfolioRepository";
 import { PortfolioStore } from "./PortfolioStore";
 
 const snapshots = import.meta.glob("../generated/githubPortfolio.json", { eager: true, import: "default" });
-const fixtures = import.meta.env.DEV ? import.meta.glob("../../../portfolio.json", { eager: true, import: "default" }) : {};
+const fixtures = import.meta.env.DEV ? import.meta.glob("../../../fixtures/portfolio.fixture.json", { eager: true, import: "default" }) : {};
 const mode = import.meta.env.VITE_PORTFOLIO_DATA_MODE ?? (import.meta.env.DEV ? "fixture" : "github");
 if (mode !== "github" && mode !== "fixture") throw new Error("VITE_PORTFOLIO_DATA_MODE must be github or fixture");
 if (import.meta.env.PROD && mode !== "github") throw new Error("Production rendering requires GitHub mode");

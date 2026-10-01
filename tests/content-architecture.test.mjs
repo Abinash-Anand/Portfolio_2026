@@ -15,7 +15,7 @@ import { noAnalytics, analyticsPayload } from "../src/app/application/AnalyticsP
 import { discoverPinnedRepositories, syncPortfolio } from "../scripts/sync-github.ts";
 
 const root = resolve(import.meta.dirname, "..");
-const fixture = JSON.parse(readFileSync(resolve(root, "portfolio.json"), "utf8"));
+const fixture = JSON.parse(readFileSync(resolve(root, "fixtures/portfolio.fixture.json"), "utf8"));
 const clone = () => structuredClone(fixture);
 const storeFor = document => new PortfolioStore(createPortfolioRepository(document));
 const require = createRequire(import.meta.url);
@@ -122,6 +122,7 @@ test("GraphQL discovery filters unions and infrastructure, preserving pin order"
 
 test("offline synchronization consumes self-contained repository content without a registry", async () => {
   const document = alternateDocument(); document.fixture = false; document.projects = [];
+  document.contact = {...document.contact, email: "contact@synthetic-owner.dev", calendly: "https://calendly.com/synthetic-owner/15min", socials: [{label: "social.alternate", href: "https://social.synthetic-owner.dev/profile"}]};
   const editorial = alternateDocument().projects.map(project => project.metadata);
   const metadataByName = new Map(alternateDocument().projects.map((project, index) => [project.slug, editorial[index]]));
   metadataByName.set("project-gamma", {schemaVersion: 1, title: "project-gamma.title", summary: "project-gamma.summary"});

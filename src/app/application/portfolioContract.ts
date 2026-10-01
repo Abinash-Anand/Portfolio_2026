@@ -95,7 +95,7 @@ export function validateRepositorySnapshot(value: unknown): readonly RepositoryP
   return snapshot.projects;
 }
 export function validateGeneratedPortfolio(value: unknown): {document: PortfolioDocument; projects?: readonly RepositoryProject[]} {
-  if (!value || typeof value !== "object" || Array.isArray(value)) fail("githubPortfolio.json", "missing generated data; run sync:github with PORTFOLIO_GH_TOKEN or use explicit development fixture mode");
+  if (!value || typeof value !== "object" || Array.isArray(value)) fail("githubPortfolio.json", "missing generated data; run sync:github (see .env.example) or use explicit development fixture mode");
   const input = value as Record<string, unknown>;
   if (input.schemaVersion !== 1) fail("githubPortfolio.json.schemaVersion", "must equal 1");
   if (Object.keys(input).some(key => !["schemaVersion", "source", "document", "projects"].includes(key))) fail("githubPortfolio.json", "unsupported field");

@@ -100,7 +100,8 @@ const pinnedQuery = `query PortfolioPinnedRepositories($owner: String!) {
     }
   }
 }`;
-export async function discoverPinnedRepositories(source: Source, api: Client): Promise<string[]> {
+export type PinDiscovery = {login: string; returned: number; repositories: string[]};
+export async function discoverPins(source: Source, api: Client): Promise<PinDiscovery> {
   const data = record(await api.graphql(pinnedQuery, {owner: source.owner}), "GitHub pins");
   const viewer = record(data.viewer, "GitHub viewer");
   const user = record(data.user, "GitHub owner");
@@ -118,7 +119,20 @@ export async function discoverPinnedRepositories(source: Source, api: Client): P
     text(record(node.defaultBranchRef, `${name}.defaultBranchRef`).name, `${name}.defaultBranchRef.name`);
     selections.push(name);
   }
-  return validateSelection(selections);
+  return {login: text(user.login, "user.login"), returned: nodes.length, repositories: validateSelection(selections)};
+}
+export async function discoverPinnedRepositories(source: Source, api: Client): Promise<string[]> {
+  return (await discoverPins(source, api)).repositories;
+}
+const optionalContent = ["title", "summary", "category", "kicker", "role", "year", "stack", "highlights", "links", "visual", "narrative", "implementation", "caseStudyContent"] as const;
+export function missingOptionalMetadata(editorial: RepositoryProject["editorial"]): string[] {
+  return optionalContent.filter(field => editorial === null || editorial[field] === undefined);
+}
+const reservedHost = /(^|\.)example\.(com|org|net)$|\.(invalid|test|example|localhost)$|^localhost$/i;
+function assertNoPlaceholderIdentity(document: PortfolioDocument, path: string): void {
+  const hosts: [string, string][] = [["contact.email", document.contact.email.split("@")[1] ?? ""], ...document.contact.socials.map((link, index): [string, string] => [`contact.socials[${index}]`, new URL(link.href).hostname])];
+  if (document.contact.calendly) hosts.push(["contact.calendly", new URL(document.contact.calendly).hostname]);
+  for (const [field, host] of hosts) if (reservedHost.test(host)) throw new Error(`${path}: ${field} uses a reserved placeholder host; production cannot publish placeholder identity`);
 }
 function content(value: unknown, source: string): {path: string; text: string} {
   const file = record(value, source);
@@ -156,12 +170,14 @@ export async function syncRepositories(selections: readonly string[], request: t
 export async function syncPortfolio(configuration: unknown, token: string, request: typeof fetch = fetch) {
   const source = validateSource(configuration);
   const api = client(token, request);
-  const pins = await discoverPinnedRepositories(source, api);
+  const discovery = await discoverPins(source, api);
+  const pins = discovery.repositories;
   const {revision} = await repositoryAtRevision(source.repository, api);
   const documentPath = `${source.repository}/portfolio.json@${revision}`;
   const documentFile = await api.json(`repos/${source.repository}/contents/portfolio.json?ref=${revision}`);
   const document = validatePortfolioDocument(parse(content(documentFile, documentPath).text, documentPath), documentPath);
   if (document.fixture) throw new Error(`${documentPath}: fixture=true cannot be published as GitHub production content`);
+  assertNoPlaceholderIdentity(document, documentPath);
   const projects = await syncSelected(pins, api);
   let resume: {path: string; bytes: Buffer} | null = null;
   let normalizedDocument: PortfolioDocument = document;
@@ -177,7 +193,7 @@ export async function syncPortfolio(configuration: unknown, token: string, reque
   const snapshot = {schemaVersion: 1, source: {mode: "github", ...source, revision, pinnedRepositories: pins}, document: normalizedDocument, projects};
   validateGeneratedPortfolio(snapshot);
   createPortfolioRepository(snapshot.document, {schemaVersion: 1, projects});
-  return {snapshot, resume};
+  return {snapshot, resume, discovery};
 }
 async function atomicWrite(path: string, data: string | Buffer): Promise<void> {
   await mkdir(dirname(path), {recursive: true});
@@ -199,7 +215,7 @@ export async function main(): Promise<void> {
   const mode = process.env.PORTFOLIO_DATA_MODE ?? "github";
   if (mode === "fixture") {
     if (process.argv.includes("--production")) throw new Error("Production build requires GitHub mode; fixture mode is only allowed for development synchronization");
-    const document = validatePortfolioDocument(parse(await readFile(resolve(root, "portfolio.json"), "utf8"), "local fixture"));
+    const document = validatePortfolioDocument(parse(await readFile(resolve(root, "fixtures/portfolio.fixture.json"), "utf8"), "local fixture"));
     if (!document.fixture) throw new Error("Fixture mode requires an explicitly marked fixture=true document");
     await atomicWrite(generatedPath, `${JSON.stringify({schemaVersion: 1, source: {mode: "fixture"}, document}, null, 2)}\n`);
     await removeOldResumes();
@@ -209,14 +225,16 @@ export async function main(): Promise<void> {
   }
   if (mode !== "github") throw new Error("PORTFOLIO_DATA_MODE must be github or fixture");
   const source = parse(await readFile(resolve(root, "scripts/github-source.json"), "utf8"), "github-source.json");
-  const {snapshot, resume} = await syncPortfolio(source, process.env.PORTFOLIO_GH_TOKEN ?? "");
+  const {snapshot, resume, discovery} = await syncPortfolio(source, process.env.PORTFOLIO_GH_TOKEN ?? "");
   if (resume) await atomicWrite(resolve(root, "public", resume.path), resume.bytes);
   await atomicWrite(generatedPath, `${JSON.stringify(snapshot, null, 2)}\n`);
   await removeOldResumes(resume?.path);
   await rm(resolve(root, "src/app/generated/githubProjects.json"), {force: true});
+  console.log(`GitHub owner: ${discovery.login} | pinned items returned: ${discovery.returned} | repositories after filtering: ${discovery.repositories.length}`);
   console.log(`GitHub pins in source order: ${snapshot.source.pinnedRepositories.join(", ") || "(none)"}`);
   snapshot.projects.forEach((project, index) => {
-    console.log(`${index + 1}. ${project.evidence.repository} | portfolio.json: ${project.editorial === null ? "missing; repository evidence fallback" : "present; validated"} | revision: ${project.evidence.revision}`);
+    const missing = missingOptionalMetadata(project.editorial);
+    console.log(`${index + 1}. ${project.evidence.repository} | portfolio.json: ${project.editorial === null ? "missing; repository evidence fallback" : "present; validated"} | optional metadata absent: ${missing.join(", ") || "none"} | hidden: ${project.editorial?.hidden === true} | revision: ${project.evidence.revision}`);
   });
   console.log(`GitHub sync: ${snapshot.projects.length} pinned repositories, ${createPortfolioRepository(snapshot.document, {schemaVersion: 1, projects: snapshot.projects}).getPortfolio().projects.length} visible projects, portfolio revision ${snapshot.source.revision}`);
 }
