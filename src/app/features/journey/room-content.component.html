@@ -1,0 +1,164 @@
+@switch (endpoint()) {
+  @case ('about') {
+    <h2
+      id="room-title"
+      tabindex="-1"
+      data-autofocus
+      class="font-display text-2xl font-bold tracking-tight focus:outline-none md:text-3xl"
+    >
+      {{ profile.name.toUpperCase() }} // {{ profile.role.toUpperCase() }}
+    </h2>
+    <p class="mt-4 leading-relaxed">{{ profile.about[1] }}</p>
+    <ul class="mt-4 flex flex-col gap-1 text-sm">
+      <li><span class="text-muted" i18n>Location:</span> Stuttgart, Germany</li>
+      <li><span class="text-muted" i18n>Core stack:</span> {{ coreStack }}</li>
+    </ul>
+  }
+
+  @default {
+    <h2
+      id="room-title"
+      tabindex="-1"
+      data-autofocus
+      class="font-display text-2xl font-bold tracking-tight focus:outline-none md:text-3xl"
+    >
+      GET {{ info().path }}
+    </h2>
+    <p class="mt-2">{{ info().summary }}</p>
+
+    <ul class="mt-5 flex flex-col gap-5">
+      @switch (endpoint()) {
+        @case ('education') {
+          @for (entry of resume.education; track entry.id) {
+            <li class="border-line border-l pl-4">
+              <ng-container
+                [ngTemplateOutlet]="title"
+                [ngTemplateOutletContext]="{ id: entry.id, text: entry.degree }"
+              />
+              <p class="text-muted text-sm">{{ entry.institution }}</p>
+              <p class="text-muted font-mono text-xs">{{ entry.period }}</p>
+              <p class="mt-1 text-sm">{{ entry.note }}</p>
+            </li>
+          }
+        }
+
+        @case ('skills') {
+          @for (group of resume.skills; track group.id) {
+            <li class="border-line border-l pl-4">
+              <ng-container
+                [ngTemplateOutlet]="title"
+                [ngTemplateOutletContext]="{ id: group.id, text: group.label }"
+              />
+              <ul class="mt-2 flex flex-wrap gap-1.5">
+                @for (item of group.items; track item) {
+                  <li class="border-line bg-surface rounded-full border px-2.5 py-0.5 text-xs">
+                    {{ item }}
+                  </li>
+                }
+              </ul>
+            </li>
+          }
+        }
+
+        @case ('projects') {
+          @for (project of projects(); track project.slug) {
+            <li class="border-line border-l pl-4">
+              <ng-container
+                [ngTemplateOutlet]="title"
+                [ngTemplateOutletContext]="{ id: project.slug, text: project.title }"
+              />
+              @if (project.summary) {
+                <p class="text-muted mt-1 text-sm">{{ project.summary }}</p>
+              }
+              @if (languages(project.slug); as languages) {
+                <p class="text-muted mt-1 font-mono text-xs">{{ languages }}</p>
+              }
+              <p class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm">
+                <a
+                  [routerLink]="['/work', project.slug]"
+                  [appTrack]="{ name: 'project_open', slug: project.slug }"
+                  class="text-blue-soft hover:underline"
+                  i18n
+                >
+                  Project page →
+                </a>
+                <a
+                  [href]="project.repoUrl"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="text-blue-soft hover:underline"
+                  i18n
+                >
+                  GitHub ↗
+                </a>
+                @if (project.liveUrl) {
+                  <a
+                    [href]="project.liveUrl"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="text-blue-soft hover:underline"
+                    i18n
+                  >
+                    Live ↗
+                  </a>
+                }
+              </p>
+            </li>
+          }
+        }
+
+        @case ('experience') {
+          @for (entry of resume.experience; track entry.id) {
+            <li class="border-line border-l pl-4">
+              <p class="text-muted font-mono text-xs">{{ entry.period }}</p>
+              <ng-container
+                [ngTemplateOutlet]="title"
+                [ngTemplateOutletContext]="{ id: entry.id, text: entry.role }"
+              />
+              <p class="text-muted text-sm">{{ entry.organisation }} · {{ entry.location }}</p>
+              <ul class="marker:text-blue mt-2 flex list-disc flex-col gap-1.5 pl-5 text-sm">
+                @for (highlight of entry.highlights; track $index) {
+                  <li>{{ highlight }}</li>
+                }
+              </ul>
+            </li>
+          }
+        }
+      }
+    </ul>
+
+    <a
+      [routerLink]="info().route"
+      class="text-blue-soft mt-5 inline-block text-sm hover:underline"
+      i18n
+    >
+      Open the {{ info().title }} page →
+    </a>
+  }
+}
+
+<!--
+  An entry's title. With a 3D world running it is a button: hover or focus points the camera at the entry, a press
+  keeps it there. Without one it is a plain line of text.
+-->
+<ng-template #title let-id="id" let-text="text">
+  @if (canLook()) {
+    <button
+      type="button"
+      class="hover:text-blue-soft focus-visible:text-blue-soft flex w-full items-baseline justify-between gap-3 text-left font-semibold"
+      [attr.aria-pressed]="pinned() === id"
+      (mouseenter)="look(id)"
+      (focus)="look(id)"
+      (mouseleave)="unlook()"
+      (blur)="unlook()"
+      (click)="toggle(id)"
+    >
+      <span>{{ text }}</span>
+      <span class="hud-label shrink-0" aria-hidden="true">{{
+        pinned() === id ? '[ LOOKING ]' : '[ LOOK ]'
+      }}</span>
+    </button>
+  } @else {
+    <p class="font-semibold">{{ text }}</p>
+  }
+</ng-template>

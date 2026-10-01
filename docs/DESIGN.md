@@ -171,7 +171,8 @@ Nothing flashes more than 3 times per second (WCAG 2.3.1). The lens "snap" is a 
 - Camera: field of view about 55 to 65 degrees; movement is slow dolly and glide (`ease-glide`), no handheld shake.
 
 ### 9.2 Text in 3D
-Readable text (the dashboard, panels, terminal windows, records) is **DOM overlay anchored to projected 3D positions**: crisp, selectable, translatable, accessible. WebGL text (SDF) is only for short labels such as `AuthGuard`, `STUTTGART_NODE_01`.
+**Phase 3 decision (ADR-020):** all text inside the world (gate names, `STUTTGART_NODE_01`, terminal windows, records, commit cards, chip skills) is drawn into one label atlas per room and shown as textured quads. It is decoration for the eye and the canvas stays `aria-hidden`. The same words exist as **real DOM text in the room panel** (crisp, selectable, translatable, accessible), and hovering an entry there points the camera at it. This replaced the earlier plan of DOM labels anchored to projected 3D positions, which needs per-frame DOM writes, cannot be occluded by the world and costs layout.
+Rules: HUD font (JetBrains Mono, loaded before text is drawn), text colors from the TEXT_SAFE tokens only, at most one atlas per room (1024 wide), never text that exists only in 3D.
 
 ### 9.3 Scenes
 | Scene | Palette | Motifs | Notes |
@@ -180,12 +181,12 @@ Readable text (the dashboard, panels, terminal windows, records) is **DOM overla
 | Console (Act I) | `blue` gridlines, `text` | Polished glass chamber (fake reflection), five emissive keycaps, reticle or outline hands | Keycaps instanced |
 | Tunnel | `cyan` out, `gold` back, `blue` lines | Streaming digits and packet headers, light streaks | Points with a glyph atlas; **about 30k points max (high), fewer on lower tiers**; no real motion blur |
 | Server vault (Act III) | `indigo`, `violet`, `emerald` gates | Cathedral hall of racks, laser gates `AuthGuard` and `ValidationPipe`, spinning core in a glass cylinder | Racks as `InstancedMesh`; LEDs via instanced emissive attribute; baked AO |
-| Database vault (Act IV) | `yellow` beam, metal drums | Circular drum array, laser arm, holographic records | Drums matcap; records as DOM |
+| Database vault (Act IV) | `yellow` beam, metal drums | Pit beneath the aisle, circular drum array, laser arm, holographic records, golden `RESPONSE_BODY (200 OK)` container | Drums and rims instanced; records are an atlas label |
 | Return and dashboard (Act V) | `gold` container | Container floats up and opens | Dashboard is a DOM glass panel |
-| Education | `blue` (HFT) | Server tower, blade `M.SC_SOFTWARE_TECHNOLOGY`, terminal windows | Windows as DOM |
-| Skills (PCB) | `blue`, `emerald` traces | Chips as instanced boxes with emissive labels, data streams along traces | Cheapest room |
-| Projects (pods) | per-project accent from the project's primary language | Pods generated from GitHub data | Data-driven, no per-project code |
-| Experience (git graph) | `blue` main line, branch hues by type | `git log --graph` corridor, commit nodes expand into metrics | Nodes instanced |
+| Education | `blue` (HFT) | Server tower `STUTTGART_NODE_01`, one pulled-out blade per degree (`M.SC_SOFTWARE_TECHNOLOGY`, `B.TECH_INFORMATION_TECHNOLOGY`), terminal windows with only facts from the CV | Windows are atlas labels; the CV has no coursework list, so none is invented |
+| Skills (PCB) | `blue`, `violet`, `cyan`, `gold` dies | One chip per CV skill group (four), pins, traces, data pulses along the traces | Cheapest room (about 9 draw calls) |
+| Projects (pods) | per-pod accent | One pod per pinned project: a lineage graph, or a producer-queue-consumer pipeline for event-driven work | Data-driven (size from languages and stars), no per-project code; at most five pods |
+| Experience (git graph) | `blue` main line, `gold` HEAD | `git log --graph` corridor, newest commit nearest; the commit the camera reaches (or the visitor picks) unfolds its achievements | Nodes instanced; the 3D card shows whole achievements up to a limit, the panel shows all |
 
 ### 9.4 Budgets (starting values)
 Per room on the high tier: about 100 draw calls, about 150k triangles; low tier about 50k triangles. Textures 1K to 2K KTX2. Only one room (plus the tunnel) in memory. See ARCHITECTURE.md 7.2 and 9.5.
@@ -279,3 +280,4 @@ The tier is shown in the HUD as `GRAPHICS` and is user-selectable.
 |---|---|
 | 2026-10-01 | Initial design specification from the owner's concept; palette contrast computed; tokens migrated in `src/styles.css`. |
 | 2026-10-01 | Phase 2: tokens mirrored in `core/design/tokens.ts` (a test keeps CSS and TypeScript in sync and asserts every text token meets AA); HUD, keycap, glass-panel and terminal styles added; `/styleguide` renders the system live. |
+| 2026-10-01 | Phase 3: 3D text decided as a decorative label atlas with the same content in the DOM panel (9.2); room rows in 9.3 updated to what was built; HUD buttons got a translucent backing so panel text never shows through them. |

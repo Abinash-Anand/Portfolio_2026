@@ -88,13 +88,19 @@ describe('EndpointKeys', () => {
     expect(buttons.every((b) => b.getAttribute('type') === 'button')).toBe(true);
   });
 
-  it('emits the endpoint on click and a cue on hover', () => {
+  it('emits the endpoint on click, and which key is looked at on hover', () => {
     const { el, selected, hovered } = render();
     const skills = el.querySelectorAll('button')[2] as HTMLButtonElement;
     skills.dispatchEvent(new Event('mouseenter'));
     skills.click();
-    expect(hovered).toHaveBeenCalledOnce();
+    expect(hovered).toHaveBeenCalledExactlyOnceWith('skills');
     expect(selected).toHaveBeenCalledExactlyOnceWith('skills');
+  });
+
+  it('reports a key that gets keyboard focus the same way, so tabbing prepares its room', () => {
+    const { el, hovered } = render();
+    (el.querySelectorAll('button')[3] as HTMLButtonElement).dispatchEvent(new Event('focus'));
+    expect(hovered).toHaveBeenCalledExactlyOnceWith('projects');
   });
 
   it('marks only the first key for autofocus and can be disabled', () => {
