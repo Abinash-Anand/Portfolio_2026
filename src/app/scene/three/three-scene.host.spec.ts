@@ -1,11 +1,14 @@
-import { InstancedMesh, Points, ShaderMaterial, type PerspectiveCamera, type Scene } from 'three';
+import { InstancedMesh, Points, type PerspectiveCamera, type Scene } from 'three';
+import type { SceneContent } from '../scene-host';
+import { EMPTY_CONTENT } from '../scene-host';
 import { FakeScheduler } from '../testing';
 import { THREE_PROFILES } from './profiles';
+import type { RoomManager } from './room-manager';
+import { FakeRoom, fakeLoaders, macrotask } from './testing';
 import { ThreeSceneHost, type RendererPort } from './three-scene.host';
 import type { ConsoleRoom } from './world/console-room';
 import type { Headset } from './world/headset';
 import type { Tunnel } from './world/tunnel';
-import type { Vault } from './world/vault';
 
 /** Stands in for WebGLRenderer: jsdom has no WebGL, and the host's logic does not need a real one. */
 class FakeRenderer {
@@ -38,7 +41,7 @@ interface World {
   headset: Headset;
   consoleRoom: ConsoleRoom;
   tunnel: Tunnel;
-  vault: Vault;
+  rooms: RoomManager;
   scene: Scene;
   camera: PerspectiveCamera;
 }
@@ -49,8 +52,15 @@ const random = (): number => (seed = (seed * 16807) % 2147483647) / 2147483647;
 function setup(tier: 'high' | 'medium' | 'low' = 'high') {
   const scheduler = new FakeScheduler();
   const renderer = new FakeRenderer();
+  const fakes = fakeLoaders();
   const createRenderer = vi.fn(() => renderer as unknown as RendererPort);
-  const host = new ThreeSceneHost({ scheduler, random, createRenderer });
+  const host = new ThreeSceneHost({
+    scheduler,
+    random,
+    createRenderer,
+    loaders: fakes.loaders,
+    createCanvas: () => null,
+  });
   const canvas = document.createElement('canvas');
   host.setTier(tier);
   const world = host as unknown as World;
@@ -59,8 +69,21 @@ function setup(tier: 'high' | 'medium' | 'low' = 'high') {
   const run = (seconds: number): void => {
     clock = scheduler.run(Math.round(seconds * 60), 1000 / 60, clock);
   };
-  return { host, scheduler, renderer, createRenderer, canvas, world, run };
+  /** Lets rooms load and build in the background: frames run the scheduler, promises settle in between. */
+  const settle = async (seconds = 0.2): Promise<void> => {
+    await macrotask();
+    run(seconds);
+    await macrotask();
+    run(seconds);
+    await macrotask();
+  };
+  return { host, scheduler, renderer, createRenderer, canvas, world, run, settle, fakes };
 }
+
+const content = (label: string): SceneContent => ({
+  ...EMPTY_CONTENT,
+  records: [{ key: label, value: 'x' }],
+});
 
 describe('ThreeSceneHost', () => {
   describe('mounting', () => {
@@ -87,25 +110,22 @@ describe('ThreeSceneHost', () => {
       expect(scheduler.pending).toBe(false);
     });
 
-    it('compiles every shader up front, with all parts visible only for that instant', () => {
+    it('compiles every shared shader up front, with the parts visible only for that instant', () => {
       const { host, renderer, canvas, world } = setup();
       let seen: boolean[] = [];
       renderer.compileAsync.mockImplementation(() => {
-        seen = [world.headset, world.consoleRoom, world.tunnel, world.vault].map(
-          (part) => part.object.visible,
-        );
+        seen = [world.headset, world.consoleRoom, world.tunnel].map((part) => part.object.visible);
         return Promise.resolve();
       });
       host.mount(canvas);
 
       expect(renderer.compileAsync).toHaveBeenCalledTimes(1);
-      expect(seen).toEqual([true, true, true, true]);
+      expect(seen).toEqual([true, true, true]);
       expect(world.consoleRoom.object.visible).toBe(false);
-      expect(world.vault.object.visible).toBe(false);
       expect(world.tunnel.object.visible).toBe(false);
     });
 
-    it('then draws each hidden part once into a single pixel, one per frame, from the camera that will see it', async () => {
+    it('then draws each hidden shared part once into a single pixel, one per frame, from the camera that will see it', async () => {
       const { host, canvas, renderer, world, run } = setup();
       host.mount(canvas);
 
@@ -114,13 +134,13 @@ describe('ThreeSceneHost', () => {
 
       await host.bench!.whenCompiled();
       const before = renderer.render.mock.calls.length;
-      run(0.05); // three frames
+      run(0.05);
       const calls = renderer.render.mock.calls.slice(before);
       const warmDraws = calls.filter(([, camera]) => camera !== world.camera);
 
-      expect(warmDraws).toHaveLength(3); // console, tunnel, vault
+      expect(warmDraws).toHaveLength(2); // console, tunnel
       expect(renderer.setScissor).toHaveBeenCalledWith(0, 0, 1, 1);
-      expect(renderer.setScissorTest.mock.calls.filter(([on]) => on === true)).toHaveLength(3);
+      expect(renderer.setScissorTest.mock.calls.filter(([on]) => on === true)).toHaveLength(2);
       expect(renderer.setScissorTest.mock.calls.at(-1)).toEqual([false]);
 
       run(1); // the queue is empty afterwards: only normal frames
@@ -128,15 +148,14 @@ describe('ThreeSceneHost', () => {
       expect(later.every(([, camera]) => camera === world.camera)).toBe(true);
 
       expect(world.consoleRoom.object.visible).toBe(false); // visibility is restored
-      expect(world.vault.object.visible).toBe(false);
     });
 
     it('can run the whole warm-up on demand and report each step', async () => {
       const { host, canvas, renderer } = setup();
       host.mount(canvas);
       const times = await host.bench!.warmUp();
-      expect(times).toHaveLength(3);
-      expect(renderer.gl.readPixels).toHaveBeenCalledTimes(3); // synced so the time is the real cost
+      expect(times).toHaveLength(2);
+      expect(renderer.gl.readPixels).toHaveBeenCalledTimes(2); // synced so the time is the real cost
       expect(await host.bench!.warmUp()).toEqual([]); // only once
     });
 
@@ -147,13 +166,14 @@ describe('ThreeSceneHost', () => {
       await expect(host.bench!.whenCompiled()).resolves.toBeUndefined();
     });
 
-    it('replays a snapshot that arrived before the world existed, without a flight', () => {
-      const { host, canvas, world, run } = setup();
+    it('replays a snapshot that arrived before the world existed, without a flight', async () => {
+      const { host, canvas, world, fakes, settle } = setup();
       host.setSnapshot({ phase: 'room', endpoint: 'skills' });
       host.mount(canvas);
-      run(0.2);
+      await settle();
       expect(world.headset.gone).toBe(true);
-      expect(world.vault.object.visible).toBe(true);
+      expect(world.rooms.current?.id).toBe('skills');
+      expect(fakes.roomOf('skills')?.shown).toBe(true);
       expect(world.tunnel.object.visible).toBe(false); // arrived directly: no response stream
     });
   });
@@ -166,7 +186,7 @@ describe('ThreeSceneHost', () => {
       expect(world.headset.object.visible).toBe(true);
       expect(world.consoleRoom.object.visible).toBe(false);
       expect(world.tunnel.object.visible).toBe(false);
-      expect(world.vault.object.visible).toBe(false);
+      expect(world.rooms.current).toBeNull();
     });
 
     it('flies the headset away and shows the console when the visitor enters', () => {
@@ -194,20 +214,6 @@ describe('ThreeSceneHost', () => {
       expect(world.consoleRoom.object.visible).toBe(false);
     });
 
-    it('arrives in a room tinted for the endpoint, answers in gold, then settles', () => {
-      const { host, canvas, world, run } = setup();
-      host.mount(canvas);
-      host.setSnapshot({ phase: 'journey', endpoint: 'projects' });
-      run(1);
-      host.setSnapshot({ phase: 'room', endpoint: 'projects' });
-      run(0.3);
-      expect(world.vault.object.visible).toBe(true);
-      expect(world.headset.gone).toBe(true);
-      expect(world.tunnel.object.visible).toBe(true); // the response is still flying
-      run(5);
-      expect(world.tunnel.object.visible).toBe(false);
-    });
-
     it('goes back to the headset when the experience is reset to boot', () => {
       const { host, canvas, world, run } = setup();
       host.mount(canvas);
@@ -218,36 +224,233 @@ describe('ThreeSceneHost', () => {
       expect(world.headset.object.visible).toBe(true);
       expect(world.consoleRoom.object.visible).toBe(false);
     });
+  });
 
-    it('retints the vault when only the endpoint changes inside a room', () => {
-      const { host, canvas, world, run } = setup();
+  describe('rooms', () => {
+    it('prepares the first stop while the console is shown, before anything is chosen', async () => {
+      const { host, canvas, world, fakes, settle } = setup();
       host.mount(canvas);
-      host.setSnapshot({ phase: 'room', endpoint: 'about' });
-      run(0.1);
-      const leds = world.vault.object.children.find(
-        (c): c is InstancedMesh =>
-          c instanceof InstancedMesh && c.material instanceof ShaderMaterial,
-      )!;
-      const material = leds.material as ShaderMaterial;
-      const before = material.uniforms['uColorA']!.value.getHex();
+      host.setSnapshot({ phase: 'console', endpoint: null });
+      expect(fakes.loads).toEqual(['about']);
+      await settle();
+
+      expect(world.rooms.get('about')).toBeDefined();
+      expect(world.rooms.current).toBeNull(); // built, but nobody is in it
+      expect(fakes.roomOf('about')?.shown).toBe(false);
+    });
+
+    it('prepares the room a visitor shows intent for, and only that one', async () => {
+      const { host, canvas, world, fakes, settle } = setup();
+      host.mount(canvas);
+      host.setIntent('skills');
+      await settle();
+
+      expect(fakes.loads).toEqual(['skills']);
+      expect(world.rooms.get('skills')).toBeDefined();
+      host.setIntent(null);
+      expect(fakes.loads).toEqual(['skills']);
+    });
+
+    it('starts building the destination as the journey begins, and shows it on arrival', async () => {
+      const { host, canvas, world, fakes, settle } = setup();
+      host.mount(canvas);
+      host.setSnapshot({ phase: 'journey', endpoint: 'projects' });
+      expect(fakes.loads).toEqual(['projects']);
+      await settle();
+
+      host.setSnapshot({ phase: 'room', endpoint: 'projects' });
+      await settle();
+      expect(world.rooms.current?.id).toBe('projects');
+      expect(fakes.roomOf('projects')?.shown).toBe(true);
+    });
+
+    it('answers in gold while arriving, then lets the stream settle once the room has taken over', async () => {
+      const { host, canvas, world, settle, run } = setup();
+      host.mount(canvas);
+      host.setSnapshot({ phase: 'journey', endpoint: 'projects' });
+      await settle();
+      host.setSnapshot({ phase: 'room', endpoint: 'projects' });
+      run(0.3);
+      expect(world.headset.gone).toBe(true);
+      expect(world.tunnel.object.visible).toBe(true); // the response is still flying
+      await settle();
+      run(5);
+      expect(world.tunnel.object.visible).toBe(false);
+    });
+
+    it('follows the shown room for its camera, and updates only that room', async () => {
+      const { host, canvas, world, fakes, settle, run } = setup();
+      host.mount(canvas);
+      host.setSnapshot({ phase: 'journey', endpoint: 'education' });
+      await settle();
+      const room = fakes.roomOf('education')!;
+      room.target = { px: 2, py: 3, pz: -40, tx: 0, ty: 3, tz: -50, fov: 55 };
+      const idle = fakes.rooms.filter((r) => r !== room);
+
+      host.setSnapshot({ phase: 'room', endpoint: 'education' });
+      await settle();
+      run(4);
+
+      expect(world.camera.position.z).toBeCloseTo(-40, 0);
+      expect(world.camera.position.x).toBeCloseTo(2, 0);
+      expect(room.updates).toBeGreaterThan(100);
+      expect(idle.every((r) => r.updates === 0)).toBe(true);
+    });
+
+    it('keeps the camera in the tunnel, and the stream flying, while a late room is still loading', async () => {
+      const { host, canvas, world, fakes, run, settle } = setup();
+      let release: () => void = () => undefined;
+      const late = new Promise<void>((resolve) => (release = resolve));
+      fakes.override('skills', async () => {
+        await late;
+        return () => new FakeRoom('skills');
+      });
+      host.mount(canvas);
+      host.setSnapshot({ phase: 'journey', endpoint: 'skills' });
+      await settle();
       host.setSnapshot({ phase: 'room', endpoint: 'skills' });
-      expect(material.uniforms['uColorA']!.value.getHex()).not.toBe(before);
+      run(3);
+
+      expect(world.rooms.current).toBeNull();
+      expect(world.tunnel.object.visible).toBe(true); // never an empty void
+      release();
+    });
+
+    it('leaves the tunnel up, without throwing, when a room cannot be loaded', async () => {
+      const { host, canvas, world, fakes, run, settle } = setup();
+      fakes.override('skills', () => Promise.reject(new Error('offline')));
+      host.mount(canvas);
+      host.setSnapshot({ phase: 'journey', endpoint: 'skills' });
+      await settle();
+      host.setSnapshot({ phase: 'room', endpoint: 'skills' });
+      await settle();
+      expect(() => run(3)).not.toThrow();
+      expect(world.rooms.current).toBeNull();
+      expect(world.rooms.failed.has('skills')).toBe(true);
+    });
+
+    it('hands the tier, the screen scale and the focus to a room when it is shown', async () => {
+      const { host, canvas, fakes, settle } = setup('medium');
+      host.mount(canvas);
+      host.resize(1000, 900, 1);
+      host.setFocus('some-commit');
+      host.setSnapshot({ phase: 'journey', endpoint: 'experience' });
+      await settle();
+      host.setSnapshot({ phase: 'room', endpoint: 'experience' });
+      await settle();
+
+      const room = fakes.roomOf('experience')!;
+      expect(room.profile).toBe(THREE_PROFILES.medium);
+      expect(room.pixelScale).toBeGreaterThan(0);
+      expect(room.focus).toBe('some-commit');
+    });
+
+    it('forwards focus changes to the room the visitor is in', async () => {
+      const { host, canvas, fakes, settle } = setup();
+      host.mount(canvas);
+      host.setSnapshot({ phase: 'room', endpoint: 'projects' });
+      await settle();
+      host.setFocus('SynthGraph');
+      expect(fakes.roomOf('projects')?.focus).toBe('SynthGraph');
+      host.setFocus(null);
+      expect(fakes.roomOf('projects')?.focus).toBeNull();
+    });
+
+    it('applies a tier change to rooms that are already built', async () => {
+      const { host, canvas, fakes, settle } = setup('high');
+      host.mount(canvas);
+      host.setIntent('skills');
+      await settle();
+      host.setTier('low');
+      expect(fakes.roomOf('skills')?.profile).toBe(THREE_PROFILES.low);
+    });
+
+    it('rebuilds rooms from new content, including the one the visitor is in', async () => {
+      const { host, canvas, world, fakes, settle } = setup();
+      host.mount(canvas);
+      host.setContent(content('first'));
+      host.setSnapshot({ phase: 'room', endpoint: 'about' });
+      await settle();
+      const first = fakes.roomOf('about')!;
+      expect(first.shown).toBe(true);
+
+      host.setContent(content('second'));
+      expect(first.disposed).toBe(1);
+      await settle();
+      const second = fakes.roomOf('about')!;
+      expect(second).not.toBe(first);
+      expect(world.rooms.current?.id).toBe('about');
+      expect(second.shown).toBe(true);
+    });
+
+    it('ignores the same content handed over twice', async () => {
+      const { host, canvas, fakes, settle } = setup();
+      host.mount(canvas);
+      const same = content('same');
+      host.setContent(same);
+      host.setSnapshot({ phase: 'room', endpoint: 'about' });
+      await settle();
+      const room = fakes.roomOf('about')!;
+      host.setContent(same);
+      expect(room.disposed).toBe(0);
+    });
+
+    it('compiles and warms each room as it is built, so entering it does not hitch', async () => {
+      const { host, canvas, renderer, world, settle } = setup();
+      host.mount(canvas);
+      await settle(); // shared warm-up first
+      const compiles = renderer.compileAsync.mock.calls.length;
+      const before = renderer.render.mock.calls.length;
+
+      host.setIntent('skills');
+      await settle();
+
+      expect(renderer.compileAsync.mock.calls.length).toBe(compiles + 1);
+      const warm = renderer.render.mock.calls
+        .slice(before)
+        .filter(([, camera]) => camera !== world.camera);
+      expect(warm).toHaveLength(1);
+      expect(world.rooms.get('skills')?.object.visible).toBe(false); // visibility restored
+    });
+
+    it('releases every room with the host', async () => {
+      const { host, canvas, fakes, settle } = setup();
+      host.mount(canvas);
+      host.setIntent('skills');
+      host.setIntent('education');
+      await settle();
+      host.dispose();
+      expect(fakes.rooms.length).toBeGreaterThan(0);
+      expect(fakes.rooms.every((room) => room.disposed === 1)).toBe(true);
+    });
+
+    it('reports how long a room took to build, and can build one on demand', async () => {
+      const { host, canvas, fakes, run } = setup();
+      host.mount(canvas);
+      const pending = host.bench!.prepareRoom('skills');
+      await macrotask();
+      run(0.2);
+      const ms = await pending;
+
+      expect(ms).not.toBeNull();
+      expect(host.bench!.roomBuildMs()).toHaveProperty('skills');
+      expect(fakes.loads).toEqual(['skills']);
     });
   });
 
   describe('quality tiers and size', () => {
-    it('trims points, rings and racks by tier without rebuilding anything', () => {
+    it('trims the tunnel by tier without rebuilding anything', () => {
       const { host, canvas, world } = setup('high');
       host.mount(canvas);
       const points = world.tunnel.object.children.find((c) => c instanceof Points) as Points;
-      const racks = world.vault.object.children.find(
+      const rings = world.tunnel.object.children.find(
         (c) => c instanceof InstancedMesh,
       ) as InstancedMesh;
       const geometryBefore = points.geometry;
 
       host.setTier('low');
       expect(points.geometry.drawRange.count).toBe(THREE_PROFILES.low.tunnelPoints);
-      expect(racks.count).toBe(THREE_PROFILES.low.racksPerSide * 2);
+      expect(rings.count).toBe(THREE_PROFILES.low.rings);
       expect(points.geometry).toBe(geometryBefore);
 
       host.setTier('high');
@@ -360,23 +563,35 @@ describe('ThreeSceneHost', () => {
       expect(renderer.dispose).toHaveBeenCalledTimes(1);
       expect(renderer.forceContextLoss).toHaveBeenCalledTimes(1);
       expect(scheduler.pending).toBe(false);
-      expect(world.scene).toBeDefined();
       expect(world.scene.children).toHaveLength(0);
       expect(removeListener).toHaveBeenCalledWith('pointermove', expect.any(Function));
       expect(host.bench!.residual()).toMatchObject({ geometries: 24, textures: 2 });
       expect(host.stats().drawCalls).toBe(0);
     });
 
-    it('ignores tier, size and snapshot calls after disposal', () => {
+    it('ignores tier, size, content and snapshot calls after disposal', () => {
       const { host, canvas } = setup('high');
       host.mount(canvas);
       host.dispose();
       expect(() => {
         host.setTier('low');
         host.resize(10, 10, 1);
+        host.setContent(content('late'));
+        host.setIntent('skills');
+        host.setFocus('x');
         host.setSnapshot({ phase: 'room', endpoint: 'about' });
         host.resume();
       }).not.toThrow();
+    });
+
+    it('does not build a room that was still loading when the host was disposed', async () => {
+      const { host, canvas, fakes } = setup('high');
+      host.mount(canvas);
+      host.setIntent('skills');
+      host.dispose();
+      await macrotask();
+      await macrotask();
+      expect(fakes.rooms).toHaveLength(0);
     });
   });
 

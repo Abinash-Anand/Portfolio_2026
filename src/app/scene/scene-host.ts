@@ -23,6 +23,55 @@ export type RenderTier = Exclude<Tier, 'static'>;
 /** What a visitor can hover in the DOM that the 3D world should react to. */
 export type SceneHover = 'headset' | null;
 
+/**
+ * The content the rooms are built from, as plain data. The Angular side maps its content files and the portfolio
+ * store into this shape, so the scene stays framework-agnostic and never imports from the content or data layers.
+ * Theatre text (gate names, terminal prompts) lives in the rooms themselves; only the visitor's real content
+ * travels here, which keeps the 3D rooms and the 2D pages showing the same facts (parity).
+ */
+export interface SceneContent {
+  /** The records the database vault "materialises" (About): `NAME: Abinash Anand` and so on. */
+  readonly records: readonly { readonly key: string; readonly value: string }[];
+  readonly skills: readonly {
+    readonly id: string;
+    readonly label: string;
+    readonly items: readonly string[];
+  }[];
+  readonly education: readonly {
+    readonly id: string;
+    readonly degree: string;
+    readonly institution: string;
+    readonly period: string;
+    readonly note: string;
+  }[];
+  readonly experience: readonly {
+    readonly id: string;
+    readonly role: string;
+    readonly organisation: string;
+    readonly period: string;
+    readonly highlights: readonly string[];
+  }[];
+  readonly projects: readonly {
+    readonly slug: string;
+    readonly title: string;
+    /** One line on what it is (the CV's description when there is one). */
+    readonly caption: string;
+    /** How its pod looks: a lineage-style `graph`, or an `events` pipeline of producers, queues and consumers. */
+    readonly kind: 'graph' | 'events';
+    readonly stack: readonly string[];
+    readonly stars: number;
+    readonly languages: readonly { readonly name: string; readonly percent: number }[];
+  }[];
+}
+
+export const EMPTY_CONTENT: SceneContent = {
+  records: [],
+  skills: [],
+  education: [],
+  experience: [],
+  projects: [],
+};
+
 export interface SceneStats {
   /** What draws the world, shown in the HUD (`ENGINE: ...`). */
   readonly engine: string;
@@ -84,6 +133,13 @@ export interface BenchApi {
   whenCompiled(): Promise<void>;
   /** Runs the first-draw warm-up now (normally spread over the first frames); returns each step's time in ms. */
   warmUp(): Promise<number[]>;
+  /**
+   * Builds and warms a room now (normally this happens in the background, from intent or during the journey).
+   * Resolves with how long construction took in ms, or null when the room could not be built.
+   */
+  prepareRoom(endpoint: EndpointId): Promise<number | null>;
+  /** Construction time of every room built so far, in ms. */
+  roomBuildMs(): Record<string, number>;
 }
 
 export interface SceneHost {
@@ -97,6 +153,15 @@ export interface SceneHost {
   setTier(tier: RenderTier): void;
   /** Reacts to a DOM control being hovered, for example the headset glowing when "Initialize" is hovered. */
   setHover?(target: SceneHover): void;
+  /** Hands over the content the rooms are built from. Rooms already built from older content are rebuilt lazily. */
+  setContent?(content: SceneContent): void;
+  /**
+   * The visitor is likely heading to this endpoint (hover or keyboard focus on its key): start preparing its
+   * room in the background (ARCHITECTURE.md S7). Null clears the intent.
+   */
+  setIntent?(endpoint: EndpointId | null): void;
+  /** Draws attention to one thing inside the current room (a project pod, a commit); null releases it. */
+  setFocus?(id: string | null): void;
   resize(width: number, height: number, devicePixelRatio: number): void;
   pause(): void;
   resume(): void;

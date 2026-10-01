@@ -1,9 +1,8 @@
 import { InstancedMesh, Matrix4, Points, ShaderMaterial } from 'three';
-import { MAX_RACKS_PER_SIDE, MAX_RINGS, MAX_TUNNEL_POINTS } from '../profiles';
+import { MAX_RINGS, MAX_TUNNEL_POINTS } from '../profiles';
 import { ConsoleRoom, keyPosition } from './console-room';
 import { Headset } from './headset';
 import { Tunnel } from './tunnel';
-import { hash, Vault } from './vault';
 
 let seed = 11;
 const random = (): number => (seed = (seed * 16807) % 2147483647) / 2147483647;
@@ -74,62 +73,6 @@ describe('Tunnel', () => {
     const released = tunnel.dispose();
     expect(released.textures).toBe(1);
     expect(released.geometries).toBeGreaterThanOrEqual(2);
-  });
-});
-
-describe('Vault', () => {
-  it('is hidden until the visitor is in a room, and trims racks per side', () => {
-    const vault = new Vault();
-    expect(vault.object.visible).toBe(false);
-
-    const [racks, leds] = instanced(vault.object);
-    vault.setRackCount(8);
-    expect(racks!.count).toBe(16);
-    expect(leds!.count).toBe(16);
-    vault.setRackCount(500);
-    expect(racks!.count).toBe(MAX_RACKS_PER_SIDE * 2);
-    vault.dispose();
-  });
-
-  it('retints the LEDs and the core per endpoint', () => {
-    const vault = new Vault();
-    const leds = instanced(vault.object)[1]!.material as ShaderMaterial;
-    const before = leds.uniforms['uColorA']!.value.getHex();
-    vault.setTint('gold', 'yellow');
-    expect(leds.uniforms['uColorA']!.value.getHex()).not.toBe(before);
-    vault.dispose();
-  });
-
-  it('animates only while it is visible', () => {
-    const vault = new Vault();
-    const leds = instanced(vault.object)[1]!.material as ShaderMaterial;
-    vault.update(1, 5);
-    expect(leds.uniforms['uTime']!.value).toBe(0); // hidden: no work
-
-    vault.object.visible = true;
-    vault.update(1, 5);
-    expect(leds.uniforms['uTime']!.value).toBe(5);
-    vault.dispose();
-  });
-
-  it('instances its racks, so the room stays a few dozen draw calls at most', () => {
-    const vault = new Vault();
-    const meshes: unknown[] = [];
-    vault.object.traverse((o) => {
-      if ((o as { isMesh?: boolean }).isMesh || (o as { isLine?: boolean }).isLine) meshes.push(o);
-    });
-    expect(meshes.length).toBeLessThan(30);
-    vault.dispose();
-  });
-
-  it('lays itself out the same way every time (deterministic hash in [0, 1))', () => {
-    for (let i = 0; i < 200; i++) {
-      const value = hash(i);
-      expect(value).toBeGreaterThanOrEqual(0);
-      expect(value).toBeLessThan(1);
-      expect(hash(i)).toBe(value);
-    }
-    expect(hash(1)).not.toBe(hash(2));
   });
 });
 

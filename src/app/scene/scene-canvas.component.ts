@@ -12,8 +12,10 @@ import {
 import { AdaptiveQuality } from '../motion/adaptive-quality';
 import { MotionService } from '../motion/motion.service';
 import {
+  EMPTY_CONTENT,
   SCENE_HOST_FACTORY,
   type RenderTier,
+  type SceneContent,
   type SceneHost,
   type SceneSnapshot,
 } from './scene-host';
@@ -37,6 +39,8 @@ import { SceneRegistry } from './scene-registry';
 export class SceneCanvas {
   readonly snapshot = input.required<SceneSnapshot>();
   readonly tier = input.required<RenderTier>();
+  /** What the rooms are built from; changing it rebuilds the rooms lazily. */
+  readonly content = input<SceneContent>(EMPTY_CONTENT);
 
   private readonly canvas = viewChild.required<ElementRef<HTMLCanvasElement>>('canvas');
   private readonly registry = inject(SceneRegistry);
@@ -80,6 +84,7 @@ export class SceneCanvas {
 
       try {
         created.setTier(this.tier());
+        created.setContent?.(this.content());
         created.setSnapshot(this.snapshot());
         created.mount(element);
         created.resize(element.clientWidth, element.clientHeight, window.devicePixelRatio || 1);
@@ -123,6 +128,11 @@ export class SceneCanvas {
     effect(() => {
       const tier = this.tier();
       host?.setTier(tier);
+    });
+
+    effect(() => {
+      const content = this.content();
+      host?.setContent?.(content);
     });
 
     // When the user hands control back to "auto", start the governor fresh from the detected tier.

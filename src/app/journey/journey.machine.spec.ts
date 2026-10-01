@@ -157,6 +157,54 @@ describe('journey machine', () => {
     }
   });
 
+  describe('deep links and history (CONCEPT.md A6)', () => {
+    it('opens straight into a room from the boot screen or the console, with no journey', () => {
+      for (const from of [INITIAL_CONTEXT, inConsole]) {
+        const opened = reduce(from, { type: 'open', endpoint: 'skills' });
+        expect(opened.state).toEqual({ kind: 'room', endpoint: 'skills' });
+        expect(opened.visited).toEqual(['skills']);
+      }
+    });
+
+    it('opens another room from a room, and does nothing when it is already there', () => {
+      const inAbout = run([{ type: 'select', endpoint: 'about' }, { type: 'arrive' }], inConsole);
+      expect(reduce(inAbout, { type: 'open', endpoint: 'projects' }).state).toEqual({
+        kind: 'room',
+        endpoint: 'projects',
+      });
+      expect(reduce(inAbout, { type: 'open', endpoint: 'about' })).toBe(inAbout);
+    });
+
+    it('lets a link override a journey in progress: the visitor arrives where the address says', () => {
+      const travelling = reduce(inConsole, { type: 'select', endpoint: 'about' });
+      expect(reduce(travelling, { type: 'open', endpoint: 'education' }).state).toEqual({
+        kind: 'room',
+        endpoint: 'education',
+      });
+    });
+
+    it('leaves a room, or a journey, for the console, and does nothing elsewhere', () => {
+      const inRoom = run([{ type: 'select', endpoint: 'about' }, { type: 'arrive' }], inConsole);
+      expect(reduce(inRoom, { type: 'leave' }).state.kind).toBe('console');
+      const travelling = reduce(inConsole, { type: 'select', endpoint: 'about' });
+      expect(reduce(travelling, { type: 'leave' }).state.kind).toBe('console');
+      expect(reduce(inConsole, { type: 'leave' })).toBe(inConsole);
+      expect(reduce(INITIAL_CONTEXT, { type: 'leave' })).toBe(INITIAL_CONTEXT);
+    });
+
+    it('ignores the address while the 2D resume is showing', () => {
+      const in2d = run([{ type: 'toggle2d' }], inConsole);
+      expect(reduce(in2d, { type: 'open', endpoint: 'skills' })).toBe(in2d);
+      expect(reduce(in2d, { type: 'leave' })).toBe(in2d);
+    });
+
+    it('a room reached by link makes the next visit there a fast one', () => {
+      const linked = reduce(INITIAL_CONTEXT, { type: 'open', endpoint: 'about' });
+      const back = run([{ type: 'console' }, { type: 'select', endpoint: 'about' }], linked);
+      expect(back.state).toEqual({ kind: 'journey', endpoint: 'about', fast: true });
+    });
+  });
+
   it('is pure: it never mutates the context it is given', () => {
     const before = run([{ type: 'select', endpoint: 'about' }, { type: 'arrive' }], inConsole);
     const snapshot = JSON.stringify(before);

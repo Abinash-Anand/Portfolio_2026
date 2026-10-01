@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
+import type { EndpointId } from '../../core/experience';
 import { MotionService } from '../../motion/motion.service';
 import type { SceneHost, ScenePhase } from '../scene-host';
 import { SceneRegistry } from '../scene-registry';
@@ -12,7 +13,7 @@ export interface SpikeApi {
   governor(seconds?: number, layers?: number): Promise<unknown>;
   lifecycle(cycles?: number): Promise<unknown>;
   /** Renders `seconds` of a phase and holds the last frame (for looking at it). */
-  view(phase: ScenePhase, seconds?: number): Promise<void>;
+  view(phase: ScenePhase, seconds?: number, endpoint?: EndpointId): Promise<void>;
   all(): Promise<unknown>;
   report(): unknown;
 }
@@ -100,7 +101,7 @@ export class BenchPanel {
       live: (seconds, contention) => this.live(seconds, contention),
       governor: (seconds, layers) => this.governor(seconds, layers),
       lifecycle: (cycles) => this.lifecycle(cycles),
-      view: (phase, seconds) => this.view(phase, seconds),
+      view: (phase, seconds, endpoint) => this.view(phase, seconds, endpoint),
       all: () => this.all(),
       report: () => this.results,
     };
@@ -176,6 +177,7 @@ export class BenchPanel {
     this.motion.setChoice('high');
     await sleep(50);
     host.resize(1920, 1080, 1);
+    await host.bench!.prepareRoom('about');
     host.setSnapshot({ phase: 'room', endpoint: 'about' });
     const rows = await runStressCurve(host);
     const back = this.size();
@@ -186,6 +188,7 @@ export class BenchPanel {
 
   async live(seconds = 10, contention?: { busyMs: number; everyMs: number }): Promise<unknown> {
     const host = this.host();
+    await host.bench!.prepareRoom('about');
     host.setSnapshot({ phase: 'room', endpoint: 'about' });
     const label = contention ? 'liveContended' : 'live';
     const result = await runLive(host, {
@@ -200,6 +203,7 @@ export class BenchPanel {
   async governor(seconds = 20, layers = 24): Promise<unknown> {
     const host = this.host();
     this.motion.setChoice('auto');
+    await host.bench!.prepareRoom('about');
     host.setSnapshot({ phase: 'room', endpoint: 'about' });
     host.bench!.setStress(layers);
     const tiers: { atSecond: number; tier: string }[] = [{ atSecond: 0, tier: this.motion.tier() }];
@@ -224,10 +228,14 @@ export class BenchPanel {
     return (this.results['lifecycle'] = result);
   }
 
-  async view(phase: ScenePhase, seconds = 2): Promise<void> {
+  async view(phase: ScenePhase, seconds = 2, endpoint: EndpointId = 'about'): Promise<void> {
     const host = this.host();
     host.pause();
-    host.setSnapshot({ phase, endpoint: phase === 'journey' || phase === 'room' ? 'about' : null });
+    if (phase === 'room') await host.bench!.prepareRoom(endpoint);
+    host.setSnapshot({
+      phase,
+      endpoint: phase === 'journey' || phase === 'room' ? endpoint : null,
+    });
     await host.bench!.renderCost(Math.round(seconds * 60));
   }
 

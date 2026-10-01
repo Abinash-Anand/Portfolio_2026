@@ -111,11 +111,11 @@ export class ConsoleRoom implements WorldPart {
 
     // Five keycaps: a dark body and a glowing top each.
     this.caps = new InstancedMesh(
-      new BoxGeometry(0.9, 0.3, 0.9),
+      new BoxGeometry(0.7, 0.26, 0.7),
       new MeshBasicMaterial({ color: tokenColor('raised') }),
       KEY_COUNT,
     );
-    const topGeometry = new PlaneGeometry(0.66, 0.66);
+    const topGeometry = new PlaneGeometry(0.5, 0.5);
     topGeometry.rotateX(-Math.PI / 2);
     this.tops = new InstancedMesh(
       topGeometry,

@@ -1,4 +1,4 @@
-import { AISLE_LENGTH, CameraRig, damp, targetPose } from './camera-rig';
+import { CameraRig, damp, portraitFactor, targetPose } from './camera-rig';
 
 const centered = { x: 0, y: 0 };
 
@@ -6,7 +6,8 @@ describe('camera poses', () => {
   it('boot looks at the headset from a short distance', () => {
     const pose = targetPose('boot', 0, centered, 1.6);
     expect(pose.pz).toBeGreaterThan(0);
-    expect([pose.tx, pose.ty, pose.tz]).toEqual([0, 0, 0]);
+    expect([pose.tx, pose.tz]).toEqual([0, 0]);
+    expect(pose.ty).toBeGreaterThan(0); // looks a little above the headset, which leaves room for the prompt
   });
 
   it('shifts the camera a little with the pointer, never a lot', () => {
@@ -32,13 +33,17 @@ describe('camera poses', () => {
     expect(later).toBeCloseTo(end, 5);
   });
 
-  it('keeps the camera inside the server aisle however long the visitor stays', () => {
-    for (let t = 0; t < 400; t += 0.5) {
-      const pose = targetPose('room', t, centered, 1.6);
-      expect(pose.pz).toBeLessThanOrEqual(-2 + 1e-9);
-      expect(pose.pz).toBeGreaterThanOrEqual(-2 - AISLE_LENGTH - 1e-9);
-      expect(pose.tz).toBeLessThan(pose.pz); // always looking down the aisle
-    }
+  it('stays in the tunnel, at full warp, while a room is not ready yet', () => {
+    const room = targetPose('room', 0, centered, 1.6);
+    const tunnel = targetPose('journey', 5, centered, 1.6);
+    expect(room).toEqual(tunnel);
+  });
+
+  it('measures how much wider a portrait screen needs the field of view', () => {
+    expect(portraitFactor(2)).toBe(1);
+    expect(portraitFactor(1)).toBe(1);
+    expect(portraitFactor(0.5)).toBeCloseTo(Math.SQRT2, 10);
+    expect(portraitFactor(0.01)).toBe(1.6);
   });
 });
 
@@ -64,14 +69,23 @@ describe('damp', () => {
 });
 
 describe('CameraRig', () => {
+  const at = (pz: number, fov = 60) => ({ px: 0, py: 0, pz, tx: 0, ty: 0, tz: -1, fov });
+
   it('starts exactly on the first target, then eases toward later ones', () => {
     const rig = new CameraRig();
-    const first = { ...rig.update(1 / 60, 'console', 0, centered, 1.6) };
-    expect(first.pz).toBeCloseTo(targetPose('console', 0, centered, 1.6).pz, 10);
+    const first = { ...rig.update(1 / 60, at(5)) };
+    expect(first.pz).toBe(5);
 
-    const next = rig.update(1 / 60, 'room', 0, centered, 1.6);
-    const target = targetPose('room', 0, centered, 1.6);
-    expect(next.pz).not.toBeCloseTo(target.pz, 3); // has not teleported
-    expect(Math.abs(next.pz - target.pz)).toBeLessThan(Math.abs(first.pz - target.pz));
+    const next = rig.update(1 / 60, at(-20));
+    expect(next.pz).toBeLessThan(5);
+    expect(next.pz).toBeGreaterThan(-20); // has not teleported
+  });
+
+  it('arrives at a steady target and stays there', () => {
+    const rig = new CameraRig();
+    rig.update(1 / 60, at(0));
+    for (let i = 0; i < 600; i++) rig.update(1 / 60, at(-10, 80));
+    expect(rig.pose.pz).toBeCloseTo(-10, 3);
+    expect(rig.pose.fov).toBeCloseTo(80, 3);
   });
 });

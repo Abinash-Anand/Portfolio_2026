@@ -253,7 +253,9 @@
     padding: 0.5rem 1rem;
     border: 1px solid color-mix(in srgb, var(--color-blue) 45%, transparent);
     border-radius: 2px;
-    background: transparent;
+    /* Backed, so text scrolling underneath a pinned HUD button never shows through it. */
+    background: color-mix(in srgb, var(--color-void) 78%, transparent);
+    backdrop-filter: blur(6px);
     color: var(--color-text);
     font-family: var(--font-mono);
     font-size: 0.75rem;
@@ -264,6 +266,12 @@
       border-color var(--dur-fast) var(--ease-glide),
       box-shadow var(--dur-fast) var(--ease-glide),
       transform var(--dur-instant) var(--ease-snap);
+  }
+
+  [data-tier='low'] .hud-button,
+  [data-tier='static'] .hud-button {
+    background: var(--color-void);
+    backdrop-filter: none;
   }
 
   .hud-button:hover {

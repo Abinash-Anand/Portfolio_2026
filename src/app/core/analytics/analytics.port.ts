@@ -15,6 +15,12 @@ export type AnalyticsEvent =
   | { readonly name: 'journey_start' }
   | { readonly name: 'endpoint_select'; readonly endpoint: EndpointId }
   | { readonly name: 'journey_skip' }
+  /** The visitor is in a room. `how`: after the journey, by skipping it, or straight there (link, history, no 3D). */
+  | {
+      readonly name: 'room_arrive';
+      readonly endpoint: EndpointId;
+      readonly how: 'journey' | 'skip' | 'direct';
+    }
   | { readonly name: 'resume_2d_toggle' }
   | { readonly name: 'tier_change'; readonly tier: TierId };
 

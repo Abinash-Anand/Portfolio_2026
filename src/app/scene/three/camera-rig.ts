@@ -24,16 +24,15 @@ export interface Pointer {
 }
 
 const clamp = (v: number, lo: number, hi: number): number => Math.min(hi, Math.max(lo, v));
+
+/** Portrait screens need a wider vertical field of view to keep the same horizontal view. */
+export function portraitFactor(aspect: number): number {
+  return aspect < 1 ? clamp(1 / Math.sqrt(aspect), 1, 1.6) : 1;
+}
 const smoothstep = (a: number, b: number, v: number): number => {
   const t = clamp((v - a) / (b - a), 0, 1);
   return t * t * (3 - 2 * t);
 };
-
-/**
- * Length of the server aisle the camera glides along in the room, in world units. It ends well short of the
- * server core (at z = -33), so the camera never passes through it.
- */
-export const AISLE_LENGTH = 24;
 
 /** Where the camera wants to be, `phaseTime` seconds into `phase`. */
 export function targetPose(
@@ -42,8 +41,7 @@ export function targetPose(
   pointer: Pointer,
   aspect: number,
 ): Pose {
-  // Portrait screens need a wider vertical field to keep the same horizontal view.
-  const portrait = aspect < 1 ? clamp(1 / Math.sqrt(aspect), 1, 1.6) : 1;
+  const portrait = portraitFactor(aspect);
 
   switch (phase) {
     case 'boot':
@@ -52,7 +50,8 @@ export function targetPose(
         py: 0.1 + pointer.y * 0.15,
         pz: 4.4,
         tx: 0,
-        ty: 0,
+        // Looking a little above the headset puts it in the lower part of the frame, under the boot prompt.
+        ty: 0.55,
         tz: 0,
         fov: 45 * portrait,
       };
@@ -77,20 +76,10 @@ export function targetPose(
         tz: -20,
         fov: (62 + 18 * smoothstep(0, 0.8, phaseTime)) * portrait,
       };
-    case 'room': {
-      // A slow back-and-forth glide down the aisle.
-      const u = 0.5 - 0.5 * Math.cos(phaseTime * 0.1);
-      const z = -2 - AISLE_LENGTH * u;
-      return {
-        px: pointer.x * 0.4,
-        py: 1.8 + pointer.y * 0.2,
-        pz: z,
-        tx: 0,
-        ty: 1.2,
-        tz: z - 10,
-        fov: 62 * portrait,
-      };
-    }
+    case 'room':
+      // Rooms own their camera (`Room.pose`). This is only what the camera does while a room is not ready yet:
+      // it stays in the tunnel, so a late room never makes the view jump.
+      return targetPose('journey', Infinity, pointer, aspect);
   }
 }
 
@@ -101,13 +90,13 @@ export function damp(current: number, target: number, lambda: number, dt: number
 
 const KEYS: readonly (keyof Pose)[] = ['px', 'py', 'pz', 'tx', 'ty', 'tz', 'fov'];
 
-/** Holds the current pose and eases it toward the target of the current phase. */
+/** Holds the current pose and eases it toward whatever target it is given each frame. */
 export class CameraRig {
   readonly pose: Pose = { px: 0, py: 0, pz: 4.4, tx: 0, ty: 0, tz: 0, fov: 45 };
   private initialised = false;
 
-  update(dt: number, phase: ScenePhase, phaseTime: number, pointer: Pointer, aspect: number): Pose {
-    const target = targetPose(phase, phaseTime, pointer, aspect);
+  /** Moves the camera toward `target`. The very first call starts exactly on it. */
+  update(dt: number, target: Pose): Pose {
     if (!this.initialised) {
       Object.assign(this.pose, target);
       this.initialised = true;
