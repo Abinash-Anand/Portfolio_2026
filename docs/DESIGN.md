@@ -78,7 +78,7 @@ The HFT Stuttgart "official blue" for the education room is **TBD**: use `blue` 
 |---|---|---|
 | Display and headings | Space Grotesk Variable (placeholder, keep unless the owner objects) | Geometric, technical |
 | Body and UI | Inter Variable | |
-| HUD, terminal, telemetry | **JetBrains Mono Variable (proposed; not installed yet)** until then the system mono stack (`ui-monospace, Cascadia Code, Consolas`) | Self-hosted via Fontsource when added |
+| HUD, terminal, telemetry | **JetBrains Mono Variable (proposed, installed 2026-10-01; pending owner confirmation)**, then the system mono stack (`ui-monospace, Cascadia Code, Consolas`) | Self-hosted via Fontsource |
 
 | Style | Size | Weight / spacing |
 |---|---|---|
@@ -247,7 +247,7 @@ The tier is shown in the HUD as `GRAPHICS` and is user-selectable.
 - **Tokens:** CSS custom properties in `src/styles.css` `@theme` (Tailwind v4). Components use utility classes mapped to tokens.
 - **Three.js colors:** read from a single shared `design/tokens.ts` constants file (proposed); a unit test asserts it equals the CSS values so the two never drift.
 - **No raw hex values or magic numbers in components.** New values become tokens first.
-- **Fonts:** self-hosted via Fontsource; the HUD mono font is added when the owner confirms the choice.
+- **Fonts:** self-hosted via Fontsource; JetBrains Mono is installed for the HUD and can be swapped by changing one import and the `--font-mono` token.
 - **Motion tokens:** CSS variables for durations and easings, mirrored in the motion service for GSAP.
 
 ## 16. Review checklist (per screen or scene)
@@ -278,3 +278,4 @@ The tier is shown in the HUD as `GRAPHICS` and is user-selectable.
 | Date | Change |
 |---|---|
 | 2026-10-01 | Initial design specification from the owner's concept; palette contrast computed; tokens migrated in `src/styles.css`. |
+| 2026-10-01 | Phase 2: tokens mirrored in `core/design/tokens.ts` (a test keeps CSS and TypeScript in sync and asserts every text token meets AA); HUD, keycap, glass-panel and terminal styles added; `/styleguide` renders the system live. |

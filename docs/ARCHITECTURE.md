@@ -89,38 +89,51 @@ flowchart LR
 flowchart TB
   features["features: pages and sections"] --> data["data: store, repository port, models"]
   features --> shared["shared: ui, directives, pipes"]
-  features --> motion["motion: smooth scroll, animation services"]
-  features --> scene["scene: Three.js SceneHost, tiers"]
-  data --> core["core: config, tokens, logger, seo"]
+  features --> journey["journey: state machine, endpoints, telemetry"]
+  features --> scene["scene: SceneHost contract, frame loop, canvas"]
+  features --> motion["motion: capabilities, tiers, governor, audio"]
+  journey --> motion
+  scene --> motion
+  data --> core["core: config, seo, analytics port, design tokens"]
   shared --> core
   motion --> core
   scene --> core
-  scene --> motion
+  journey --> core
 ```
 
 ```
 src/app/
-  core/        app.config providers, injection tokens, Logger, SeoService, error handler
-  data/        models.ts, PortfolioRepository (port), adapters, PortfolioStore (signals)
-  motion/      SmoothScrollService (Lenis), MotionService (reduced motion, tier), gsap registration
-  scene/       SceneHost interface, MainThreadSceneHost, WorkerSceneHost, tier ladder, readiness scheduler
-  features/    home/ (hero, about, featured-work, skills, activity, contact), work/ (index, detail), not-found/
-  shared/      ui/ (button, tag, section-heading, icon), directives/ (reveal, parallax, split-text, tilt, magnetic), pipes/
-  content/     profile.ts (about, contact, socials)
+  core/        SITE_URL, SeoService, AnalyticsPort (+ no-op adapter), ShellService, design/ (tokens.ts, contrast.ts), experience.ts (endpoint and tier ids)
+  content/     profile.ts, resume.ts (typed content from the CV)
+  data/        models, PortfolioRepository (port), build-time JSON adapter, PortfolioStore (signals), project resolver
+  motion/      capability probe, tier ladder, AdaptiveQuality governor, MotionService (reduced motion + effective tier), audio/ (procedural sounds, AudioService)
+  scene/       SceneHost contract, FrameLoop (single loop, even pacing), SceneCanvas wrapper, DevOverlay, SceneRegistry, placeholder-scene (replaced by the Three.js host in Spike 0)
+  journey/     journey.machine (pure state machine), JourneyService (timers, audio cues, analytics), endpoints, telemetry (simulated)
+  features/    home/, work/, resume/, journey/ (page + hud/), styleguide/, not-found/
+  shared/      ui/, directives/, pipes/
 ```
 
-Dependency rules (enforced with `eslint-plugin-boundaries`, to be added in Phase 1):
-- `features` may depend on any layer below; nothing depends on `features`.
-- `data` and `shared` must not depend on `features`; `shared` must not depend on `data`.
-- `scene` core is framework-agnostic: no Angular imports in the scene classes, only in the thin wrapper component.
-- Only `core` and `content` are imported from everywhere.
+Dependency rules, **enforced by `eslint-plugin-boundaries`** (each rule was verified to fire with deliberate violations):
+- `features` may depend on `core`, `data`, `content`, `shared`, `motion`, `scene`, `journey`; nothing depends on `features`.
+- `journey` and `scene` may depend on `motion` and `core`; `motion` on `core`; `data` on `core` (and the generated data); `shared` on `core`.
+- `core` and `content` depend on nothing else in the app. Root files (`app.ts`, `app.config.ts`, `app.routes.ts`, `main.ts`) are the composition root and are deliberately unrestricted.
+- Scene implementations are framework-agnostic: no Angular imports in the frame loop or the hosts. Only `SceneCanvas` and `DevOverlay` are Angular.
 
 Components follow **smart/presentational**: pages fetch and orchestrate; UI components take inputs and emit outputs only.
-All components are standalone, `OnPush`, zoneless (Angular 21 default).
+All components are standalone and `OnPush`; the app is zoneless (Angular 21 default).
 
-Routes: `/` · `/work` · `/work/:slug` (prerendered per project) · `**` real 404.
-Legacy `/project/:id` URLs redirect to `/work/:slug` (done in Phase 0). The router uses `withComponentInputBinding()`,
-`withViewTransitions()` and in-memory scrolling.
+Routes: `/` · `/work` · `/work/:slug` (prerendered per project in Phase 4) · `/resume` · `/about` · `/experience` · `/skills` · `/education` · `/not-found` · `**` 404.
+Preview routes for the experience engine (Phase 2; not linked, `noindex`): `/journey` and `/styleguide`.
+Legacy `/project/:id` URLs redirect to `/work/:slug`. The router uses `withComponentInputBinding()`, `withViewTransitions()` and in-memory scrolling.
+
+### 4.1 The experience engine (Phase 2)
+
+- **State machine** (`journey/journey.machine.ts`): pure TypeScript, no Angular, no timers. `boot -> console -> journey -> room`, with `standard2d` reachable from every state. It is the single driver of the experience (CONCEPT.md section 7). Events that make no sense return the same context object, so it can never reach an invalid state (a 5,000-step random-walk test checks this).
+- **JourneyService** runs the machine and owns the side effects: the travel timer (4 s first visit, 2 s repeat, none under reduced motion or on the `static` tier), audio cues and analytics events.
+- **SceneHost contract** (`scene/scene-host.ts`): `mount`, `setSnapshot` and `setTier` push coarse state in; `stats()` is pulled a few times a second. The factory is asynchronous so implementations (and Three.js) load lazily. Phase 2 ships a 2D-canvas placeholder behind it.
+- **FrameLoop** renders every Nth display refresh, where N is the whole number closest to the tier's fps cap, so frame pacing is even (72 fps on a 144 Hz display with a 60 fps cap, not an uneven mix of 13.9 ms and 20.8 ms frames).
+- **Tiers and governor:** `detectTier` picks a starting tier from capabilities; `AdaptiveQuality` steps it down after sustained slow frames and back up only with sustained headroom (hysteresis), never above the detected tier, and never against a tier the user forced.
+- **Audio** is synthesised (Web Audio), muted by default, unlocked only by a user gesture, with the mute state held in memory only.
 
 ## 5. Data architecture
 
@@ -420,8 +433,8 @@ and a **review stop**.
 |---|---|---|---|
 | 0. Foundation | Branch, dependency patches (0 audit findings), angular-eslint, skeleton routes and shell, design tokens, self-hosted fonts, favicon, legacy redirects, motion gate | Lint, tests and build green | **done** (uncommitted) |
 | 1. Content and data foundation (safety net first) | GitHub sync script **in TypeScript** with fixture and schema validation; `PortfolioRepository` port and adapters; `PortfolioStore`; typed content files from the CV (profile, experience, education, skills); `/work` and `/work/:slug`; **2D resume `/resume`** with print styles and CV download; a 2D page per endpoint (`/about`, `/education`, `/skills`, `/projects`, `/experience`); `SeoService` basics; boundary lint; i18n structure; `AnalyticsPort` with the no-op adapter; CI (lint, tests, build, budgets) and the deploy-hook Action | A complete, accessible, indexable 2D site on a Vercel preview with real GitHub data and no WebGL. **Shippable on its own** | **done** (uncommitted). Deferred from the plan: contributions calendar (not needed for the 2D MVP), `de` locale build (German pending native review; `ng extract-i18n` works and 54 messages are extracted), real analytics provider (Phase 4) |
-| 2. Design system and experience engine (no heavy 3D) | HUD components; journey state machine (pure TypeScript, unit-tested); audio service (Web Audio); `MotionService` and tier detection; `SceneHost` interface with the main-thread host; dev overlay (FPS, draw calls, memory); `/styleguide`; owner sign-off of the visual mock (DESIGN.md section 17) | HUD and state machine run over a placeholder scene; design decisions signed off | next |
-| 2.5 Spike 0 (measured) | Boot scene (procedural headset, console), tunnel, About room (server vault, database vault, dashboard), measured on the baseline laptop and a phone; decide the worker tier; calibrate budgets | Section 9.7 criteria met, or scope and fidelity reduced **before** Phase 3 (go/no-go) | |
+| 2. Design system and experience engine (no heavy 3D) | HUD components; journey state machine (pure TypeScript, unit-tested); audio service (Web Audio); `MotionService` and tier detection; `SceneHost` interface with the main-thread host; dev overlay (FPS, draw calls, memory); `/styleguide`; owner sign-off of the visual mock (DESIGN.md section 17) | HUD and state machine run over a placeholder scene; design decisions signed off | **done** (uncommitted). Built: journey state machine, `/journey` HUD flow over a placeholder scene, procedural audio, tiers and governor, dev overlay, `/styleguide`. Pending: owner sign-off of DESIGN.md section 17 and CONCEPT.md A1 to A8 |
+| 2.5 Spike 0 (measured) | Boot scene (procedural headset, console), tunnel, About room (server vault, database vault, dashboard), measured on the baseline laptop and a phone; decide the worker tier; calibrate budgets | Section 9.7 criteria met, or scope and fidelity reduced **before** Phase 3 (go/no-go) | next |
 | 3. Rooms and integration | Remaining rooms (Skills, Projects from data, Education, Experience); `ReadinessScheduler`; tiers and adaptive quality; skip and repeat journeys; URL and back-button wiring to the state machine; worker tier if approved; analytics events | Every endpoint works in 3D and 2D with parity; budgets hold on the baseline devices | |
 | 4. Production hardening | SSR static prerender and Vercel rewrites; SEO, Open Graph, sitemap, JSON-LD; accessibility audit (axe, keyboard, screen reader); Lighthouse CI budgets enforced; real-user Web Vitals; security headers and CSP; privacy page (and Impressum if required); analytics provider wiring; German and `hreflang` only if natively reviewed; caching headers | Lighthouse mobile >= 90, axe clean, all checklists in CONCEPT.md section 9 and DESIGN.md section 16 pass | |
 | 5. Launch | Merge `redesign/v2` to `main`; production deploy on the existing Vercel project and domain; swap in the new CV; verify redirects; monitoring | Live and verified | |
@@ -474,6 +487,9 @@ Dependencies and cut lines:
 - ADR-013 Internal `/styleguide` route instead of Storybook for the MVP
 - ADR-014 Stable async APIs (app initializer plus route resolvers) instead of experimental `resource()`
 - ADR-015 Sync failure policy: real-data fixture locally, fail in CI and on production without a token
+- ADR-016 Pure journey state machine as the single driver of the experience (replaces scroll)
+- ADR-017 Asynchronous SceneHost factory, so scene implementations and Three.js are lazy-loaded
+- ADR-018 Frame pacing by whole display refreshes instead of time-based frame skipping
 
 ## 15. How to extend
 
