@@ -24,7 +24,10 @@
               class="hud-button hud-button--primary"
               data-autofocus
               (click)="journey.enter()"
-              (mouseenter)="journey.cueHover()"
+              (mouseenter)="journey.cueHover(); hover('headset')"
+              (mouseleave)="hover(null)"
+              (focus)="hover('headset')"
+              (blur)="hover(null)"
             >
               [ INITIALIZE NEURAL LINK ]
             </button>
@@ -157,4 +160,7 @@
     (cue)="journey.cueHover()"
   />
   <app-dev-overlay />
+  @defer (when benchMode) {
+    <app-bench-panel />
+  }
 </div>

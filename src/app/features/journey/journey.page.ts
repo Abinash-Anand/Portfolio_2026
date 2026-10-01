@@ -19,9 +19,11 @@ import { JourneyService } from '../../journey/journey.service';
 import { BOOT_LINES, CONSOLE_PROMPT, RESPONSE_LINE, SIMULATED_TAG } from '../../journey/telemetry';
 import { AudioService } from '../../motion/audio/audio.service';
 import { MotionService } from '../../motion/motion.service';
+import { BenchPanel } from '../../scene/bench/bench-panel.component';
 import { DevOverlay } from '../../scene/dev-overlay.component';
 import { SceneCanvas } from '../../scene/scene-canvas.component';
-import type { RenderTier, SceneSnapshot } from '../../scene/scene-host';
+import type { RenderTier, SceneHover, SceneSnapshot } from '../../scene/scene-host';
+import { SceneRegistry } from '../../scene/scene-registry';
 import { EndpointKeys } from './hud/endpoint-keys.component';
 import { Hud } from './hud/hud.component';
 import { TelemetryMonitor } from './hud/telemetry-monitor.component';
@@ -33,7 +35,16 @@ import { Typewriter } from './hud/typewriter.component';
  */
 @Component({
   selector: 'app-journey-page',
-  imports: [DevOverlay, EndpointKeys, Hud, RouterLink, SceneCanvas, TelemetryMonitor, Typewriter],
+  imports: [
+    BenchPanel,
+    DevOverlay,
+    EndpointKeys,
+    Hud,
+    RouterLink,
+    SceneCanvas,
+    TelemetryMonitor,
+    Typewriter,
+  ],
   templateUrl: './journey.page.html',
   host: { '(document:keydown.escape)': 'onEscape()' },
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -44,7 +55,12 @@ export class JourneyPage {
   protected readonly audio = inject(AudioService);
   private readonly shell = inject(ShellService);
   private readonly analytics = inject(AnalyticsPort);
+  private readonly registry = inject(SceneRegistry);
   private readonly injector = inject(Injector);
+
+  /** `?bench` shows the Spike 0 benchmark panel (its code is a separate chunk, never sent otherwise). */
+  protected readonly benchMode =
+    typeof location !== 'undefined' && new URLSearchParams(location.search).has('bench');
 
   protected readonly profile = PROFILE;
   protected readonly endpoints = ENDPOINTS;
@@ -137,6 +153,11 @@ export class JourneyPage {
 
   protected onEscape(): void {
     if (this.journey.kind() === 'journey') this.journey.skip();
+  }
+
+  /** The headset glows while its DOM twin (the Initialize button) is hovered or focused. */
+  protected hover(target: SceneHover): void {
+    this.registry.hover(target);
   }
 
   protected toggleAudio(): void {
