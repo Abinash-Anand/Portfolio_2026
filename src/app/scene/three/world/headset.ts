@@ -121,7 +121,10 @@ export class Headset implements WorldPart {
       curveSegments: 10,
     });
     visorGeometry.translate(0, 0, -DEPTH / 2);
-    this.object.add(new Mesh(visorGeometry, new MeshBasicMaterial({ color: surface })));
+    // The visor is a step lighter than the void, so it reads as a solid object and not just an outline.
+    this.object.add(
+      new Mesh(visorGeometry, new MeshBasicMaterial({ color: tokenColor('raised') })),
+    );
 
     this.edgeMaterial = new LineBasicMaterial({
       color: tokenColor('blue'),
@@ -156,6 +159,20 @@ export class Headset implements WorldPart {
     const glow = new Mesh(new PlaneGeometry(6, 3.6), this.glowMaterial);
     glow.position.z = -DEPTH / 2 - 0.4;
     this.object.add(glow);
+
+    // A faint blue lens across the front, where the circuit traces run.
+    const lens = new Mesh(
+      new PlaneGeometry(WIDTH - 0.5, HEIGHT - 0.4),
+      new MeshBasicMaterial({
+        color: tokenColor('blue'),
+        transparent: true,
+        opacity: 0.1,
+        blending: AdditiveBlending,
+        depthWrite: false,
+      }),
+    );
+    lens.position.z = DEPTH / 2 + 0.065;
+    this.object.add(lens);
   }
 
   /** Hover glow (the circuit traces light up, DESIGN.md section 6.2). */

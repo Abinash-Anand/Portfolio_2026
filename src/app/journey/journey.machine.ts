@@ -8,6 +8,7 @@ import { nextEndpoint } from './endpoints';
  * reacts to it (HUD, scene, audio, analytics) observes the state it produces.
  *
  *   boot -> console -> journey -> room -> (journey | console)       standard2d is reachable from every state
+ *   `open` jumps to a room from anywhere (deep links, history); `leave` returns from a room to the console
  */
 
 export type BaseState =
@@ -33,6 +34,10 @@ export type JourneyEvent =
   | { readonly type: 'rerun'; readonly instant?: boolean }
   | { readonly type: 'next'; readonly instant?: boolean }
   | { readonly type: 'console' }
+  /** The address bar or a history entry names a room: go straight there, with no journey (a deep link). */
+  | { readonly type: 'open'; readonly endpoint: EndpointId }
+  /** History went back out of a room, to the console. */
+  | { readonly type: 'leave' }
   | { readonly type: 'toggle2d' };
 
 export const INITIAL_CONTEXT: JourneyContext = { state: { kind: 'boot' }, visited: [] };
@@ -72,12 +77,16 @@ export function reduce(ctx: JourneyContext, event: JourneyEvent): JourneyContext
 
   switch (state.kind) {
     case 'boot':
+      if (event.type === 'open') return arriveAt(ctx, event.endpoint);
       return event.type === 'enter' ? { ...ctx, state: { kind: 'console' } } : ctx;
 
     case 'console':
+      if (event.type === 'open') return arriveAt(ctx, event.endpoint);
       return event.type === 'select' ? travelTo(ctx, event.endpoint, event.instant) : ctx;
 
     case 'journey':
+      if (event.type === 'open') return arriveAt(ctx, event.endpoint);
+      if (event.type === 'leave') return { ...ctx, state: { kind: 'console' } };
       return event.type === 'arrive' || event.type === 'skip' ? arriveAt(ctx, state.endpoint) : ctx;
 
     case 'room':
@@ -89,7 +98,10 @@ export function reduce(ctx: JourneyContext, event: JourneyEvent): JourneyContext
         case 'next':
           return travelTo(ctx, nextEndpoint(state.endpoint), event.instant);
         case 'console':
+        case 'leave':
           return { ...ctx, state: { kind: 'console' } };
+        case 'open':
+          return event.endpoint === state.endpoint ? ctx : arriveAt(ctx, event.endpoint);
         default:
           return ctx;
       }

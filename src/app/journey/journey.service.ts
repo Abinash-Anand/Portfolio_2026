@@ -75,6 +75,16 @@ export class JourneyService {
     this.dispatch({ type: 'toggle2d' });
   }
 
+  /** Straight to a room, with no journey: the address bar or history named it. */
+  open(endpoint: Parameters<typeof endpointInfo>[0]): void {
+    this.dispatch({ type: 'open', endpoint });
+  }
+
+  /** History went back out of a room: to the console. */
+  leave(): void {
+    this.dispatch({ type: 'leave' });
+  }
+
   /** Back to the boot screen (used when the page is left and re-entered). */
   reset(): void {
     this.clearTimer();
@@ -117,14 +127,22 @@ export class JourneyService {
         if (after.state.kind === 'journey') this.audio.play('whoosh');
         if (target && event.type !== 'rerun')
           this.analytics.track({ name: 'endpoint_select', endpoint: target });
+        // No travelling (reduced motion, or no 3D): the room is reached at once.
+        if (target && after.state.kind === 'room')
+          this.analytics.track({ name: 'room_arrive', endpoint: target, how: 'direct' });
         break;
       }
       case 'arrive':
         this.audio.play('arrive');
+        this.trackArrival(after, 'journey');
         break;
       case 'skip':
         this.audio.play('arrive');
         this.analytics.track({ name: 'journey_skip' });
+        this.trackArrival(after, 'skip');
+        break;
+      case 'open':
+        this.trackArrival(after, 'direct');
         break;
       case 'toggle2d':
         if (after.state.kind === 'standard2d') this.analytics.track({ name: 'resume_2d_toggle' });
@@ -133,6 +151,13 @@ export class JourneyService {
         break;
     }
     void before;
+  }
+
+  private trackArrival(after: JourneyContext, how: 'journey' | 'skip' | 'direct'): void {
+    const endpoint = endpointOf(after.state);
+    if (endpoint && after.state.kind === 'room') {
+      this.analytics.track({ name: 'room_arrive', endpoint, how });
+    }
   }
 
   private clearTimer(): void {

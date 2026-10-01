@@ -7,7 +7,8 @@
         [disabled]="disabled()"
         [attr.data-autofocus]="first ? '' : null"
         (click)="selected.emit(endpoint.id)"
-        (mouseenter)="hovered.emit()"
+        (mouseenter)="hovered.emit(endpoint.id)"
+        (focus)="hovered.emit(endpoint.id)"
       >
         <span class="keycap__path">{{ label(endpoint) }}</span>
         <span class="keycap__summary">{{ endpoint.summary }}</span>

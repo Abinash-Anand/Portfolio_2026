@@ -32,6 +32,8 @@ function fakeHost(overrides: Partial<BenchApi> = {}) {
     residual: () => ({ ...emptyInfo, geometries: 0, textures: 0 }),
     whenCompiled: () => Promise.resolve(),
     warmUp: async () => [30, 20, 10],
+    prepareRoom: async () => 5,
+    roomBuildMs: () => ({}),
     ...overrides,
   };
   const host = {
@@ -65,9 +67,10 @@ describe('benchmark runner', () => {
         restore: { width: 800, height: 600, dpr: 2 },
       });
 
-      expect(rows).toHaveLength(3 * 4);
+      expect(rows).toHaveLength(3 * 8); // boot, console, journey and five rooms, at three tiers
       expect(rows[0]).toMatchObject({ tier: 'high', phase: 'boot' });
-      expect(rows[11]).toMatchObject({ tier: 'low', phase: 'room' });
+      expect(rows[7]).toMatchObject({ tier: 'high', phase: 'room', endpoint: 'experience' });
+      expect(rows[23]).toMatchObject({ tier: 'low', phase: 'room', endpoint: 'experience' });
       expect(rows[0]!.cpu.p50).toBe(1);
       expect(rows[0]!.wall.p50).toBe(4);
       expect(rows[0]!.gpu?.p50).toBe(2);
@@ -87,7 +90,11 @@ describe('benchmark runner', () => {
           gpuMs: [],
         })),
       });
-      const rows = await runCost(host, { frames: 5, tiers: ['low'], phases: ['room'] });
+      const rows = await runCost(host, {
+        frames: 5,
+        tiers: ['low'],
+        cases: [{ phase: 'room', endpoint: 'skills' }],
+      });
       expect(rows).toHaveLength(1);
       expect(rows[0]!.gpu).toBeNull();
       const frameCounts = (bench.renderCost as ReturnType<typeof vi.fn>).mock.calls.map(
@@ -163,7 +170,13 @@ describe('benchmark runner', () => {
       expect(result.contextsReleased).toBe(true);
       expect(result.leaked).toBe(false);
       expect(Object.keys(result.coldFrameMs)).toEqual(
-        expect.arrayContaining(['mount (blocking)', 'console', 'journey', 'room']),
+        expect.arrayContaining([
+          'mount (blocking)',
+          'console',
+          'journey',
+          'room:about',
+          'room:experience',
+        ]),
       );
       getContext.mockRestore();
     });

@@ -1,4 +1,5 @@
 import {
+  AdditiveBlending,
   FogExp2,
   InstancedMesh,
   Matrix4,
@@ -6,46 +7,45 @@ import {
   PlaneGeometry,
   Scene,
   ShaderMaterial,
-  AdditiveBlending,
   WebGLRenderer,
 } from 'three';
-import { COLORS, type ColorToken } from '../../core/design/tokens';
+import { COLORS } from '../../core/design/tokens';
 import { ENDPOINT_IDS, type EndpointId } from '../../core/experience';
 import { FrameLoop, type FrameInfo, type FrameScheduler } from '../frame-loop';
-import type {
-  BenchApi,
-  FrameRecording,
-  RenderInfo,
-  RenderTier,
-  SceneHost,
-  SceneHover,
-  SceneSnapshot,
-  SceneStats,
-  ScenePhase,
+import { PRIORITY, ReadinessScheduler, type TaskSteps } from '../readiness-scheduler';
+import {
+  EMPTY_CONTENT,
+  type BenchApi,
+  type FrameRecording,
+  type RenderInfo,
+  type RenderTier,
+  type SceneContent,
+  type SceneHost,
+  type SceneHover,
+  type ScenePhase,
+  type SceneSnapshot,
+  type SceneStats,
 } from '../scene-host';
-import { CameraRig, targetPose, type Pointer } from './camera-rig';
+import { CameraRig, targetPose, type Pointer, type Pose } from './camera-rig';
 import { GpuTimer, type TimerContext } from './gpu-timer';
 import { THREE_PROFILES, type ThreeProfile } from './profiles';
+import { ROOM_LOADERS, type Room, type RoomContext, type RoomLoader } from './room';
+import { RoomManager } from './room-manager';
 import { ConsoleRoom } from './world/console-room';
 import { Headset } from './world/headset';
 import type { WorldPart } from './world/part';
 import { Tunnel } from './world/tunnel';
-import { Vault } from './world/vault';
-
-/** The vault is recolored per endpoint until Phase 3 builds a dedicated room for each. */
-const ROOM_TINTS: Readonly<Record<EndpointId, readonly [ColorToken, ColorToken]>> = {
-  about: ['indigo', 'violet'],
-  education: ['blue', 'cyan'],
-  skills: ['emerald', 'cyan'],
-  projects: ['gold', 'yellow'],
-  experience: ['blue', 'violet'],
-};
 
 /** Seconds the console stays visible after a journey starts, so the cut is not abrupt. */
 const CONSOLE_LINGER = 0.6;
 /** Seconds the gold "response" stream keeps flying after arriving in a room. */
 const RETURN_FLIGHT = 0.8;
+/** Milliseconds of preparation work allowed per frame (ARCHITECTURE.md S7). */
+const READINESS_BUDGET_MS = 4;
+/** A room asked for at the start of a journey must be built by this long after, whatever the frame load. */
+const JOURNEY_DEADLINE_MS = 2500;
 const MAX_STRESS_LAYERS = 160;
+const LABEL_FONT = '600 32px "JetBrains Mono Variable"';
 
 interface CostSample {
   cpuMs: number[];
@@ -75,10 +75,12 @@ function yieldToEventLoop(): Promise<void> {
   });
 }
 
-/** A part drawn once, out of sight, and the camera phase that will later see it (see `warmNext`). */
-interface WarmStep {
-  readonly part: WorldPart;
-  readonly phase: ScenePhase;
+/** Resolves when the HUD font is loaded, so label text is drawn in it. Never waits long: text may fall back. */
+function loadLabelFont(): Promise<unknown> {
+  const fonts = typeof document === 'undefined' ? undefined : document.fonts;
+  if (!fonts?.load) return Promise.resolve();
+  const timeout = new Promise((resolve) => setTimeout(resolve, 1500));
+  return Promise.race([fonts.load(LABEL_FONT).catch(() => undefined), timeout]);
 }
 
 /** The slice of the WebGL renderer the host uses, so tests can substitute a fake (jsdom has no WebGL). */
@@ -103,6 +105,10 @@ export interface ThreeHostOptions {
   random?: () => number;
   /** Replaces the real renderer. Defaults to a WebGL renderer drawing into the mounted canvas. */
   createRenderer?: (canvas: HTMLCanvasElement, profile: ThreeProfile) => RendererPort;
+  /** Replaces how rooms are loaded (tests use fakes). Defaults to the lazy chunk per room. */
+  loaders?: Readonly<Record<EndpointId, RoomLoader>>;
+  /** Replaces the drawing surface for label text (tests have no canvas). */
+  createCanvas?: RoomContext['createCanvas'];
 }
 
 /**
@@ -110,6 +116,10 @@ export interface ThreeHostOptions {
  * graph, one frame loop, unlit emissive materials with fog and additive glow (no lights, no shadows, no
  * post-processing), instancing for every repeated shape, and no allocations per frame. Framework-agnostic: this
  * file has no Angular imports.
+ *
+ * Shared pieces (headset, console, tunnel) live here; each destination is a Room, loaded as its own chunk when
+ * the visitor shows intent (or starts the journey), built through the ReadinessScheduler so building never costs
+ * a frame, and released when the visitor has moved on, so at most two rooms exist at once.
  */
 export class ThreeSceneHost implements SceneHost {
   readonly engine = 'THREE.JS';
@@ -128,6 +138,8 @@ export class ThreeSceneHost implements SceneHost {
     residual: () => this.residualInfo,
     whenCompiled: () => this.compiled,
     warmUp: () => this.warmUp(),
+    prepareRoom: (endpoint) => this.prepareRoomNow(endpoint),
+    roomBuildMs: () => Object.fromEntries(this.rooms?.buildMs ?? []),
   };
 
   private renderer: RendererPort | null = null;
@@ -136,24 +148,30 @@ export class ThreeSceneHost implements SceneHost {
   private readonly camera = new PerspectiveCamera(45, 1, 0.1, 220);
   private readonly rig = new CameraRig();
   private readonly loop: FrameLoop;
+  private readonly readiness = new ReadinessScheduler();
+  private readonly options: ThreeHostOptions;
   private readonly random: () => number;
   private readonly createRenderer: NonNullable<ThreeHostOptions['createRenderer']>;
 
   private headset: Headset | null = null;
   private consoleRoom: ConsoleRoom | null = null;
   private tunnel: Tunnel | null = null;
-  private vault: Vault | null = null;
+  private rooms: RoomManager | null = null;
   private stress: InstancedMesh | null = null;
   private parts: WorldPart[] = [];
 
+  private content: SceneContent = EMPTY_CONTENT;
   private profile: ThreeProfile = THREE_PROFILES.medium;
   private width = 1;
   private height = 1;
   private dpr = 1;
+  private pixelScale = 1;
   private phase: ScenePhase = 'boot';
   private endpoint: EndpointId | null = null;
+  private focus: string | null = null;
   private clock = 0;
   private phaseStart = 0;
+  private roomStart = 0;
   private returnUntil = 0;
   private lastFov = 0;
   private readonly pointer: Pointer = { x: 0, y: 0 };
@@ -172,8 +190,8 @@ export class ThreeSceneHost implements SceneHost {
   private recording: { delta: number[]; cpu: number[]; gpu: number[] } | null = null;
   private residualInfo: RenderInfo | null = null;
   private compiled: Promise<void> = Promise.resolve();
-  private warmQueue: WarmStep[] = [];
   private readonly warmCamera = new PerspectiveCamera(60, 1, 0.1, 220);
+  private readonly origin: Pointer = { x: 0, y: 0 };
 
   private readonly onPointerMove = (event: PointerEvent): void => {
     this.pointerTarget.x = (event.clientX / Math.max(1, window.innerWidth)) * 2 - 1;
@@ -187,6 +205,7 @@ export class ThreeSceneHost implements SceneHost {
   };
 
   constructor(options: ThreeHostOptions = {}) {
+    this.options = options;
     this.random = options.random ?? Math.random;
     this.createRenderer = options.createRenderer ?? defaultRenderer;
     this.loop = new FrameLoop((frame) => this.frame(frame), this.profile.maxFps, options.scheduler);
@@ -202,9 +221,23 @@ export class ThreeSceneHost implements SceneHost {
     this.headset = new Headset();
     this.consoleRoom = new ConsoleRoom();
     this.tunnel = new Tunnel(this.random);
-    this.vault = new Vault();
-    this.parts = [this.headset, this.consoleRoom, this.tunnel, this.vault];
+    this.parts = [this.headset, this.consoleRoom, this.tunnel];
     for (const part of this.parts) this.scene.add(part.object);
+
+    const fonts = loadLabelFont();
+    this.rooms = new RoomManager({
+      parent: this.scene,
+      loaders: this.options.loaders ?? ROOM_LOADERS,
+      scheduler: this.readiness,
+      context: () => ({
+        content: this.content,
+        profile: this.profile,
+        random: this.random,
+        createCanvas: this.options.createCanvas,
+      }),
+      ready: () => fonts,
+      onBuilt: (room) => this.onRoomBuilt(room),
+    });
 
     canvas.addEventListener('webglcontextlost', this.onContextLostEvent);
     window.addEventListener('pointermove', this.onPointerMove, { passive: true });
@@ -227,16 +260,39 @@ export class ThreeSceneHost implements SceneHost {
   }
 
   setSnapshot(snapshot: SceneSnapshot): void {
-    const previous = this.phase;
-    const phase = snapshot.phase;
+    const previousPhase = this.phase;
+    const previousEndpoint = this.endpoint;
     this.endpoint = snapshot.endpoint;
-    if (phase !== previous) {
-      this.phase = phase;
+    if (snapshot.phase !== previousPhase) {
+      this.phase = snapshot.phase;
       this.phaseStart = this.clock;
-      this.onPhaseChange(previous, phase, snapshot.endpoint);
-    } else if (phase === 'room' && snapshot.endpoint) {
-      this.tint(snapshot.endpoint);
+      this.onPhaseChange(previousPhase, snapshot.phase, snapshot.endpoint);
+    } else if (
+      snapshot.phase === 'room' &&
+      snapshot.endpoint &&
+      snapshot.endpoint !== previousEndpoint
+    ) {
+      this.enterRoom(snapshot.endpoint);
     }
+  }
+
+  setContent(content: SceneContent): void {
+    if (content === this.content) return;
+    this.content = content;
+    if (!this.rooms) return;
+    // Rooms were built from the old content: drop them, and rebuild what the visitor needs right now.
+    this.rooms.invalidate();
+    if (this.phase === 'room' && this.endpoint) this.enterRoom(this.endpoint);
+    else if (this.phase === 'console') this.prepareRoom('about', PRIORITY.prefetch);
+  }
+
+  setIntent(endpoint: EndpointId | null): void {
+    if (endpoint) this.prepareRoom(endpoint, PRIORITY.intent);
+  }
+
+  setFocus(id: string | null): void {
+    this.focus = id;
+    this.rooms?.current?.setFocus(id);
   }
 
   setTier(tier: RenderTier): void {
@@ -291,14 +347,15 @@ export class ThreeSceneHost implements SceneHost {
     if (this.disposed) return;
     this.disposed = true;
     this.loop.stop();
+    this.readiness.cancelAll();
     this.canvas?.removeEventListener('webglcontextlost', this.onContextLostEvent);
     window.removeEventListener('pointermove', this.onPointerMove);
+    this.rooms?.dispose();
     for (const part of this.parts) part.dispose();
     this.stress?.geometry.dispose();
     (this.stress?.material as ShaderMaterial | undefined)?.dispose();
     this.stress?.dispose();
     this.parts = [];
-    this.warmQueue = [];
     this.scene.clear();
     this.residualInfo = this.renderInfo(); // the renderer's own count of what is still alive
     this.gpu?.dispose();
@@ -306,10 +363,13 @@ export class ThreeSceneHost implements SceneHost {
     this.renderer?.forceContextLoss(); // free the GPU context now, not whenever the garbage collector runs
     this.renderer = null;
     this.canvas = null;
-    this.headset = this.consoleRoom = this.tunnel = this.vault = this.stress = null;
+    this.rooms = null;
+    this.headset = this.consoleRoom = this.tunnel = this.stress = null;
     this.onFrameTime = null;
     this.onContextLost = null;
   }
+
+  // --- readiness: compile, warm up, rooms -----------------------------------------------------------------------
 
   /**
    * Starts compiling every shader program now, in parallel and off the main thread where the browser allows,
@@ -319,38 +379,56 @@ export class ThreeSceneHost implements SceneHost {
   private precompile(): Promise<void> {
     const renderer = this.renderer;
     if (!renderer) return Promise.resolve();
-    const visibility = this.parts.map((part) => part.object.visible);
-    for (const part of this.parts) part.object.visible = true;
+    return this.compileVisible(this.parts.map((part) => part.object));
+  }
+
+  /** Compiles the shaders of these objects as if they were visible, restoring their visibility at once. */
+  private compileVisible(objects: readonly { visible: boolean }[]): Promise<void> {
+    const renderer = this.renderer;
+    if (!renderer) return Promise.resolve();
+    const visibility = objects.map((object) => object.visible);
+    for (const object of objects) object.visible = true;
     const done = renderer.compileAsync(this.scene, this.camera).then(
       () => undefined,
       () => undefined, // a failed warm-up only costs the old first-frame hitch
     );
-    this.parts.forEach((part, i) => (part.object.visible = visibility[i]!));
+    objects.forEach((object, i) => (object.visible = visibility[i]!));
     return done;
   }
 
+  /** The shared parts are drawn once, out of sight, one per frame, while the boot screen is up. */
   private queueWarmUp(): void {
-    if (this.disposed || !this.consoleRoom || !this.tunnel || !this.vault) return;
-    this.warmQueue = [
-      { part: this.consoleRoom, phase: 'console' },
-      { part: this.tunnel, phase: 'journey' },
-      { part: this.vault, phase: 'room' },
-    ];
+    if (this.disposed || !this.consoleRoom || !this.tunnel) return;
+    this.scheduleWarm('console', this.consoleRoom, () =>
+      targetPose('console', 0, this.origin, this.camera.aspect),
+    );
+    this.scheduleWarm('journey', this.tunnel, () =>
+      targetPose('journey', 0, this.origin, this.camera.aspect),
+    );
+  }
+
+  private scheduleWarm(
+    name: string,
+    part: WorldPart,
+    pose: () => Pose,
+    priority: number = PRIORITY.prefetch,
+  ): void {
+    void this.readiness.schedule(`warm:${name}`, () => this.warmSteps(part, pose), { priority });
+  }
+
+  private *warmSteps(part: WorldPart, pose: () => Pose): TaskSteps {
+    this.warmDraw(part, pose());
+    yield; // the draw is one step; finishing is the next, so the scheduler can stop right after it
   }
 
   /**
-   * Draws the next queued part once, into a single pixel, from the camera that will later see it. On its first
-   * draw the GPU does per-context work that shader pre-compilation cannot (Spike 0 measured 40 to 110 ms per
-   * phase), so it is paid here, one part per frame while the boot screen is up, instead of at a phase change.
-   * Returns how long it took when `sync` makes the GPU finish, otherwise null.
+   * Draws a part once, into a single pixel, from the camera that will later see it. On its first draw the GPU does
+   * per-context work that shader pre-compilation cannot (Spike 0 measured 40 to 110 ms per phase), so it is paid
+   * here, in the background, instead of at a phase change.
    */
-  private warmNext(sync = false): number | null {
+  private warmDraw(part: WorldPart, pose: Pose): void {
     const renderer = this.renderer;
-    const step = this.warmQueue.shift();
-    if (!renderer || !step) return null;
-
-    const started = performance.now();
-    const pose = targetPose(step.phase, 0, { x: 0, y: 0 }, this.camera.aspect);
+    if (!renderer || this.disposed) return;
     const camera = this.warmCamera;
     camera.aspect = this.camera.aspect;
     camera.fov = pose.fov;
@@ -358,26 +436,68 @@ export class ThreeSceneHost implements SceneHost {
     camera.position.set(pose.px, pose.py, pose.pz);
     camera.lookAt(pose.tx, pose.ty, pose.tz);
 
-    const visible = step.part.object.visible;
-    step.part.object.visible = true;
+    const visible = part.object.visible;
+    part.object.visible = true;
     renderer.setScissorTest(true);
     renderer.setScissor(0, 0, 1, 1);
     renderer.render(this.scene, camera);
     renderer.setScissorTest(false);
-    step.part.object.visible = visible;
-
-    if (!sync) return null;
-    const gl = renderer.getContext();
-    gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(4));
-    return performance.now() - started;
+    part.object.visible = visible;
   }
 
-  /** Benchmark: runs the whole warm-up now and reports the time each part took (ms). */
+  /** Benchmark: runs the whole warm-up now and reports the time each step took (ms). */
   private async warmUp(): Promise<number[]> {
     await this.compiled;
     const times: number[] = [];
-    for (let ms = this.warmNext(true); ms !== null; ms = this.warmNext(true)) times.push(ms);
+    const gl = this.renderer?.getContext();
+    const pixel = new Uint8Array(4);
+    for (const id of this.readiness.pendingIds().filter((task) => task.startsWith('warm:'))) {
+      const started = performance.now();
+      this.readiness.flush(id);
+      gl?.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel); // wait for the GPU, so the time is real
+      times.push(performance.now() - started);
+    }
     return times;
+  }
+
+  private prepareRoom(endpoint: EndpointId, priority: number, deadlineMs?: number): void {
+    const deadline = deadlineMs === undefined ? {} : { deadline: performance.now() + deadlineMs };
+    void this.rooms?.prepare(endpoint, { priority, ...deadline });
+  }
+
+  private async prepareRoomNow(endpoint: EndpointId): Promise<number | null> {
+    const rooms = this.rooms;
+    if (!rooms) return null;
+    const pending = rooms.prepare(endpoint, { priority: PRIORITY.urgent });
+
+    // The frame loop is normally what runs the scheduler, but a benchmark pauses it: drive the scheduler by hand
+    // until the room is built (and give up if its code never arrives).
+    let settled = false;
+    void pending.then(() => (settled = true));
+    for (let waits = 0; !settled && waits < 2000; waits++) {
+      await yieldToEventLoop();
+      this.readiness.tick(Infinity);
+    }
+    const room = settled ? await pending : null;
+    if (!room || this.disposed) return null;
+
+    this.readiness.flush(`warm:room:${endpoint}`);
+    await this.compiled;
+    return rooms.buildMs.get(endpoint) ?? null;
+  }
+
+  /** A room was just built: apply the tier, compile its shaders, and queue its warm-up draw. */
+  private onRoomBuilt(room: Room): void {
+    if (this.disposed) return;
+    room.setProfile(this.profile);
+    room.setPixelScale(this.pixelScale);
+    void this.compileVisible([room.object]);
+    this.scheduleWarm(
+      `room:${room.id}`,
+      room,
+      () => room.pose(0, this.origin, this.camera.aspect),
+      PRIORITY.intent,
+    );
   }
 
   // --- phases -------------------------------------------------------------------------------------------
@@ -388,44 +508,72 @@ export class ThreeSceneHost implements SceneHost {
         this.headset?.reset();
         this.consoleRoom?.press(-1);
         this.tunnel?.setFlying(false);
+        this.rooms?.hide();
         break;
       case 'console':
         if (from === 'boot') this.headset?.fly();
         this.consoleRoom?.press(-1);
         this.tunnel?.setFlying(false);
+        this.rooms?.hide();
+        // The first stop is the likeliest, so it is prepared before the visitor chooses.
+        this.prepareRoom('about', PRIORITY.prefetch);
         break;
       case 'journey':
         // The pressed key stays down while the packet leaves.
-        if (endpoint) this.consoleRoom?.press(ENDPOINT_IDS.indexOf(endpoint));
+        if (endpoint) {
+          this.consoleRoom?.press(ENDPOINT_IDS.indexOf(endpoint));
+          this.prepareRoom(endpoint, PRIORITY.urgent, JOURNEY_DEADLINE_MS);
+        }
+        this.rooms?.hide();
         this.tunnel?.setReturning(false);
         this.tunnel?.setFlying(true);
         this.returnUntil = 0;
         break;
       case 'room':
         this.consoleRoom?.press(-1);
-        if (endpoint) this.tint(endpoint);
         // The gold response stream carries the visitor back for a moment.
         this.tunnel?.setReturning(true);
         this.tunnel?.setFlying(true);
         this.returnUntil = this.clock + RETURN_FLIGHT;
+        if (endpoint) this.enterRoom(endpoint);
         break;
     }
   }
 
-  private tint(endpoint: EndpointId): void {
-    const [a, b] = ROOM_TINTS[endpoint];
-    this.vault?.setTint(a, b);
+  /** Shows the room for an endpoint as soon as it is built (at once when it already is). */
+  private enterRoom(endpoint: EndpointId): void {
+    const rooms = this.rooms;
+    if (!rooms) return;
+    if (this.showRoom(endpoint)) return;
+    void rooms.prepare(endpoint, { priority: PRIORITY.urgent }).then(() => {
+      if (!this.disposed && this.phase === 'room' && this.endpoint === endpoint)
+        this.showRoom(endpoint);
+    });
   }
 
-  /** Which parts are visible, given the current phase and how long it has been going. */
+  private showRoom(endpoint: EndpointId): boolean {
+    const room = this.rooms?.show(endpoint);
+    if (!room) return false;
+    room.setProfile(this.profile);
+    room.setPixelScale(this.pixelScale);
+    room.setFocus(this.focus);
+    this.roomStart = this.clock;
+    return true;
+  }
+
+  /** Which shared parts are visible, given the current phase and how long it has been going. */
   private applyPhaseVisibility(phaseTime: number): void {
-    if (!this.headset || !this.consoleRoom || !this.vault) return;
+    if (!this.headset || !this.consoleRoom) return;
     const phase = this.phase;
     this.consoleRoom.object.visible =
       phase === 'console' || (phase === 'journey' && phaseTime < CONSOLE_LINGER);
-    this.vault.object.visible = phase === 'room';
     if (phase === 'journey' || phase === 'room') this.headset.object.visible = false;
-    if (this.returnUntil > 0 && this.clock >= this.returnUntil) {
+    // The response stream ends once its time is up AND the room is there to take over; never an empty void.
+    if (
+      this.returnUntil > 0 &&
+      this.clock >= this.returnUntil &&
+      (phase !== 'room' || this.rooms?.current)
+    ) {
       this.tunnel?.setFlying(false);
       this.returnUntil = 0;
     }
@@ -436,7 +584,7 @@ export class ThreeSceneHost implements SceneHost {
   private applyProfile(): void {
     this.tunnel?.setPointCount(this.profile.tunnelPoints);
     this.tunnel?.setRingCount(this.profile.rings);
-    this.vault?.setRackCount(this.profile.racksPerSide);
+    for (const id of this.rooms?.ids ?? []) this.rooms?.get(id)?.setProfile(this.profile);
   }
 
   private applySize(): void {
@@ -446,7 +594,9 @@ export class ThreeSceneHost implements SceneHost {
     renderer.setSize(this.width, this.height, false); // CSS owns the displayed size
     this.camera.aspect = this.width / this.height;
     this.camera.updateProjectionMatrix();
-    this.tunnel?.setPixelScale(renderer.domElement.height / 900);
+    this.pixelScale = renderer.domElement.height / 900;
+    this.tunnel?.setPixelScale(this.pixelScale);
+    for (const id of this.rooms?.ids ?? []) this.rooms?.get(id)?.setPixelScale(this.pixelScale);
   }
 
   // --- the frame ------------------------------------------------------------------------------------------
@@ -459,7 +609,7 @@ export class ThreeSceneHost implements SceneHost {
     this.step(dt);
     this.render();
     const cpu = performance.now() - t0;
-    this.warmNext(); // one queued part per frame during the first frames, then nothing
+    this.readiness.tick(READINESS_BUDGET_MS); // what the visitor is about to need, in the background
 
     this.recordFrame(deltaMs, cpu, now);
     this.onFrameTime?.((deltaMs / expectedMs) * (1000 / 60));
@@ -475,7 +625,12 @@ export class ThreeSceneHost implements SceneHost {
     this.pointer.x += (this.pointerTarget.x - this.pointer.x) * k;
     this.pointer.y += (this.pointerTarget.y - this.pointer.y) * k;
 
-    const pose = this.rig.update(dt, this.phase, phaseTime, this.pointer, this.camera.aspect);
+    // A room owns its camera; until it is shown, the camera stays where the phase puts it.
+    const room = this.phase === 'room' ? this.rooms?.current : null;
+    const target = room
+      ? room.pose(this.clock - this.roomStart, this.pointer, this.camera.aspect)
+      : targetPose(this.phase, phaseTime, this.pointer, this.camera.aspect);
+    const pose = this.rig.update(dt, target);
     this.camera.position.set(pose.px, pose.py, pose.pz);
     this.camera.lookAt(pose.tx, pose.ty, pose.tz);
     if (Math.abs(pose.fov - this.lastFov) > 0.01) {
@@ -486,6 +641,7 @@ export class ThreeSceneHost implements SceneHost {
 
     this.applyPhaseVisibility(phaseTime);
     for (const part of this.parts) part.update(dt, this.clock);
+    room?.update(dt, this.clock);
   }
 
   private render(): void {

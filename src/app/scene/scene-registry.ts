@@ -1,4 +1,5 @@
 import { Injectable, signal } from '@angular/core';
+import type { EndpointId } from '../core/experience';
 import type { SceneHost, SceneHover, SceneStats } from './scene-host';
 
 /**
@@ -36,5 +37,15 @@ export class SceneRegistry {
   /** Forwards a hover from a DOM control to the world (no-op for hosts that do not react to it). */
   hover(target: SceneHover): void {
     this.current?.setHover?.(target);
+  }
+
+  /** The visitor is likely heading to this endpoint: let the world start preparing its room. */
+  intent(endpoint: EndpointId | null): void {
+    this.current?.setIntent?.(endpoint);
+  }
+
+  /** Draws attention to one thing inside the current room (a project pod, a commit). */
+  focus(id: string | null): void {
+    this.current?.setFocus?.(id);
   }
 }

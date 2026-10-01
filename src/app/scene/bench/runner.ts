@@ -1,4 +1,4 @@
-import type { EndpointId } from '../../core/experience';
+import { ENDPOINT_IDS, type EndpointId } from '../../core/experience';
 import type { RenderTier, SceneHost, ScenePhase } from '../scene-host';
 import {
   estimateRefreshHz,
@@ -21,6 +21,10 @@ import {
 export interface CostRow {
   readonly tier: RenderTier;
   readonly phase: ScenePhase;
+  /** For the `room` phase, which room. */
+  readonly endpoint: EndpointId | null;
+  /** How long the room took to build, in ms (first time it was measured). */
+  readonly buildMs: number | null;
   /** JavaScript time per frame: world update plus draw-call submission. */
   readonly cpu: Summary;
   /** Wall time per frame with the GPU forced to finish: the true cost of the frame. */
@@ -34,19 +38,31 @@ export interface CostRow {
   readonly textures: number;
 }
 
+/** One thing to measure: a phase, and for rooms, which room. */
+export interface CostCase {
+  readonly phase: ScenePhase;
+  readonly endpoint?: EndpointId;
+}
+
 export interface CostOptions {
   readonly frames?: number;
   readonly tiers?: readonly RenderTier[];
-  readonly phases?: readonly ScenePhase[];
+  /** What to measure. Defaults to every phase and every room. */
+  readonly cases?: readonly CostCase[];
   /** Render at this fixed size and DPR 1, so numbers are comparable between devices. */
   readonly reference?: { readonly width: number; readonly height: number };
   /** The size to put back afterwards (the real canvas). */
   readonly restore?: { readonly width: number; readonly height: number; readonly dpr: number };
-  readonly endpoint?: EndpointId;
 }
 
 const ALL_TIERS: readonly RenderTier[] = ['high', 'medium', 'low'];
-const ALL_PHASES: readonly ScenePhase[] = ['boot', 'console', 'journey', 'room'];
+/** The shared phases, then each room. */
+export const ALL_CASES: readonly CostCase[] = [
+  { phase: 'boot' },
+  { phase: 'console' },
+  { phase: 'journey', endpoint: 'about' },
+  ...ENDPOINT_IDS.map((endpoint): CostCase => ({ phase: 'room', endpoint })),
+];
 const REFERENCE = { width: 1920, height: 1080 };
 
 function requireBench(host: SceneHost): NonNullable<SceneHost['bench']> {
@@ -60,7 +76,6 @@ export const sleep = (ms: number): Promise<void> =>
 export async function runCost(host: SceneHost, options: CostOptions = {}): Promise<CostRow[]> {
   const bench = requireBench(host);
   const frames = options.frames ?? 120;
-  const endpoint = options.endpoint ?? 'about';
   const reference = options.reference ?? REFERENCE;
   const rows: CostRow[] = [];
 
@@ -68,19 +83,24 @@ export async function runCost(host: SceneHost, options: CostOptions = {}): Promi
   bench.enableGpuTiming();
   host.resize(reference.width, reference.height, 1);
 
+  const buildMs = new Map<EndpointId, number>();
   for (const tier of options.tiers ?? ALL_TIERS) {
     host.setTier(tier);
-    for (const phase of options.phases ?? ALL_PHASES) {
-      host.setSnapshot({
-        phase,
-        endpoint: phase === 'journey' || phase === 'room' ? endpoint : null,
-      });
+    for (const { phase, endpoint } of options.cases ?? ALL_CASES) {
+      if (phase === 'room' && endpoint) {
+        // Build (and warm) the room first, as the background preparation would have; remember what it cost.
+        const ms = await bench.prepareRoom(endpoint);
+        if (ms !== null && !buildMs.has(endpoint)) buildMs.set(endpoint, ms);
+      }
+      host.setSnapshot({ phase, endpoint: endpoint ?? null });
       await bench.renderCost(20); // warm-up: shader compilation, buffer uploads, JIT
       const { cpuMs, wallMs, gpuMs } = await bench.renderCost(frames);
       const info = bench.info();
       rows.push({
         tier,
         phase,
+        endpoint: endpoint ?? null,
+        buildMs: endpoint ? (buildMs.get(endpoint) ?? null) : null,
         cpu: summarize(cpuMs),
         wall: summarize(wallMs),
         gpu: gpuMs.length ? summarize(gpuMs) : null,
@@ -234,8 +254,10 @@ export interface LifecycleResult {
   readonly coldFrameMs: Readonly<Record<string, number>>;
   /** The same first frames on a second fresh scene that ran the draw-ahead warm-up first. */
   readonly warmedFrameMs: Readonly<Record<string, number>>;
-  /** Time each warm-up draw took (console, tunnel, vault), in ms. */
+  /** Time each shared warm-up draw took (console, tunnel), in ms. */
   readonly warmUpMs: readonly number[];
+  /** How long each room took to build on the first cycle, in ms. */
+  readonly roomBuildMs: Readonly<Record<string, number>>;
   readonly leaked: boolean;
 }
 
@@ -255,6 +277,7 @@ export async function runLifecycle(
   const coldFrameMs: Record<string, number> = {};
   const warmedFrameMs: Record<string, number> = {};
   let warmUpMs: number[] = [];
+  let roomBuildMs: Record<string, number> = {};
   let released = true;
 
   for (let cycle = 0; cycle < cycles; cycle++) {
@@ -278,12 +301,21 @@ export async function runLifecycle(
       record['compile (until ready)'] = Math.round((performance.now() - mountStart) * 10) / 10;
     }
 
-    for (const phase of ['console', 'journey', 'room'] as const) {
+    for (const phase of ['console', 'journey'] as const) {
       host.setSnapshot({ phase, endpoint: phase === 'console' ? null : 'about' });
       const { wallMs } = await bench.renderCost(1);
       if (record) record[phase] = Math.round((wallMs[0] ?? 0) * 10) / 10;
       await bench.renderCost(5);
     }
+    // Visit every room, as a visitor moving through the site would: at most two stay alive at once.
+    for (const endpoint of ENDPOINT_IDS) {
+      await bench.prepareRoom(endpoint);
+      host.setSnapshot({ phase: 'room', endpoint });
+      const { wallMs } = await bench.renderCost(1);
+      if (record) record[`room:${endpoint}`] = Math.round((wallMs[0] ?? 0) * 10) / 10;
+      await bench.renderCost(5);
+    }
+    if (cycle === 0) roomBuildMs = bench.roomBuildMs();
 
     const info = bench.info();
     alive.push({ geometries: info.geometries, textures: info.textures });
@@ -312,6 +344,7 @@ export async function runLifecycle(
     coldFrameMs,
     warmedFrameMs,
     warmUpMs,
+    roomBuildMs,
     leaked: !steady || !clean || !released,
   };
 }
