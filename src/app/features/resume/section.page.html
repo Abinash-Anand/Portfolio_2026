@@ -1,0 +1,32 @@
+<article class="mx-auto max-w-4xl px-6 pt-32 pb-24 md:px-10">
+  <a routerLink="/resume" class="text-muted text-sm hover:text-text" i18n>← Full resume</a>
+
+  @switch (section()) {
+    @case ('about') {
+      <h1 class="font-display mt-6 text-4xl font-bold tracking-tight md:text-6xl" i18n>About</h1>
+      <div class="mt-8 flex max-w-2xl flex-col gap-5 leading-relaxed">
+        @for (paragraph of profile.about; track $index) {
+          <p>{{ paragraph }}</p>
+        }
+      </div>
+    }
+    @case ('experience') {
+      <h1 class="font-display mt-6 text-4xl font-bold tracking-tight md:text-6xl" i18n>
+        Experience
+      </h1>
+      <div class="mt-10"><app-experience-section [entries]="resume.experience" [level]="2" /></div>
+    }
+    @case ('skills') {
+      <h1 class="font-display mt-6 text-4xl font-bold tracking-tight md:text-6xl" i18n>Skills</h1>
+      <div class="mt-10">
+        <app-skills-section [groups]="resume.skills" [spoken]="resume.spoken" [level]="2" />
+      </div>
+    }
+    @case ('education') {
+      <h1 class="font-display mt-6 text-4xl font-bold tracking-tight md:text-6xl" i18n>
+        Education
+      </h1>
+      <div class="mt-10"><app-education-section [entries]="resume.education" [level]="2" /></div>
+    }
+  }
+</article>
