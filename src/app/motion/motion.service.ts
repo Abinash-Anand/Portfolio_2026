@@ -1,4 +1,5 @@
 import { computed, DestroyRef, inject, Injectable, InjectionToken, signal } from '@angular/core';
+import { AnalyticsPort } from '../core/analytics/analytics.port';
 import { probeCapabilities, type Capabilities, type ProbeEnvironment } from './capabilities';
 import { detectTier, TIERS, type Tier, type TierChoice } from './tier';
 
@@ -26,6 +27,7 @@ export const CAPABILITY_PROBE = new InjectionToken<() => Capabilities>('CAPABILI
 @Injectable({ providedIn: 'root' })
 export class MotionService {
   private readonly probe = inject(CAPABILITY_PROBE);
+  private readonly analytics = inject(AnalyticsPort);
 
   // No signal dependencies: evaluated once, on first read, so the (cheap but not free) probe only runs
   // when the experience actually mounts.
@@ -74,8 +76,9 @@ export class MotionService {
   }
 
   /** The 3D world cannot run (no context, or it was lost): fall back to the 2D experience. */
-  fallBackToStatic(): void {
+  fallBackToStatic(reason: 'init_failed' | 'context_lost'): void {
     this.failed.set(true);
+    this.analytics.track({ name: 'webgl_fallback', reason });
   }
 
   /** auto -> high -> medium -> low -> static -> auto (the HUD graphics button). */

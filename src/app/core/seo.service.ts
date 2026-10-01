@@ -9,13 +9,19 @@ export interface PageSeo {
   readonly description: string;
   /** Path of the page, for example `/work/ParkRabbit`. */
   readonly path: string;
+  /** Absolute URL of a share image. Without one, the site's default card is used. */
   readonly image?: string | null;
   readonly type?: 'website' | 'article';
+  /** Structured data (schema.org) for the page, written as JSON-LD. Removed again when a page has none. */
+  readonly jsonLd?: object | null;
   /** Defaults to indexable. Preview and internal routes pass `noindex`. */
   readonly robots?: string;
 }
 
-/** Per-page meta description, canonical URL and Open Graph / Twitter tags. */
+/** The share card used when a page has no image of its own (1200 x 630, in `public/assets`). */
+export const DEFAULT_SHARE_IMAGE = '/assets/og-default.jpg';
+
+/** Per-page meta description, canonical URL, Open Graph / Twitter tags and structured data. */
 @Injectable({ providedIn: 'root' })
 export class SeoService {
   private readonly meta = inject(Meta);
@@ -32,13 +38,13 @@ export class SeoService {
     this.property('og:description', page.description);
     this.property('og:type', page.type ?? 'website');
     this.property('og:url', url);
-    this.name('twitter:card', page.image ? 'summary_large_image' : 'summary');
-    if (page.image) {
-      this.property('og:image', page.image);
-    } else {
-      this.meta.removeTag(`property='og:image'`);
-    }
+    this.property('og:locale', 'en_US');
+    const image = page.image || new URL(DEFAULT_SHARE_IMAGE, this.site).toString();
+    this.property('og:image', image);
+    this.name('twitter:card', 'summary_large_image');
+    this.name('twitter:image', image);
     this.canonical(url);
+    this.structuredData(page.jsonLd ?? null);
   }
 
   private name(name: string, content: string): void {
@@ -57,5 +63,19 @@ export class SeoService {
       this.document.head.appendChild(link);
     }
     link.setAttribute('href', url);
+  }
+
+  /** One JSON-LD block per page. `<` is escaped so the data can never close the script element early. */
+  private structuredData(data: object | null): void {
+    const existing = this.document.head.querySelector('script#seo-jsonld');
+    if (!data) {
+      existing?.remove();
+      return;
+    }
+    const script = existing ?? this.document.createElement('script');
+    script.setAttribute('id', 'seo-jsonld');
+    script.setAttribute('type', 'application/ld+json');
+    script.textContent = JSON.stringify(data).replace(/</g, '\\u003c');
+    if (!existing) this.document.head.appendChild(script);
   }
 }

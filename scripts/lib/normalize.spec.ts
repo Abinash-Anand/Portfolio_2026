@@ -34,6 +34,32 @@ const build = (repos: RawRepo[], pinned: RawRepo[] = [], extra: object = {}) =>
     ...extra,
   });
 
+describe('buildPortfolio activity', () => {
+  const contributions = {
+    totalContributions: 3,
+    weeks: [
+      {
+        contributionDays: [
+          { date: '2026-09-29', contributionCount: 3, weekday: 2 },
+          { date: '2026-09-30', contributionCount: 0, weekday: 3 },
+        ],
+      },
+    ],
+  };
+
+  it('carries the contribution calendar into the index when GitHub returned one', async () => {
+    const { index } = await build([repo('a')], [], {
+      raw: { pinned: [], repos: [repo('a')], contributions },
+    });
+    expect(index.activity).toMatchObject({ total: 3, from: '2026-09-27' });
+    expect(index.activity?.days).toHaveLength(7);
+  });
+
+  it('is null when it did not (fixture data, or a token that cannot read it)', async () => {
+    expect((await build([repo('a')])).index.activity).toBeNull();
+  });
+});
+
 describe('buildPortfolio', () => {
   it('features pinned repos first (in pin order), then the rest by most recent push', async () => {
     const a = repo('a', { pushedAt: '2026-01-01T00:00:00Z' });

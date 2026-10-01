@@ -11,6 +11,13 @@
       >Resume</a
     >
     <a
+      routerLink="/journey"
+      class="border-emerald/60 text-emerald hover:border-emerald rounded-full border px-6 py-3 font-mono text-sm tracking-wide"
+      i18n
+    >
+      Enter the 3D experience →
+    </a>
+    <a
       [href]="profile.cvPath"
       [appTrack]="{ name: 'cv_download' }"
       download
@@ -43,6 +50,20 @@
         </li>
       }
     </ul>
+  </section>
+}
+
+@if (activity(); as calendar) {
+  <section class="mx-auto max-w-6xl px-6 pb-24 md:px-10" aria-labelledby="home-activity">
+    <h2 id="home-activity" class="text-muted font-mono text-xs tracking-wider uppercase" i18n>
+      Activity
+    </h2>
+    <p class="text-muted mt-2 text-sm" i18n>
+      {{ calendar.total }} contributions on GitHub in the last year
+    </p>
+    <div class="mt-6 overflow-x-auto">
+      <app-activity-graph [calendar]="calendar" />
+    </div>
   </section>
 }
 

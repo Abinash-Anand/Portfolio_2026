@@ -1,5 +1,11 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
-import type { PortfolioIndex, PortfolioSource, Project, ProjectDetail } from './models';
+import type {
+  ActivityCalendar,
+  PortfolioIndex,
+  PortfolioSource,
+  Project,
+  ProjectDetail,
+} from './models';
 import { PortfolioRepository } from './portfolio.repository';
 
 /**
@@ -14,6 +20,8 @@ export class PortfolioStore {
   readonly loaded = computed(() => this.state() !== null);
   readonly source = computed<PortfolioSource | null>(() => this.state()?.source ?? null);
   readonly projects = computed<readonly Project[]>(() => this.state()?.projects ?? []);
+  /** The GitHub activity calendar; null when the build had no token that can read it. */
+  readonly activity = computed<ActivityCalendar | null>(() => this.state()?.activity ?? null);
   readonly featured = computed(() => this.projects().filter((p) => p.featured));
   readonly archive = computed(() => this.projects().filter((p) => !p.featured));
   private readonly bySlug = computed(

@@ -7,6 +7,7 @@ import type {
 } from '../../src/app/data/models';
 import { readmeOf, type RawPortfolio, type RawRepo } from './github';
 import { parseManifest, resolveCover } from './manifest';
+import { normalizeActivity } from './activity';
 import { PortfolioIndexSchema, ProjectDetailSchema } from './schema';
 import { firstParagraph, isBoilerplate, plainText, renderReadme } from './readme';
 
@@ -154,6 +155,7 @@ export async function buildPortfolio(input: BuildInput): Promise<BuildOutput> {
     source: input.source,
     login: input.login,
     projects,
+    activity: normalizeActivity(input.raw.contributions ?? null),
   });
   const validDetails = details.map((detail) => ProjectDetailSchema.parse(detail));
   return { index, details: validDetails, warnings };
