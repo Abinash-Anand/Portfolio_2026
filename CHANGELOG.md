@@ -447,3 +447,22 @@ This is a reusable entry template, not a completed change. Copy it for each mean
 - Owner decisions and unverified content: `resume` is `null` because the Master CV contains a phone number and the repository is public. The availability text `Open to new opportunities`, the LinkedIn URL (taken from earlier public profile data; LinkedIn blocks automated checks), and the omission of the Instagram link are owner-confirmable. `Eber` is described only from its README and the CV's Elluminati entry; no claim about that repository's origin is made.
 - Findings from real content: at 390 px the single-word project title `SynthGraph` is 15 px wider than its content box in the detail overlay; it stays inside the viewport (0 px past it at 360 px) and was left as is because typography is protected. The stack group `AI / Systems` was renamed `Engineering` in data because its former items had no basis in the owner's work. The pinned repositories were updated through direct commits to their default branches (ParkRabbit's `main` is branch-protected; the owner's permissions allowed the commit).
 - `.github/workflows/ci.yml` still runs Angular-era scripts that no longer exist in `package.json`; it is outside this change and was not modified. `.github/workflows/scheduled-deploy.yml` can rebuild daily through a Vercel deploy hook (secret `VERCEL_DEPLOY_HOOK`) so pin changes appear without a manual build. `REGRESSION_CHECKLIST.md` lines that name fixture content describe the development fixture, not the production data.
+
+## 2026-10-02 — Serve Inter and favicon.ico as regular git blobs (untrack from Git LFS)
+
+### Fixed
+
+- The live site (`abinashanand.vercel.app`) served 129–130 byte Git LFS pointer text in place of all seven `public/fonts/*.woff2` files and `public/favicon.ico`, because `.gitattributes` routed `*.woff2` and `*.ico` through Git LFS and Vercel does not fetch LFS objects. Inter therefore never loaded in production (`document.fonts.check('500 14px Inter')` was false, with an OTS "invalid sfntVersion" console warning per font), the page fell back to Arial, and the `.ico` favicon was unusable. The defect predates the 2026-10-02 activation entry: the same pointers were already present in `2f7f94f`, and no earlier successful production deployment of this React build existed to expose it.
+- Cause removed: the `*.woff2` and `*.ico` LFS rules in `.gitattributes` were replaced with `binary` rules, and the eight files were re-committed so git stores their real bytes. Other LFS rules are unchanged; no LFS-tracked file remains in the repository.
+
+### Preserved
+
+- Font family, weights, `@font-face` declarations, CSS, application and motion code, dependencies and configuration are unchanged. Each re-committed file is byte-identical to its original: the sha256 of every file equals the oid in its former LFS pointer. The file history keeps the earlier pointer commits; their LFS objects remain in LFS storage.
+
+### Regression Testing
+
+- Built with `vite build`: `dist/favicon.ico`, `dist/favicon.svg` and all seven `dist/fonts/*.woff2` plus the license are byte-identical to their `public/` sources, and the built CSS references the same `/fonts/*.woff2` URLs. `tsc --noEmit` passed and 25 of 25 tests passed. Live-site verification after deployment is recorded in the follow-up note below.
+
+### Notes
+
+- `.gitattributes` carries a "Generated" header from the project template. If a platform tool regenerates it, the LFS rules for `*.woff2`/`*.ico` could return and reintroduce the defect; the comment beside each new rule states why. `*.woff`, `*.ttf`, `*.otf`, `*.eot` and the remaining LFS rules were deliberately left alone as no such files are in use.

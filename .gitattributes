@@ -11,7 +11,8 @@
 *.bmp                filter=lfs diff=lfs merge=lfs -text
 *.tiff               filter=lfs diff=lfs merge=lfs -text
 *.tif                filter=lfs diff=lfs merge=lfs -text
-*.ico                filter=lfs diff=lfs merge=lfs -text
+# Served directly by the deployment, which does not fetch Git LFS objects: keep as regular blobs.
+*.ico                binary
 *.webp               filter=lfs diff=lfs merge=lfs -text
 *.psd                filter=lfs diff=lfs merge=lfs -text
 *.ai                 filter=lfs diff=lfs merge=lfs -text
@@ -78,7 +79,8 @@
 *.ttf                filter=lfs diff=lfs merge=lfs -text
 *.otf                filter=lfs diff=lfs merge=lfs -text
 *.woff               filter=lfs diff=lfs merge=lfs -text
-*.woff2              filter=lfs diff=lfs merge=lfs -text
+# Self-hosted Inter is served directly by the deployment, which does not fetch Git LFS objects: keep as regular blobs.
+*.woff2              binary
 *.eot                filter=lfs diff=lfs merge=lfs -text
 
 # ---------------------------------------------------------------------------

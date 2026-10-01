@@ -26,7 +26,7 @@ The toolchain remains React 19, TypeScript, Vite 8, Tailwind v4 and the existing
 
 ### CSS
 
-`src/index.css` imports Tailwind and declares self-hosted Inter faces for the existing 400/500/600 weights, using the same WOFF2 subsets previously served by Google Fonts. Files and the SIL Open Font License are in `public/fonts`; CSS asset URLs are handled by Vite's existing base-path processing. Font family, display strategy, typography rules, and component/layout architecture are unchanged. The current JSX primarily uses semantic class names rather than Tailwind utilities.
+`src/index.css` imports Tailwind and declares self-hosted Inter faces for the existing 400/500/600 weights, using the same WOFF2 subsets previously served by Google Fonts. Files and the SIL Open Font License are in `public/fonts`, and these fonts plus `public/favicon.ico` are stored as regular git blobs, not Git LFS (`.gitattributes` marks `*.woff2` and `*.ico` binary), because the Vercel build does not fetch LFS objects and would otherwise serve text pointer stubs; CSS asset URLs are handled by Vite's existing base-path processing. Font family, display strategy, typography rules, and component/layout architecture are unchanged. The current JSX primarily uses semantic class names rather than Tailwind utilities.
 
 Root variables include paper/ink/muted/line/dark/light colors, easing curves, and document progress. Registered custom properties include reveal offsets/opacity, hover scale, and inherited project-pointer offsets. The stylesheet owns typography, section/grid layouts, CSS-built technical visuals, sticky positioning, hover states, overlay/cursor styling, responsive overrides, and reduced-motion overrides.
 
