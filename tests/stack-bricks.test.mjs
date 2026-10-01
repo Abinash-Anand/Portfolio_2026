@@ -209,6 +209,11 @@ test("reveals are enter-triggered once; reduced motion and the capability hold s
   const reduced = css.slice(css.indexOf("@media (prefers-reduced-motion: reduce)"));
   assert.match(reduced, /\.reveal \*,\.reveal\{opacity:1!important/);
   assert.match(reduced, /\.stack-tile-name,\.stack-tile-ref\{transform:none!important\}/);
+  // `.stack-tile-foot small{display:block}` outranks a bare `.stack-tile-ref`, so a bare display:none never applied and the
+  // "Used in" label showed over the category in reduced motion (where `.reveal *` also forces opacity:1).
+  const hide = ".stack-tile-foot .stack-tile-ref{display:none}";
+  assert.equal(css.split(hide).length - 1, 2, "the reference is hidden at <=800px and in reduced motion with enough specificity");
+  assert.ok(!css.replaceAll(hide, "").includes(".stack-tile-ref{display:none}"), "no hiding rule may use the bare, outranked selector");
   for (const forbidden of [/bounce|elastic|overshoot/i, /box-shadow/i, /border-radius:\s*(?!50%)\d/, /linear-gradient\([^)]*#[0-9a-f]{3,6}[^)]*(red|blue)/i]) assert.ok(!forbidden.test(css.slice(css.indexOf(".stack-field"), css.indexOf(".about {"))), `stack styles contain ${forbidden}`);
   assert.ok(!/lenis|locomotive|scroll-snap|wheel/i.test(css + engine + appSource), "native scrolling must stay untouched");
 });

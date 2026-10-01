@@ -107,7 +107,7 @@ Additional shared checks:
 - [ ] Narrow layout (≤800 px) keeps the category label and intentionally hides the reference text.
 - [ ] Changing the stack in `portfolio.json` (add, remove, reorder, recategorize, many skills) changes the wall with no component change.
 - [ ] No unintended click action or modal has been added to the informational stack tiles.
-- [ ] Tiles reveal once on entering the viewport and stay visible; reduced motion shows them immediately with an instant category/reference swap.
+- [ ] Tiles reveal once on entering the viewport and stay visible; reduced motion shows them immediately; an idle tile shows only its category (no "Used in" label over it), and hover/focus swaps category for reference instantly.
 
 ## About / Education
 
