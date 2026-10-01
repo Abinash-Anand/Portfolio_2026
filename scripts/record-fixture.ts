@@ -23,8 +23,10 @@ function main(): Promise<void> {
       ['api', 'graphql', '-f', `query=${PORTFOLIO_QUERY}`, '-f', `login=${GITHUB_LOGIN}`],
       { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 },
     );
-    const data = (JSON.parse(stdout) as { data: unknown }).data;
+    const data = (JSON.parse(stdout) as { data: { user: Record<string, unknown> } }).data;
     parseRawPortfolio(data); // fail early if GitHub's shape changed
+    // The activity calendar includes private-contribution counts; it is never committed.
+    delete data.user['contributionsCollection'];
 
     const trim = (value: unknown): unknown => {
       if (Array.isArray(value)) return value.map(trim);

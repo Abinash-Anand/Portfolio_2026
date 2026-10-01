@@ -41,5 +41,25 @@ jobs:
       - name: Build
         run: npm run build
 
+      # The same checks that run against production after a deploy, here against the build itself.
+      - name: Smoke test the built site
+        run: |
+          npm run serve:dist -- --port 4300 &
+          sleep 5
+          npm run smoke -- http://localhost:4300
+
+      # Serves the built site with the rules from vercel.json and checks Lighthouse (mobile) on the main pages:
+      # performance and layout shift, accessibility, SEO (thresholds in lighthouserc.json). The reports are kept as a build artifact.
+      - name: Lighthouse
+        run: npx --yes @lhci/cli@0.14 autorun --config=lighthouserc.json
+
+      - name: Keep the Lighthouse reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-reports
+          path: .lighthouseci
+          if-no-files-found: ignore
+
       - name: Audit production dependencies
         run: npm audit --omit=dev --audit-level=high

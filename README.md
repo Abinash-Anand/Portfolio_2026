@@ -1,59 +1,30 @@
-# Portfolio2026
+# Portfolio 2026
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.2.1.
+Abinash Anand's portfolio: an Angular 21 site whose project content comes from GitHub at build time, with an optional
+3D "Packet's Journey" experience (Three.js) on top of a complete, prerendered 2D site.
 
-## Development server
+Documentation: [PRODUCT](docs/PRODUCT.md) · [ARCHITECTURE](docs/ARCHITECTURE.md) · [CONCEPT](docs/CONCEPT.md) ·
+[DESIGN](docs/DESIGN.md) · [SPIKE-0](docs/SPIKE-0.md) · [LAUNCH runbook](docs/LAUNCH.md)
 
-To start a local development server, run:
+## Commands
 
-```bash
-ng serve
-```
+| Command | What it does |
+|---|---|
+| `npm start` | Dev server on http://localhost:4200 (runs the GitHub sync first) |
+| `npm run sync` | Fetch GitHub data into `src/generated/` (needs `PORTFOLIO_GH_TOKEN`; otherwise uses the sample fixture locally) |
+| `npm run build` | Production build, then `postbuild`: prerender check, sitemap, CSP hash check, font preloads |
+| `npm run serve:dist` | Serve the production build locally with the Vercel headers and redirects |
+| `npm run smoke -- <url>` | Smoke-test a running copy (`--expect-real-data` for production) |
+| `npm test` / `npm run test:scripts` | App tests (includes axe accessibility) / build-script tests |
+| `npm run lint` · `npm run format` | ESLint with layer-boundary rules · Prettier |
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+## Environment
 
-## Code scaffolding
+| Variable | Where | Purpose |
+|---|---|---|
+| `PORTFOLIO_GH_TOKEN` | Vercel (Production and Preview) | Read-only access to public GitHub data for the build |
+| `PORTFOLIO_ALLOW_FIXTURE=1` | Vercel, optional | Deploy with the sample data when no token is set |
+| `SITE_URL` | Vercel, optional | Public address when it differs from the Vercel production URL (custom domain) |
+| `VERCEL_DEPLOY_HOOK` | GitHub secret | Lets the daily workflow trigger a rebuild |
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
-```
-
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
-
-```bash
-ng generate --help
-```
-
-## Building
-
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+Full launch steps and what only the owner can do: [docs/LAUNCH.md](docs/LAUNCH.md).

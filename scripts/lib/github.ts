@@ -63,6 +63,18 @@ export const PORTFOLIO_QUERY = /* GraphQL */ `
 
   query Portfolio($login: String!) {
     user(login: $login) {
+      contributionsCollection {
+        contributionCalendar {
+          totalContributions
+          weeks {
+            contributionDays {
+              date
+              contributionCount
+              weekday
+            }
+          }
+        }
+      }
       pinnedItems(first: 6, types: REPOSITORY) {
         nodes {
           ... on Repository {
@@ -114,8 +126,23 @@ export const RawRepoSchema = z.object({
   manifest: blob,
 });
 
+const RawContributionsSchema = z.object({
+  totalContributions: z.number(),
+  weeks: z.array(
+    z.object({
+      contributionDays: z.array(
+        z.object({ date: z.string(), contributionCount: z.number(), weekday: z.number() }),
+      ),
+    }),
+  ),
+});
+
+export type RawContributions = z.infer<typeof RawContributionsSchema>;
+
 export const RawPortfolioSchema = z.object({
   user: z.object({
+    // Optional so a recorded fixture without it (see scripts/fixtures) still parses.
+    contributionsCollection: z.object({ contributionCalendar: RawContributionsSchema }).optional(),
     pinnedItems: z.object({ nodes: z.array(z.looseObject({})) }),
     repositories: z.object({ nodes: z.array(RawRepoSchema) }),
   }),
@@ -126,6 +153,8 @@ export type RawRepo = z.infer<typeof RawRepoSchema>;
 export interface RawPortfolio {
   readonly pinned: readonly RawRepo[];
   readonly repos: readonly RawRepo[];
+  /** The contribution calendar, when the response had one. */
+  readonly contributions?: RawContributions | null;
 }
 
 /** Validates a raw GraphQL `data` payload (from the API or the recorded fixture). */
@@ -135,7 +164,11 @@ export function parseRawPortfolio(data: unknown): RawPortfolio {
   const pinned = parsed.user.pinnedItems.nodes
     .map((node) => RawRepoSchema.safeParse(node))
     .flatMap((result) => (result.success ? [result.data] : []));
-  return { pinned, repos: parsed.user.repositories.nodes };
+  return {
+    pinned,
+    repos: parsed.user.repositories.nodes,
+    contributions: parsed.user.contributionsCollection?.contributionCalendar ?? null,
+  };
 }
 
 export async function fetchRawPortfolio(login: string, token: string): Promise<RawPortfolio> {

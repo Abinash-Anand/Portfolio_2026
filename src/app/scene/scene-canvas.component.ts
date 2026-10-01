@@ -65,7 +65,7 @@ export class SceneCanvas {
       try {
         created = await this.createHost();
       } catch {
-        if (!destroyed) this.motion.fallBackToStatic();
+        if (!destroyed) this.motion.fallBackToStatic('init_failed');
         return;
       }
       if (destroyed) {
@@ -80,7 +80,7 @@ export class SceneCanvas {
         const change = governor.push(ms);
         if (change) this.motion.reportGovernorTier(change);
       };
-      created.onContextLost = () => this.motion.fallBackToStatic();
+      created.onContextLost = () => this.motion.fallBackToStatic('context_lost');
 
       try {
         created.setTier(this.tier());
@@ -91,7 +91,7 @@ export class SceneCanvas {
       } catch {
         // For example: no WebGL, or the driver refused to create a context.
         created.dispose();
-        this.motion.fallBackToStatic();
+        this.motion.fallBackToStatic('init_failed');
         return;
       }
       host = created;

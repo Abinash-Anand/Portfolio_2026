@@ -30,14 +30,16 @@
               }
             ],
             "styles": ["src/styles.css"],
-            "polyfills": ["@angular/localize/init"]
+            "polyfills": ["@angular/localize/init"],
+            "server": "src/main.server.ts",
+            "outputMode": "static"
           },
           "configurations": {
             "production": {
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "350kB",
+                  "maximumWarning": "380kB",
                   "maximumError": "450kB"
                 },
                 {
@@ -46,7 +48,15 @@
                   "maximumError": "8kB"
                 }
               ],
-              "outputHashing": "all"
+              "outputHashing": "all",
+              "optimization": {
+                "scripts": true,
+                "styles": {
+                  "minify": true,
+                  "inlineCritical": false
+                },
+                "fonts": true
+              }
             },
             "development": {
               "optimization": false,

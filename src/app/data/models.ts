@@ -43,6 +43,17 @@ export interface Project {
 
 export type PortfolioSource = 'github' | 'fixture';
 
+/**
+ * One year of GitHub activity: contributions per day, in week-major order (7 per week, Sunday first), `null` for
+ * days outside the range (the start of the first week and the end of the last one).
+ */
+export interface ActivityCalendar {
+  readonly total: number;
+  /** Date (YYYY-MM-DD) of the first day of the first week, which is a Sunday. */
+  readonly from: string;
+  readonly days: readonly (number | null)[];
+}
+
 export interface PortfolioIndex {
   /** ISO 8601 timestamp of the sync. */
   readonly generatedAt: string;
@@ -50,6 +61,8 @@ export interface PortfolioIndex {
   readonly source: PortfolioSource;
   readonly login: string;
   readonly projects: readonly Project[];
+  /** Present only when the sync had a token that can read it; the activity section is hidden without it. */
+  readonly activity: ActivityCalendar | null;
 }
 
 export interface ProjectDetail {

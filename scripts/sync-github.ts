@@ -7,20 +7,27 @@
  *   npm run sync -- --if-missing only generate when src/generated/index.json does not exist (postinstall)
  *
  * Failure policy:
- *   - no token                      -> fixture (sample data); FAILS on Vercel production builds
+ *   - no token                      -> fixture (sample data); FAILS on Vercel production builds, unless
+ *                                      PORTFOLIO_ALLOW_FIXTURE=1 says to ship the sample data on purpose
  *   - token but the API call fails  -> FAILS in CI; locally falls back to the fixture with a warning
+ *
+ * Besides the data it writes what depends on where the site lives: src/generated/site.json (the origin for
+ * canonical URLs) and public/sitemap.xml and public/robots.txt.
  */
 import { existsSync } from 'node:fs';
-import { readFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { GITHUB_LOGIN } from '../src/app/content/profile';
 import { fetchRawPortfolio, parseRawPortfolio, type RawPortfolio } from './lib/github';
 import { buildPortfolio } from './lib/normalize';
 import { writeOutputs } from './lib/output';
+import { buildRobots, buildSitemap } from './lib/seo';
+import { siteOrigin } from './lib/site';
 
 // npm scripts run from the project root.
 const root = process.cwd();
 const generatedDir = join(root, 'src', 'generated');
+const publicDir = join(root, 'public');
 const fixturePath = join(root, 'scripts', 'fixtures', 'github.fixture.json');
 
 /** Repositories that are never shown as projects. */
@@ -43,7 +50,8 @@ async function main(): Promise<void> {
   const inCi = !!process.env['CI'];
   const isProduction = process.env['VERCEL_ENV'] === 'production';
 
-  if (args.has('--if-missing') && existsSync(join(generatedDir, 'index.json'))) {
+  const generated = ['index.json', 'site.json'].map((file) => join(generatedDir, file));
+  if (args.has('--if-missing') && generated.every((file) => existsSync(file))) {
     console.log('[sync] src/generated already exists; skipping');
     return;
   }
@@ -61,9 +69,13 @@ async function main(): Promise<void> {
       console.warn(`[sync] WARNING: ${message}\n[sync] Falling back to the fixture (sample data).`);
     }
   } else if (!args.has('--fixture') && isProduction) {
-    throw new Error(
-      '[sync] PORTFOLIO_GH_TOKEN is required for production builds (refusing to ship sample data).',
-    );
+    if (process.env['PORTFOLIO_ALLOW_FIXTURE'] !== '1') {
+      throw new Error(
+        '[sync] PORTFOLIO_GH_TOKEN is required for production builds (refusing to ship sample data). ' +
+          'To ship the sample data on purpose, set PORTFOLIO_ALLOW_FIXTURE=1.',
+      );
+    }
+    console.warn('[sync] WARNING: shipping SAMPLE data to production (PORTFOLIO_ALLOW_FIXTURE=1).');
   }
 
   if (!raw) {
@@ -80,6 +92,16 @@ async function main(): Promise<void> {
     featuredFallback: FEATURED_FALLBACK,
   });
   await writeOutputs(generatedDir, output);
+
+  const origin = siteOrigin(process.env);
+  const slugs = output.index.projects.map((project) => project.slug);
+  await writeFile(join(generatedDir, 'site.json'), JSON.stringify({ origin }, null, 2) + '\n');
+  await mkdir(publicDir, { recursive: true });
+  await writeFile(
+    join(publicDir, 'sitemap.xml'),
+    buildSitemap(origin, slugs, output.index.generatedAt),
+  );
+  await writeFile(join(publicDir, 'robots.txt'), buildRobots(origin));
 
   for (const warning of output.warnings) console.warn(`[sync] WARNING: ${warning}`);
   const featured = output.index.projects.filter((p) => p.featured).length;
