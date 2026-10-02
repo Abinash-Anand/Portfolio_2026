@@ -468,7 +468,7 @@ function Experience({ portfolio }: PortfolioProps) {
         ))}
       </div>
       <DetailOverlay open={!!selected} onClose={() => setSelected(null)} label={portfolio.labels.experienceOverlay} labels={portfolio.labels.overlay}>
-        {selected && <article className="simple-detail"><span>{selected.period}</span><h2>{selected.company}</h2><h3>{selected.role}</h3><p>{selected.description}</p><div><small>{portfolio.labels.experienceTechnologies}</small>{selected.tech}</div></article>}
+        {selected && <article className="simple-detail"><span>{selected.period}</span><h2>{selected.company}</h2><h3>{selected.role}</h3><p>{selected.description}</p>{selected.story && <div className="simple-detail-story">{selected.story.paragraphs.map((paragraph, index) => <p key={index}>{paragraph}</p>)}</div>}<div><small>{portfolio.labels.experienceTechnologies}</small>{selected.tech}</div></article>}
       </DetailOverlay>
     </section>
   );
@@ -516,7 +516,7 @@ function Services({ portfolio, analytics = noAnalytics }: PortfolioProps) {
         {portfolio.services.map((service, index) => <button className={`service-row reveal${selected?.id === service.id ? " is-selected" : ""}`} data-scroll-scene key={service.id} onClick={() => setSelected(service)} data-cursor={portfolio.labels.serviceCursor}><span className="scroll-layer" data-scroll-layer data-x="-6,0,3" data-opacity="0.45,1,0.5">0{index + 1}</span><strong className="scroll-layer" data-scroll-layer data-y="10,0,-8" data-opacity="0.3,1,0.4" data-phase="-0.015">{service.title}</strong><i className="scroll-layer" data-scroll-layer data-x="8,0,-6" data-y="4,0,-6">↗</i></button>)}
       </div>
       <DetailOverlay open={!!selected} onClose={() => setSelected(null)} label={portfolio.labels.serviceOverlay} labels={portfolio.labels.overlay}>
-        {selected && <article className="simple-detail"><span>{portfolio.labels.capability}</span><h2>{selected.title}</h2><p>{selected.description}</p><a href={`mailto:${portfolio.contact.email}`} onClick={() => analytics.track({name: "contact_click", kind: "email"})}>{`${portfolio.labels.discussProject} `}<b>↗</b></a></article>}
+        {selected && <article className="simple-detail"><span>{portfolio.labels.capability}</span><h2>{selected.title}</h2><p>{selected.description}</p>{selected.story && <div className="simple-detail-story">{selected.story.paragraphs.map((paragraph, index) => <p key={index}>{paragraph}</p>)}</div>}<a href={`mailto:${portfolio.contact.email}`} onClick={() => analytics.track({name: "contact_click", kind: "email"})}>{`${portfolio.labels.discussProject} `}<b>↗</b></a></article>}
       </DetailOverlay>
     </section>
   );

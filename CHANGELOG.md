@@ -1008,3 +1008,94 @@ to the project-detail experience only.
   user's "whenever the JSON contains a concrete implementation fact, prefer a visual/evidence treatment" instruction
   — applied to the baseline metadata every project already has, not only to rich case studies — but it is called out
   here explicitly in case the intent was for these to stay scoped to documented case studies only.
+
+## 2026-10-02 — Content: sharper hero/section copy, narrative depth for Experience and Capabilities
+
+### Context
+
+The user flagged that the site's copy was too generic in places (the hero statement described an animation style,
+not an engineer) and, separately, that the Experience and Capabilities detail overlays were too brief —
+resume-bullet sentences rather than a portfolio actually "speaking about" the work. Two rounds of user-directed
+copy/content work, both scoped to `portfolio.json` and (for the second round) the minimum additive UI needed to
+hold the extra content without breaking the existing display-text typography.
+
+### Changed
+
+- **`portfolio.json` — copy only (no schema change)**: `person.statement` (hero) and `sections.experience.title`
+  rewritten to be concrete claims instead of generic/vague phrasing — see Notes for the exact before/after text.
+  `sections.projects/stack/about` titles were reviewed and intentionally left unchanged (already specific).
+- **`src/app/domain/portfolioData.ts`, `src/app/application/portfolioContract.ts`**: added an optional
+  `story?: { paragraphs: readonly string[] }` field to both `Experience` and `Capability`, reusing the same
+  "array of paragraph strings" shape the `CaseStudySection` type already established for project case studies —
+  no new validation pattern, just the existing one applied to two more content types. Fully additive and optional;
+  an entry without `story` renders exactly as before.
+- **`src/App.tsx`**: both `.simple-detail` overlay templates (Experience and Capability/Service detail) now
+  conditionally render `selected.story.paragraphs` as a new `.simple-detail-story` block beneath the existing lede
+  `description` paragraph and its divider.
+- **`src/index.css`**: added `.simple-detail-story` at 17px/1.6 line-height (mobile: 16px) — the same supporting-body
+  typography already used by `.chapter-explanation` in the project-detail chapters, not a new scale. Changed
+  `.simple-detail p` to `.simple-detail>p` (and the mobile override to match) so the giant display-text rule
+  (`clamp(20px,2.5vw,38px)`) only ever applies to the top-level lede paragraph and cannot accidentally catch the
+  new nested story paragraphs through cascade order.
+- **`portfolio.json` — content**: `description` on all three `experience` entries and all five `services` entries
+  was tightened to a single punchy lede sentence (previously 1–2 dense compound sentences sized for giant display
+  text); the material that previously made those sentences long was moved into 2–3 new `story.paragraphs` per
+  entry — real narrative (context/why, the actual decisions made, outcome in human terms), not more resume bullets.
+
+### Fixed
+
+- N/A — no defect; this is a content and small additive-schema change.
+
+### Preserved
+
+- `DetailOverlay`'s full lifecycle (portal, scroll lock, Escape, focus save/restore) — untouched; only the content
+  markup inside two existing `.simple-detail` templates changed. No motion was added to `.simple-detail` (it was
+  static before this change and remains static; the new story paragraphs are plain content, not scroll-layers,
+  matching the existing precedent of everything else in this template). Every `Experience`/`Capability` entry
+  without `story` (none currently, but the field is optional for future entries) renders identically to before.
+  `fixtures/portfolio.fixture.json` (the separate "Alex Morgan" synthetic dev identity) was not touched — confirmed
+  via `git diff` showing no residual change after the temporary verification swap described below was reverted.
+
+### Regression Testing
+
+- `node -e "JSON.parse(...)"` and the project's own `validatePortfolioDocument` run directly against the edited
+  `portfolio.json`: both passed, confirming the new optional `story` field validates under the extended contract.
+- `pnpm exec tsc --noEmit`: passed, no errors (checked after the schema/component extension and again after the
+  final content edit).
+- `node --experimental-strip-types --test tests/*.test.mjs`: 36 of 36 passed, 0 failed.
+- `PORTFOLIO_DATA_MODE=fixture node scripts/sync-github.ts && vite build`: succeeded, after the fixture was restored
+  to its original (non-swapped) content.
+- **Browser verification, Playwright-driven Chromium against the dev server**: the dev fixture's `experience` and
+  `services` arrays were temporarily swapped for the real, edited `portfolio.json` content (backed up first,
+  restored after — confirmed via `git diff` showing zero residual change to the fixture), since the fixture's
+  own synthetic entries have no `story` content of their own and dev mode cannot reach the real document without a
+  live GitHub token. **Simulated input only, not physical devices, not the live site:**
+  - Opened the HFT Stuttgart and Letstream experience entries and the Full-stack Development capability: each
+    showed exactly the expected paragraph count (3, 3, and 2 respectively) in the new `.simple-detail-story` block,
+    below the shortened lede and the existing divider line.
+  - Measured computed `font-size` directly: the lede paragraph rendered at 36px, the new story paragraphs at 17px —
+    confirming the CSS selector change (`.simple-detail>p` vs `.simple-detail-story p`) correctly separates the two
+    without a cascade collision.
+  - Screenshot-reviewed (not just element-count-asserted) both an Experience entry and a Capability entry: the
+    layout reads as a lede statement, a thin rule, then readable narrative paragraphs — not a wall of giant text.
+  - 390px mobile: no horizontal overflow; the story block renders at 16px and remains readable; screenshot-reviewed.
+  - Reduced-motion emulation: the story block is visible immediately (it was never animated, so there was nothing
+    to neutralize); Escape still closes the overlay correctly.
+  - Zero console errors across desktop, mobile, and reduced-motion passes.
+- **Not performed:** physical trackpad/mouse/touch input, cross-browser/device certification, the real
+  authenticated GitHub sync/production build, and a live-site check. Keyboard-focus/`:focus-visible` was not
+  re-verified this round since no focusable element was added or changed (the story block is plain `<p>` content,
+  not an interactive control).
+
+### Notes
+
+- Hero statement: `"Building software\nwith clarity,\ndepth & motion."` → `"I build software\nthat ships to\nproduction, not demos."`
+- Experience section title: `"Building at the intersection of product and systems."` → `"Measurable impact, every role."`
+- This round's work was explicitly scoped by the user to `portfolio.json`; the `story` field and its rendering
+  were added as the minimum additive UI change needed to hold real narrative depth without breaking the existing
+  giant-display-text typography those two overlay templates were built around — confirmed with the user before
+  implementing, since it touched code beyond pure content editing.
+- `about.description` (the homepage About section's own single big statement) was deliberately left unchanged in
+  this round — it's a different, always-visible main-page layout system with a larger blast radius than an
+  opt-in detail overlay, not the system the user's example was about. Flagged to the user as a possible separate
+  follow-up rather than bundled into this change.

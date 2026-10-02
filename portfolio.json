@@ -132,7 +132,14 @@
       "role": "Student Assistant, Facility Data Systems",
       "period": "Jun—Aug 2026",
       "tech": "Python · Automation · Automated testing",
-      "description": "Built and shipped a Python automation tool that replaced manual facility-data entry, processing 200+ records across 10+ buildings in a live production run with zero errors. Added a hierarchical resolution and verification pipeline with automatic detection of missing records, an automated test suite (100% passing) and independent post-import verification."
+      "description": "Replaced a fully manual facility-data workflow with a production automation pipeline — 200+ records, zero errors.",
+      "story": {
+        "paragraphs": [
+          "HFT Stuttgart's facility team was entering building and room data by hand from spreadsheets into their system of record — slow, and quietly error-prone. Duplicate rooms, missed floors, records that drifted out of sync with reality. There was no way to know how many mistakes existed until someone happened to find one.",
+          "I designed a hierarchical resolution pipeline that normalizes facility data through building → floor → room, resolving each level independently and flagging ambiguous matches instead of guessing. Automatic detection catches missing records before they reach production, and an automated test suite — 100% passing — runs against every change.",
+          "The tool processed 200+ records across 10+ buildings in its first live run with zero errors, and ran independent post-import verification to prove that, not just claim it. It's now how the team actually imports facility data, not a one-off script someone ran once."
+        ]
+      }
     },
     {
       "id": "letstream",
@@ -140,7 +147,14 @@
       "role": "Software Development Engineer I",
       "period": "Dec 2024—Apr 2025",
       "tech": "Angular · GraphQL · Lazy loading",
-      "description": "Built a reactive Angular dashboard for logistics tracking that improved real-time data sync speed by 25%, and cut initial load times by 40% through custom lazy-loading and GraphQL fragment optimization. Led the migration of two developers from Vue.js to Angular, reducing code-review cycle time by 15%, and collaborated with backend engineers on end-to-end testing before release."
+      "description": "Rebuilt Letstream's real-time logistics dashboard in Angular and led the team's migration off Vue.",
+      "story": {
+        "paragraphs": [
+          "The logistics dashboard was built in Vue, but the rest of the team's stack had already moved to Angular — so it was both out of step with everything else and slow under real load, with sync lag and initial loads that made the tool frustrating to use during live tracking.",
+          "I rebuilt it as a reactive Angular application, replacing broad data fetches with custom lazy-loading and GraphQL fragment optimization — cutting initial load time by 40% and improving real-time sync speed by 25%. Alongside the rebuild, I led two developers through the Vue-to-Angular migration myself, pairing on patterns and reviews until the team was fluent, which cut code-review cycle time by 15%.",
+          "I worked directly with backend engineers on end-to-end testing before every release, because a logistics dashboard that's wrong under load is worse than one that's just slow."
+        ]
+      }
     },
     {
       "id": "elluminati-ventures",
@@ -148,7 +162,14 @@
       "role": "Software Engineer, Full Stack Intern (MEAN)",
       "period": "Oct 2023—Oct 2024",
       "tech": "Angular · Node.js · MongoDB",
-      "description": "Built a full-stack ride-booking platform with an Angular frontend and a Node.js, Express and MongoDB backend, including real-time tracking, Stripe payments and multi-channel notifications. Developed the REST APIs for the complete ride lifecycle, WebSocket live tracking, browser push notifications, PWA support and an admin dashboard with ride history, filtering, export and live trip visualization via Google Maps."
+      "description": "Built the backend and real-time infrastructure for a full-stack ride-booking platform, start to finish.",
+      "story": {
+        "paragraphs": [
+          "Elluminati Ventures needed a ride-booking platform that handled the full lifecycle of a ride — request, match, track, pay, complete — not a UI mockup of one. I owned the backend: a Node.js, Express and MongoDB service exposing REST APIs for every stage of that lifecycle.",
+          "Real-time tracking ran over WebSockets, so a rider's location updates continuously instead of on a polling delay. I integrated Stripe for payments and built multi-channel notifications — browser push plus in-app — so riders and drivers stay informed without refreshing anything.",
+          "On the admin side, I built a dashboard with ride history, filtering, export and live trip visualization on Google Maps, and added PWA support so the whole platform worked reliably as an installable app, not just a browser tab left open."
+        ]
+      }
     }
   ],
   "technologies": [
@@ -301,27 +322,57 @@
     {
       "id": "full-stack-development",
       "title": "Full-stack Development",
-      "description": "TypeScript applications from interface to API and database, shipped with automated tests and CI/CD."
+      "description": "TypeScript applications from interface to API and database, shipped with automated tests and CI/CD.",
+      "story": {
+        "paragraphs": [
+          "I don't treat \"full-stack\" as switching hats between frontend and backend — it's owning the whole path a piece of data takes, from a database schema through an API contract to the component that renders it, so nothing gets lost in translation at the boundaries.",
+          "That's shown up directly in projects like SynthGraph's lineage pipeline and Eber's ride-booking platform, where I designed the schema, built the API and shipped the UI that consumes it, with automated tests and CI/CD gating every change before it reaches production."
+        ]
+      }
     },
     {
       "id": "frontend-engineering",
       "title": "Frontend Engineering",
-      "description": "Reactive Angular and React interfaces with real-time data and attention to load performance."
+      "description": "Reactive Angular and React interfaces with real-time data and attention to load performance.",
+      "story": {
+        "paragraphs": [
+          "Real-time data is the part that actually breaks frontend code — a UI that looks right in a demo can fall apart under live updates, race conditions and slow networks. I build interfaces that are reactive by default, whether that's Angular's RxJS streams or React state that assumes data changes out from under it.",
+          "Performance work is concrete for me, not aspirational: cutting Letstream's dashboard load time by 40% came from auditing what actually blocked rendering and fixing that specifically, not from running a generic optimization checklist."
+        ]
+      }
     },
     {
       "id": "backend-and-api-design",
       "title": "Backend & API Design",
-      "description": "NestJS and Node.js services with explicit domain boundaries, API contracts and migration discipline."
+      "description": "NestJS and Node.js services with explicit domain boundaries, API contracts and migration discipline.",
+      "story": {
+        "paragraphs": [
+          "An API is a promise to whoever calls it, so I design contracts to be explicit and hard to misuse — clear domain boundaries, predictable error shapes, and versioning discipline when something has to change.",
+          "I carry that same discipline through migrations: moving a team from one framework to another, or a dataset through a hierarchical resolution pipeline, works the same way — resolve ambiguity early, verify independently, and never let a \"probably fine\" assumption reach production."
+        ]
+      }
     },
     {
       "id": "software-architecture",
       "title": "Software Architecture",
-      "description": "Event-driven and distributed system design, the focus of my M.Sc. studies."
+      "description": "Event-driven and distributed system design, the focus of my M.Sc. studies.",
+      "story": {
+        "paragraphs": [
+          "This is the part of engineering I'm actively deepening through my M.Sc. — how systems stay correct and observable as they grow distributed, not just how to draw the diagram.",
+          "SynthGraph's lineage graph is where that's most concrete in my own work: tracking generation, training and evaluation as one connected system instead of isolated scripts, so a result can be traced back to exactly what produced it."
+        ]
+      }
     },
     {
       "id": "ai-assisted-engineering",
       "title": "AI-assisted Engineering",
-      "description": "Agentic coding workflows guided by explicit architecture and engineering guardrails."
+      "description": "Agentic coding workflows guided by explicit architecture and engineering guardrails.",
+      "story": {
+        "paragraphs": [
+          "I use agentic coding tools as engineers, not oracles, which means the guardrails matter more than the autonomy. Explicit architecture docs, a stability contract and a regression checklist turn an agent from something that moves fast and breaks things into something that moves fast inside boundaries I've actually reviewed.",
+          "This portfolio is itself built that way: every change an agent makes here goes through the same required-reading and verification process a human contributor would."
+        ]
+      }
     }
   ],
   "contact": {

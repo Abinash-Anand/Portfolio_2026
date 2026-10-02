@@ -21,8 +21,14 @@ export type Experience = {
   readonly period: string;
   readonly tech: string;
   readonly description: string;
+  readonly story?: { readonly paragraphs: readonly string[] };
 };
-export type Capability = { readonly id: string; readonly title: string; readonly description: string };
+export type Capability = {
+  readonly id: string;
+  readonly title: string;
+  readonly description: string;
+  readonly story?: { readonly paragraphs: readonly string[] };
+};
 export type PortfolioDocument = {
   readonly schemaVersion: 2;
   readonly fixture: boolean;

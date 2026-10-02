@@ -112,6 +112,9 @@ Each chapter answers one question (shown as a small `caseStudyLabels.questions[n
 - [ ] Hover feedback remains intact, including background, content offset, and desktop arrow.
 - [ ] Each row opens its own detail by pointer/touch or keyboard activation.
 - [ ] Each detail shows the correct selected employer information and existing shared descriptive copy.
+- [ ] When an entry supplies the optional `story.paragraphs`, they render as readable body text (17px desktop/16px
+      mobile) below a thin rule beneath the lede `description`, never at the lede's giant display size; an entry
+      without `story` renders identically to before (no empty block, no stray rule).
 - [ ] Close/Escape and return to the page work for every experience detail.
 - [ ] Narrow-screen rows stack correctly and intentionally hide the arrow.
 
@@ -138,6 +141,9 @@ Each chapter answers one question (shown as a small `caseStudyLabels.questions[n
 - [ ] Hover background sweep, padding, color state, and arrow feedback remain consistent with the baseline; use `MOTION_SYSTEM.md` for effective transition timing.
 - [ ] Every row opens its selected detail using pointer/touch or keyboard activation.
 - [ ] Each detail displays the correct title/description and working mailto action.
+- [ ] When a capability supplies the optional `story.paragraphs`, they render as readable body text below a thin
+      rule beneath the lede `description`, same treatment as the Experience detail; a capability without `story`
+      renders identically to before.
 - [ ] Close/Escape work and scrolling resumes after dismissal.
 - [ ] Narrow-screen labels and arrows remain readable and reachable.
 
