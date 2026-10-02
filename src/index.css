@@ -177,11 +177,11 @@ a { text-decoration: none; }
 .section-kicker span:first-child { color: var(--muted); }
 .section-header h2 { margin: 0; max-width: 1050px; font-size: clamp(45px,5.8vw,94px); line-height: .96; letter-spacing: calc(-.06em + var(--scene-letter, 0em)); font-weight: 500; }
 .section-note { grid-column: 2; max-width: 400px; margin: 32px 0 0; color: var(--muted); }
-.reveal .reveal-label,.reveal .reveal-heading,.reveal .reveal-meta,.about-layout.reveal { --reveal-opacity: 0; --reveal-y: 26px; transition: --reveal-opacity 800ms var(--ease), --reveal-y 800ms var(--ease); }
+.reveal .reveal-label,.reveal .reveal-heading,.reveal .reveal-meta,.principle-layout.reveal { --reveal-opacity: 0; --reveal-y: 26px; transition: --reveal-opacity 800ms var(--ease), --reveal-y 800ms var(--ease); }
 .project-row.reveal,.service-row.reveal { opacity: 0; transition: opacity 700ms var(--ease), padding 350ms var(--ease); }
 .stack-tile.reveal { opacity: 0; transition: opacity 700ms var(--ease) calc(min(var(--tile-col, 0), 5) * 45ms); }
 .reveal .contact-actions { opacity: 0; transition: opacity 800ms var(--ease) 180ms; }
-.reveal.is-visible .reveal-label,.reveal.is-visible.about-layout { --reveal-opacity: 1; --reveal-y: 0px; }
+.reveal.is-visible .reveal-label,.reveal.is-visible.principle-layout { --reveal-opacity: 1; --reveal-y: 0px; }
 .reveal.is-visible.project-row,.reveal.is-visible.service-row,.reveal.is-visible.stack-tile,.reveal.is-visible .contact-actions { opacity:1}
 .reveal.is-visible .reveal-heading { --reveal-opacity:1;--reveal-y:0px;transition-delay:100ms}.reveal.is-visible .reveal-meta{--reveal-opacity:1;--reveal-y:0px;transition-delay:180ms}
 
@@ -268,12 +268,36 @@ a { text-decoration: none; }
   .stack-tile { grid-column:span var(--span-md,3); }
 }
 
+/* About / Engineering: a decision-lens selector (left, an accessible manual-activation tablist) paired with the
+   active principle's statement + evidence (right). Not scroll-driven like Experience -- this section's interaction
+   language is direct selection (click/keyboard/touch), with only the existing one-time `.reveal` entrance applied
+   to the whole layout as it enters the viewport, per the user's explicit "do not duplicate the Experience
+   interaction" instruction. */
 .about { background:#e9e9e3; }
-.about-layout { display:grid;grid-template-columns:1fr 1fr;gap:9vw;margin-left:25%; }
-.about-layout>p { margin:0;font-size:clamp(25px,3vw,48px);line-height:1.08;letter-spacing:-.045em; }
-.about-layout>div { display:flex;flex-direction:column;border-top:1px solid var(--ink); }
-.about-layout>div span { padding:18px 0;border-bottom:1px solid var(--line);font-size:12px;text-transform:uppercase;letter-spacing:.06em; }
-.focus-line { margin-top:10vw;border-top:1px solid var(--ink);border-bottom:1px solid var(--ink);display:flex;justify-content:space-between;padding:17px 0;text-transform:uppercase;font-size:9px;letter-spacing:.08em; }
+.about .section-header h2 { font-size:clamp(22px,2.3vw,32px);line-height:1.3;font-weight:400;max-width:620px;letter-spacing:-.02em; }
+.principle-layout { display:grid;grid-template-columns:minmax(200px,30%) 1fr;gap:64px;margin-top:4px; }
+.principle-selector { display:flex;flex-direction:column; }
+.principle-tab { all:unset;box-sizing:border-box;cursor:pointer;display:flex;align-items:baseline;gap:12px;padding:20px 0;border-top:1px solid var(--line);transition:padding 400ms var(--ease); }
+.principle-selector .principle-tab:last-child { border-bottom:1px solid var(--line); }
+.principle-tab-index { font-size:10px;color:var(--muted); }
+.principle-tab-label { font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);transition:color 400ms var(--ease),font-size 400ms var(--ease); }
+.principle-tab:hover .principle-tab-label,.principle-tab:focus-visible .principle-tab-label { color:var(--ink); }
+.principle-tab:focus-visible { outline:1px solid var(--ink);outline-offset:4px; }
+.principle-tab[aria-selected="true"] { padding-left:14px; }
+.principle-tab[aria-selected="true"] .principle-tab-label { color:var(--ink);font-size:15px;font-weight:500; }
+.principle-content { opacity:0;transform:translateY(24px);transition:opacity 500ms var(--ease),transform 500ms var(--ease); }
+.principle-content.is-entered { opacity:1;transform:translateY(0); }
+.principle-content:focus { outline:none; }
+.principle-statement { margin:0;max-width:65%;font-size:clamp(40px,5.5vw,72px);line-height:.95;letter-spacing:-.055em;font-weight:500; }
+.principle-explanation { margin:32px 0 0;max-width:620px;font-size:18px;line-height:1.5;color:var(--muted); }
+.principle-evidence { list-style:none;margin:56px 0 0;padding:28px 0 0;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(4,1fr);gap:0 24px; }
+.principle-evidence li { padding-left:24px;border-left:1px solid var(--line); }
+.principle-evidence li:first-child { padding-left:0;border-left:0; }
+.principle-evidence-label { display:block;font-size:clamp(14px,1.2vw,18px);font-weight:500;letter-spacing:-.01em; }
+.principle-evidence-descriptor { display:block;margin-top:8px;font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted); }
+.about-education { margin-top:100px;padding-top:28px;border-top:1px solid var(--ink); }
+.about-education-label { margin:0 0 18px;font-size:10px;text-transform:uppercase;letter-spacing:.14em;color:var(--muted); }
+.about-education-list { display:flex;flex-wrap:wrap;gap:8px 36px;font-size:13px;color:var(--muted); }
 
 .service-list { border-top:1px solid var(--ink); }
 .service-row { width:100%;height:118px;border:0;border-bottom:1px solid var(--line);background:transparent;display:grid;grid-template-columns:8% 1fr auto;align-items:center;text-align:left;position:relative;isolation:isolate;overflow:hidden;transition:color 500ms,padding 500ms var(--ease); }
@@ -492,7 +516,17 @@ footer span:nth-child(2){justify-self:center}footer a{justify-self:end;color:var
   .experience-selector-hint{display:none}
   .experience-panel{max-width:none}
   .stack-field{grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:minmax(96px,auto)}.stack-tile{grid-column:span var(--span-sm,1)}.stack-tile button{min-height:96px;padding:12px 14px}.stack-tile-name{font-size:16px}.stack-tile-foot .stack-tile-ref{display:none}
-  .about-layout{display:block;margin:0}.about-layout>p{font-size:28px;margin-bottom:60px}.focus-line{overflow:auto;gap:30px;justify-content:flex-start;padding:16px 0}.focus-line span{white-space:nowrap}
+  .principle-layout{display:block}
+  .principle-selector{flex-direction:row;flex-wrap:wrap;gap:20px 28px}
+  .principle-tab{border-top:0;padding:0 0 10px;flex:none}
+  .principle-selector .principle-tab:last-child{border-bottom:0}
+  .principle-tab[aria-selected="true"]{padding-left:0;border-bottom:2px solid var(--ink)}
+  .principle-content{max-width:none;margin-top:40px}
+  .principle-statement{max-width:none}
+  .principle-evidence{grid-template-columns:1fr;gap:20px 0}
+  .principle-evidence li{padding:16px 0 0;border-left:0;border-top:1px solid var(--line)}
+  .principle-evidence li:first-child{padding-top:0;border-top:0}
+  .about-education{margin-top:70px}
   .service-row{height:92px;grid-template-columns:12% 1fr auto}.service-row strong{font-size:6.5vw}
   .contact{height:108svh}.contact-sticky{padding:12vh 20px 5vh}.contact-meta{left:20px;right:20px}.contact h2{font-size:14.5vw}.contact-action{font-size:18px}.social-links{margin-top:35px}
   footer{height:auto;padding:30px 20px;display:flex;flex-direction:column;align-items:flex-start;gap:15px}footer span:nth-child(2),footer a{align-self:flex-start}

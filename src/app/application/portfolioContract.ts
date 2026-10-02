@@ -45,6 +45,15 @@ const resumeUrl: Check<string> = (value, path) => {
 };
 const visual: Check<TechnicalVisualData> = validateTechnicalVisual;
 const heading = object({index: text, eyebrow: text, title: text, note: optional(text)});
+function tuple4<Value>(rule: Check<Value>): Check<[Value, Value, Value, Value]> {
+  return (value, path) => {
+    const items = array(rule)(value, path);
+    if (items.length !== 4) fail(path, "must contain 4 items");
+    return items as [Value, Value, Value, Value];
+  };
+}
+const engineeringPrincipleEvidence = object({label: text, descriptor: text});
+const engineeringPrinciple = object({id: text, label: text, statement: text, explanation: text, evidence: tuple4(engineeringPrincipleEvidence)});
 const implementation = object({lines: array(text), summary: text});
 const metadata = (value: unknown, path: string) => validatePortfolioMetadata(value, path);
 const document: Check<PortfolioDocument> = object({
@@ -59,11 +68,12 @@ const document: Check<PortfolioDocument> = object({
   technologies: array(object({label: text, items: array(object({name: text, usedIn: text}))})),
   education: array(object({qualification: text})),
   about: object({description: text, location: text, exploration: text, interestsLabel: text, interests: array(text)}),
+  engineeringPrinciples: tuple4(engineeringPrinciple),
   services: array(object({id: text, title: text, description: text, story: optional(object({paragraphs: array(text)}))})),
   contact: object({email: (value, path) => { const address = text(value, path); if (!/^[^\s@<>?&#]+@[^\s@<>?&#]+\.[^\s@<>?&#]+$/.test(address)) fail(path, "must be an email address"); return address; }, calendly: optional(url), booking: optional(object({label: text, detail: text, accessibleLabel: text})), availability: text, location: text, headingLines: array(text), cursor: text, socials: array(object({label: text, href: url}))}),
   resume: nullable(object({label: text, href: resumeUrl})),
   footer: object({statement: text, backToTop: text}),
-  labels: object({overlay: object({close: text, closeAria: text}), projectOverlay: text, experienceOverlay: text, serviceOverlay: text, projectCta: text, projectCursor: text, projectVisualPrefix: text, experienceCursor: text, serviceCursor: text, caseProgressAria: text, usedIn: text, experienceTechnologies: text, capability: text, discussProject: text, experienceTimelineAria: text, experienceScrollHint: text, experienceExpand: text}),
+  labels: object({overlay: object({close: text, closeAria: text}), projectOverlay: text, experienceOverlay: text, serviceOverlay: text, projectCta: text, projectCursor: text, projectVisualPrefix: text, experienceCursor: text, serviceCursor: text, caseProgressAria: text, usedIn: text, experienceTechnologies: text, capability: text, discussProject: text, experienceTimelineAria: text, experienceScrollHint: text, experienceExpand: text, principleSelectorAria: text, educationLabel: text}),
 });
 export function validatePortfolioDocument(value: unknown, source = "portfolio.json"): PortfolioDocument {
   const data = document(value, source);

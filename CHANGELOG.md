@@ -1392,3 +1392,124 @@ was active. Investigated and root-caused before any fix was attempted, per the u
   string, and no leftover `.service-row.is-selected` class selector in the stylesheet. This encodes the root cause
   as a standing check, not just a one-time fix, since the underlying hazard (imperative DOM mutation outside
   React's tracking, vulnerable to any future conditional `className`) could otherwise recur on a different element.
+
+## 2026-10-02 — About: replace the static description/education layout with a Decision Lens principle selector
+
+### Context
+
+The user supplied a detailed specification replacing the static About/Education section with a directly-interactive
+"Decision Lens" selector answering "how does Abinash think when making engineering decisions?" — four fixed
+engineering principles (Features/Systems/Trade-offs/Reliability, Systems active by default), a large statement +
+explanation + 4-item evidence row for whichever is selected, and an accessible manual-activation tablist on the
+left. The spec was explicit and repeated that this must feel like a *different* interaction language from
+Experience's same-day scroll-driven timeline — selection only through direct interaction (click/keyboard/touch),
+never scroll-advanced — and must reuse the existing visual system, motion easing, and accessibility conventions
+rather than introduce new ones. Main-page layout/interaction change, treated as a protected-system change per
+`AGENTS.md`/`CHANGE_PROTOCOL.md`.
+
+### Changed
+
+- **`src/App.tsx`** — removed the static `.about-layout`/`.focus-line` markup and replaced it with:
+  - `PrincipleSelector`: a full WAI-ARIA manual-activation tablist with roving tabindex — `role="tablist"` wrapping
+    four `role="tab"` buttons, `aria-selected`/`aria-controls` wired to a single `role="tabpanel"`, only the
+    selected tab in the normal `Tab` order. `ArrowUp`/`ArrowDown` move keyboard focus between tabs (wrapping at the
+    ends) via a local `focusIndex` ref array *without* changing the selection; `Enter`/`Space` commits the focused
+    tab. Click selects immediately.
+  - `PrincipleContent`: renders the active principle's statement/explanation/4-item evidence row, reusing the exact
+    same enter-transition technique `ExperiencePanel` already established the same day (an `is-entered` class
+    toggled via one `requestAnimationFrame` tick, skipped on first mount) — not a new pattern.
+  - `About` itself now holds `activeIndex` state (default `1`, i.e. "Systems") and composes the two above inside
+    the existing `principle-layout reveal scroll-layer` wrapper — the *same* `.reveal`/scroll-layer entrance the
+    old `.about-layout` used, just renamed; no new entrance mechanism. `education` still renders, below the
+    evidence row, as a quiet continuation.
+  - `SectionHeader` is still used unmodified for the eyebrow/index/reveal machinery every section shares; only a
+    scoped `.about .section-header h2` CSS override shrinks this section's own title instance to a "question" size,
+    since the large engineering statement — not the section title — is now the section's dominant visual.
+- **`src/index.css`** — removed `.about-layout`/`.focus-line` and their mobile overrides; added `.principle-layout`
+  (30/70 desktop column split, same proportions as Experience's), `.principle-selector`/`.principle-tab` (thin
+  rules between items, active tab larger/darker/indented, matching "mechanical calibration instrument, not a tab
+  bar" — no cards, shadows, gradients, or pills anywhere in this block), `.principle-content`/`.principle-statement`
+  (`clamp(40px,5.5vw,72px)`, `max-width:65%` of its own now-unconstrained container so it wraps to roughly the
+  3–4 lines the spec asked for, not 6), `.principle-evidence` (4-column grid with vertical rules, no card/box
+  styling), and `.about-education` (a single thin top rule, well below the evidence row). Renamed the two
+  `.about-layout` references in the shared reveal rules to `.principle-layout` so the identical entrance mechanism
+  keeps working under its new name. Added a `≤800px` override (selector becomes a horizontal wrapping tap row,
+  evidence collapses to one column) — same component and state as desktop, CSS-only mode switch, matching the
+  spec's explicit "do not simply shrink the desktop layout."
+- **`src/app/domain/portfolioData.ts`, `src/app/application/portfolioContract.ts`** — added `EngineeringPrinciple`/
+  `EngineeringPrincipleEvidence` types and a new required `engineeringPrinciples: readonly [EngineeringPrinciple,
+  EngineeringPrinciple, EngineeringPrinciple, EngineeringPrinciple]` on the document (same fixed-4-tuple pattern as
+  `storySteps`/`decisionLabels`), plus two new `labels` strings (`principleSelectorAria`, `educationLabel`) — all
+  data-driven chrome, no principle content or copy hardcoded in `App.tsx`.
+- **`portfolio.json`, `fixtures/portfolio.fixture.json`** — populated `engineeringPrinciples` (four principles,
+  each with a statement/explanation/4-item evidence tuple grounded in the portfolio's own real experience/case-study
+  facts — e.g. Reliability's evidence cites the same pytest/Vitest/CI facts already documented in Experience and
+  Projects, not invented metrics), updated `sections.about.eyebrow`/`title` to "About / Engineering" / "What lens do
+  you bring to engineering decisions?", and added the two new label values. The fixture's principles use its own
+  separate synthetic wording (consistent with its established "Alex Morgan" identity), not a copy of the real text.
+  `about.description`/`location`/`exploration`/`interestsLabel`/`interests` were left completely unchanged in both
+  files — still present, still validated, simply no longer rendered by any component (see Notes).
+
+### Preserved
+
+- `SectionHeader`'s shared component and CSS, and every other section's title size, are untouched — only a scoped
+  selector changes About's own heading instance. The existing `.reveal`/scroll-layer entrance mechanism is reused
+  under a new class name, not replaced. No `IntersectionObserver`, scroll track, or any scroll-position-driven state
+  was added anywhere in this section — confirmed by design (no such code exists in `About`/`PrincipleSelector`/
+  `PrincipleContent`) and by browser verification (selection unchanged after scrolling, see below). Projects,
+  Experience, Stack, Services, Contact, Navigation, the cursor system, and global typography/color tokens were not
+  touched — `git diff --stat` after this round shows changes scoped to About's own code paths plus the two renamed
+  shared reveal selectors.
+
+### Regression Testing
+
+- `pnpm exec tsc --noEmit`: passed, no errors.
+- `node --experimental-strip-types --test tests/*.test.mjs`: 37 of 37 passed (no test needed updating this round;
+  the existing motion-policy/reveal tests already generically cover the renamed `.principle-layout` reveal rule).
+- `node -e "JSON.parse(...)"` and `validatePortfolioDocument`: passed against both the edited `portfolio.json` and
+  `fixtures/portfolio.fixture.json`.
+- `PORTFOLIO_DATA_MODE=fixture node scripts/sync-github.ts && vite build`: succeeded.
+- **Browser verification, Playwright-driven Chromium against the dev server.** Because the fixture now carries its
+  own complete, synthetic `engineeringPrinciples`, interaction mechanics were verified directly against it (no
+  temporary swap needed for that part); a separate temporary swap of the *real* `engineeringPrinciples`/`sections.
+  about`/`education`/two labels (backed up first, restored after — confirmed via `git diff` showing only the
+  intended fields changed) verified the real copy specifically. **Simulated input only, not physical devices, not
+  the live site:**
+  - Initial state: "Systems" active by default, correct statement/explanation/4 evidence items.
+  - No scroll-jacking: scrolled the page 400px down and back up while on the section and confirmed the selected
+    principle never changed — this was checked explicitly, not just assumed, since it's the key distinction from
+    Experience.
+  - Clicked each of the 4 tabs in turn: `aria-selected` moved correctly each time, and the statement/evidence-count
+    (always 4) updated together with it.
+  - Keyboard: a real `Tab`-sequence landed on a `role="tab"` element; `ArrowDown` moved focus to a different tab
+    (confirmed by comparing `document.activeElement` text before/after, including correct wrap-around from the
+    last tab to the first) while the *selected* principle stayed unchanged (confirmed directly); `Enter` then
+    committed the focused tab's selection; the focused tab showed a non-`none` `:focus-visible` outline.
+  - 390px mobile: no horizontal overflow; tapping a tab switched the panel's content; screenshot-reviewed the
+    horizontal wrapping selector row with the active tab visually distinguished.
+  - Reduced motion: `.principle-layout` opacity stayed `1`, and `.principle-content` opacity stayed `1` immediately
+    after switching principles (never caught mid-transition).
+  - Screenshot-reviewed both the default "Systems" state and "Reliability" against the real portfolio content,
+    including the education continuation block beneath the evidence row — confirmed visually that the large
+    statement reads as the dominant element (3–4 natural line wraps after the width fix described below, not a
+    forced line count) and that the evidence row's thin-rule, no-card treatment matches the rest of the site.
+  - Zero console errors across every pass.
+- **A sizing bug caught by screenshot review during this change's own verification, fixed before being considered
+  done:** `.principle-content` initially had its own `max-width:760px`, and `.principle-statement` was `max-width:
+  65%` *of that* (≈494px) rather than of the actual grid column (~990px at 1440px viewport) — producing 6 cramped
+  line wraps instead of the spec's targeted 3–4. Root-caused to the redundant nested `max-width`, fixed by removing
+  `.principle-content`'s own cap so the statement's `65%` resolves against the real column width, re-verified via
+  `getBoundingClientRect()` and a fresh screenshot.
+- **Not performed:** physical trackpad/mouse/touch input, cross-browser/device certification, a measured
+  frame-rate/performance recording, the real authenticated GitHub sync/production build, and a live-site check.
+
+### Notes
+
+- `about.description`, `location`, `exploration`, `interestsLabel`, and `interests` remain in the schema, the
+  contract, and both data files, completely unmodified — they are simply no longer consumed by any component. This
+  is the same "stop rendering, don't delete" treatment already used elsewhere in this codebase for superseded
+  fields; nothing was removed from `portfolio.json` itself, so restoring their visibility later would be a
+  component-only change, not a data-recovery one.
+- `STABILITY_CONTRACT.md` gained a new About clause (the previous contract had none, since the old section had no
+  real interaction to protect); `STABLE_BASELINE.md` was deliberately left untouched, as it is an explicitly frozen
+  historical snapshot of a specific past commit, not a living description of current behavior.

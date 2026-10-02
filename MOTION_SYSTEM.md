@@ -121,6 +121,33 @@ pattern instead of inventing a third scroll mechanism).
   functional state indicators, not decorative motion), and the sitewide `*{transition-duration:.01ms!important}`
   rule already makes every state change in this section land instantly rather than animate.
 
+### About: Decision Lens principle selector (2026-10-02; replaces the former static description/education layout)
+
+Unlike Experience, this section is explicitly **not** scroll-driven — per the user's own instruction not to
+duplicate Experience's scroll-stepping language here, selection only ever changes through direct interaction.
+
+- **Trigger / elements:** `PrincipleSelector`'s four `role="tab"` buttons (click, `Enter`/`Space`, or touch to
+  select; `ArrowUp`/`ArrowDown` to move keyboard focus between them without selecting) and `PrincipleContent`'s
+  `role="tabpanel"`.
+- **Properties:** the selected tab's label gets a larger font-size and full-color treatment
+  (`.principle-tab[aria-selected="true"] .principle-tab-label`) versus muted/smaller inactive tabs; the panel plays
+  the same `opacity 0→1`/`translateY(24px)→0` enter transition `ExperiencePanel` already uses, via an `is-entered`
+  class toggled through one `requestAnimationFrame` tick, skipped on first mount.
+- **Timing/easing:** tab label color/font-size 400 ms `var(--ease)`; panel enter 500 ms `var(--ease)`. Same
+  `cubic-bezier(0.16, 1, 0.3, 1)` as the rest of the system.
+- **Section entrance:** the whole layout (`principle-layout`) still uses the existing shared one-time `.reveal`
+  entrance (the same `--reveal-opacity`/`--reveal-y` mechanism every other section's header/copy uses) as it enters
+  the viewport — this is the only scroll-linked behavior in the section, and it never changes which principle is
+  selected, only when the block first fades/rises into view.
+- **Responsive:** at ≤800 px the selector becomes a horizontal, wrapping tap row (`flex-direction:row`) above a
+  full-width panel; evidence collapses from 4 columns to 1. Same component and state as desktop, CSS-only mode
+  switch.
+- **Reduced motion:** the section's `.reveal`-classed wrapper is already covered by the existing
+  `.reveal *,.reveal{opacity:1!important;transform:none!important}` rule (no new override needed, since
+  `principle-content` is a descendant of `principle-layout.reveal`, unlike Experience's panel which deliberately
+  sits outside any `.reveal` ancestor and needed its own explicit override). `aria-selected`/focus state remain
+  fully functional; only the animated transition is removed.
+
 ### Stack hover
 
 - **Trigger / elements:** a brick-wall tile button (`.stack-tile button`) on hover or `:focus-visible`; its “Used in” reference replaces its category label in the same slot.

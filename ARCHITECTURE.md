@@ -111,7 +111,7 @@ The configured GitHub portfolio repository’s root portfolio.json is the produc
 | projects | Offline fixture project instances: slug, versioned owner metadata, nullable repository/live URLs. Metadata includes narrative, visual, implementation and optional caseStudyContent. GitHub mode does not read this array as an editorial registry or membership list; use an empty array in the production global document |
 | projectDetail | Shared chapter/decision/section labels, generic implementation fallback and architecture explanation; no project-specific registry. Optional `caseStudyLabels` (overview, context, role, category, decisions, rationale, alternatives, chosen, implementationDetail, technicalSurface, learnings, metrics, links, undocumentedResult, questions — a five-tuple of per-chapter guiding-question micro-copy) supplies the data-driven chrome for `ProjectDetail`'s additive `caseStudyContent` rendering and for the evidence-row/technical-surface/evidence-grid chrome described below; omitted means those extra sections never render even if a project supplies `caseStudyContent` |
 | experience / technologies / education / services | Typed ordered content and all current detail/disclosure copy |
-| about / contact / footer / labels | Remaining text, availability, email/social links, footer and shared accessible/cursor labels |
+| about / engineeringPrinciples / contact / footer / labels | Remaining about text (no longer rendered by `About`, see its own architecture section), a fixed 4-tuple of engineering decision-lens principles, availability, email/social links, footer and shared accessible/cursor labels |
 | resume | Nullable label/href. Source schema permits HTTPS or safe root-relative PDF; production sync requires /resume.pdf and rewrites it to a revision-pinned generated asset. A conditional footer CV link exists when supplied; the current fixture remains null. |
 
 PortfolioProjectSource.metadata reuses RepositoryPortfolioMetadata: title/summary, category/kicker, role/year/stack/highlights, ordering/featured/hidden, links, narrative, implementation, visual, optional structured caseStudyContent and optional external evidence references. Normalized metadata.description is the display name for authored summary, not a second authored value. CaseStudy remains a distinct typed concern nested under owner editorial data, never GitHub evidence. Inline content is validated, attached, and rendered: `ProjectDetail` additively presents `caseStudyContent` inside the existing five `data-story-step` chapters, each answering one guiding question (`caseStudyLabels.questions[n]`, shown as a small chapter-level prompt when present), when a project supplies it — falling back to the unchanged compact narrative/implementation when it does not. A fixed-width `header` (`.detail-intro`: kicker/title/summary/meta) introduces the project; below it, `.detail-body` is a CSS Grid pairing the existing informational chapter rail (`.case-progress`, now `position:sticky` within the grid rather than viewport-pinned) with `.detail-chapters`:
@@ -211,6 +211,49 @@ Navigation uses native hash links plus CSS `scroll-behavior`, not a programmatic
 - **Reduced motion**: mirrors the existing `.hero,.contact{height:auto}.hero-sticky,.contact-sticky{position:relative}` convention exactly (`.experience-track{height:auto!important}.experience-sticky{position:relative}`), plus `.experience-panel{opacity:1!important;transform:none!important}` so an entry can never rest hidden. The selector's own `transform`/`opacity` are left alone (they are functional — they indicate which year is active — not decorative), and the sitewide `*{transition-duration:.01ms!important}` rule already makes every state change in this section instant rather than animated.
 - **Data-driven, no portfolio-specific branching**: the selector's year labels come from a generic `experienceStartYear(period)` helper (`/\d{4}/.exec(period)?.[0]`, the first four-digit number in the existing `period` string) — not an `if (company === ...)` branch. `highlights` is a new optional `string[]` on `Experience`, modeled directly on `metadata.highlights`'s existing shape on Projects, populated with facts already present in each entry's existing `description`/`story` prose (restructured for the panel's evidence row, not invented).
 
+### About: Decision Lens principle selector
+
+`About` replaced its former static description/education/interests layout with a directly-interactive "decision lens"
+selector: four fixed `engineeringPrinciples` (Features/Systems/Trade-offs/Reliability, Systems active by default),
+each with a `statement`, `explanation`, and a 4-item `evidence` tuple, selected one at a time. Unlike Experience,
+this section is explicitly **not** scroll-driven — selection only ever changes through direct interaction (click,
+keyboard, touch), so the two sections read as related but distinct interaction languages, per the user's own
+explicit instruction not to duplicate Experience's scroll-stepping here.
+
+- **Accessible manual-activation tablist**: `PrincipleSelector` implements the full WAI-ARIA tablist pattern with
+  roving tabindex — `role="tablist"` wrapping four `role="tab"` buttons, `aria-selected`/`aria-controls` wired to a
+  single `role="tabpanel"` (`PrincipleContent`), and only the selected tab in the normal Tab order (`tabIndex={0}`
+  on the active tab, `-1` on the rest). `ArrowUp`/`ArrowDown` move keyboard focus between tabs (wrapping at the
+  ends) via a local `focusIndex` ref array, independent of the selected principle; `Enter`/`Space` commits the
+  focused tab's selection. This is manual, not automatic, activation — arrow-key focus movement never changes what
+  is selected on its own, matching the spec's explicit "↑/↓ move between principles... Enter/Space should select
+  the focused principle" rather than the simpler (but here wrong) "arrow keys both move and select" pattern. Click
+  selects immediately, matching a manual-activation tablist's own click behavior.
+- **No scroll-jacking by construction**: the whole section uses only the existing one-time `.reveal` entrance (the
+  `principle-layout` wrapper carries `reveal scroll-layer` exactly like the old `about-layout` it replaces) — there
+  is no `IntersectionObserver`-driven step advancement, no tall scroll track, nothing watching scroll position to
+  change `activeIndex`. Scrolling past the section at any speed never changes the active principle; only clicking,
+  tapping, or committing a keyboard selection does.
+- **Content swap**: `PrincipleContent` reuses the exact same enter-transition technique as `ExperiencePanel`
+  (`opacity`/`translateY` via an `is-entered` class, toggled through one `requestAnimationFrame` tick after the
+  first render, skipped on initial mount) — not a new pattern, the same one already proven for Experience's panel.
+- **Heading treatment**: `About` still renders the shared `SectionHeader` (same eyebrow/index/reveal machinery
+  every other section uses), but a scoped `.about .section-header h2` override shrinks just this section's own
+  instance of the title to a smaller "question" size (`clamp(22px,2.3vw,32px)`, not the shared `clamp(45px,5.8vw,
+  94px)` every other section's `h2` uses) — the large engineering statement, not the section question, is the
+  dominant visual element here, per the spec's explicit hierarchy. This is a selector scoped to one section's own
+  heading instance; `SectionHeader`'s shared CSS and every other section's title size are untouched.
+- **Education, demoted not removed**: the former static description/location/exploration/interests content is no
+  longer rendered by `About` (the decision-lens statements now carry that voice), but `education` still renders, as
+  a restrained, quiet continuation below the evidence row (`about-education`, a single thin top rule and small
+  label) — per the user's explicit "do not remove education permanently" instruction. `about.description`,
+  `location`, `exploration`, `interestsLabel` and `interests` remain in the schema and the data files unchanged
+  (and are still validated); they are simply no longer consumed by any component, the same "stop rendering, don't
+  delete" treatment already used elsewhere in this codebase for superseded fields.
+- **Data-driven, no portfolio-specific branching**: `engineeringPrinciples` is a plain, fixed 4-tuple on the
+  document (same pattern as `storySteps`/`decisionLabels`); the component has no `if principle.id === "systems"`
+  branch anywhere — it renders whichever principle is active identically, by shape.
+
 ## Motion Architecture
 
 | Responsibility | Current owner and mechanism |
@@ -243,7 +286,7 @@ The render's `getBoundingClientRect()` read is for an active pointer anchor, not
 | Condition | Current behavior |
 | --- | --- |
 | Default desktop CSS | Multi-column editorial layouts; fixed navigation; sticky hero/contact interiors and project rows; hover disclosures; custom cursor. |
-| Width ≤800 px | Primary nav links hidden; wordmark/Contact retained; custom cursor hidden. Project tracks/rows lose desktop sticking, descriptions/CTAs remain visible, and art shrinks to a corner. Experience drops its sticky pin and scroll-stepping entirely (markers removed from layout so the observer never fires) and becomes a flat, tap-to-switch layout: a horizontal year row above a full-width content panel, same component and state, CSS-only mode switch. The stack brick wall becomes a two-column field (it is a seven-column field from 801 to 1100 px and twelve-column above), About/details stack, footer becomes vertical, and architecture becomes a vertical sequence. Stack references and chapter progress are hidden. Hero/contact use shortened sticky tracks under normal motion. |
+| Width ≤800 px | Primary nav links hidden; wordmark/Contact retained; custom cursor hidden. Project tracks/rows lose desktop sticking, descriptions/CTAs remain visible, and art shrinks to a corner. Experience drops its sticky pin and scroll-stepping entirely (markers removed from layout so the observer never fires) and becomes a flat, tap-to-switch layout: a horizontal year row above a full-width content panel, same component and state, CSS-only mode switch. The stack brick wall becomes a two-column field (it is a seven-column field from 801 to 1100 px and twelve-column above), About's principle selector becomes a horizontal, wrapping tap row above a full-width statement/evidence panel (same tablist component and state, CSS-only mode switch — not scroll-stepped like Experience's mobile mode, since About was never scroll-driven to begin with), footer becomes vertical, and architecture becomes a vertical sequence. Stack references and chapter progress are hidden. Hero/contact use shortened sticky tracks under normal motion. |
 | Engine width ≥1100 px | Full motion strength `1`. |
 | Engine width ≥600 and <1100 px | Motion strength `0.66`. |
 | Engine width <600 px | Motion strength `0.26`. |

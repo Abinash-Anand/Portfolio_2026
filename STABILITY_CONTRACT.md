@@ -27,6 +27,12 @@ Existing interactions MUST continue working unless the user explicitly requests 
 - **Projects:** row activation opens the correct project; existing hover/pointer composition, detail content, architecture activation, and scroll-tracked chapters remain functional.
 - **Experience (2026-10-02, explicit user-authorized redesign of the former row list):** scrolling through the section advances/reverses the active entry in data order; clicking a year jumps directly to it without being reverted by the next scroll-triggered check; the sticky pin releases cleanly at the section's start/end; the "Read full story" control still opens the correct employer's full detail overlay (the one interaction carried over unchanged from the row-list design). At ≤800 px the sticky pin and scroll-stepping are disabled in favor of a flat, tap-to-switch layout, same component and state.
 - **Services:** row activation opens the correct capability; hover treatment and detail email action remain intact.
+- **About (2026-10-02, explicit user-authorized redesign of the former static description/education layout):**
+  selecting a principle (click, `Enter`/`Space`, or touch) updates the selector and the statement/explanation/
+  evidence together, never one without the other; `ArrowUp`/`ArrowDown` move keyboard focus between the four
+  principle tabs without changing the selection, matching an accessible manual-activation tablist; scrolling the
+  page never changes which principle is selected, unlike Experience's deliberately different, scroll-driven
+  interaction language. Education remains present as a quiet continuation.
 - **Modals:** preserve the shared portal-based overlay pattern, independent detail scrolling, body scroll lock while open, and restoration of normal document scrolling on close.
 - **Close behavior:** Close and Escape dismiss the active detail. Existing focus-management attempts and restoration of previous focus MUST NOT be removed or weakened.
 - **Keyboard behavior:** preserve native link/button activation, visible focus, architecture-node focus interaction, and Escape handling. Stack reference disclosure on visible focus remains available where the baseline displays it.

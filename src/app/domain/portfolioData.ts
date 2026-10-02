@@ -30,6 +30,14 @@ export type Capability = {
   readonly description: string;
   readonly story?: { readonly paragraphs: readonly string[] };
 };
+export type EngineeringPrincipleEvidence = { readonly label: string; readonly descriptor: string };
+export type EngineeringPrinciple = {
+  readonly id: string;
+  readonly label: string;
+  readonly statement: string;
+  readonly explanation: string;
+  readonly evidence: readonly [EngineeringPrincipleEvidence, EngineeringPrincipleEvidence, EngineeringPrincipleEvidence, EngineeringPrincipleEvidence];
+};
 export type PortfolioDocument = {
   readonly schemaVersion: 2;
   readonly fixture: boolean;
@@ -61,6 +69,7 @@ export type PortfolioDocument = {
   readonly technologies: readonly { readonly label: string; readonly items: readonly { readonly name: string; readonly usedIn: string }[] }[];
   readonly education: readonly { readonly qualification: string }[];
   readonly about: { readonly description: string; readonly location: string; readonly exploration: string; readonly interestsLabel: string; readonly interests: readonly string[] };
+  readonly engineeringPrinciples: readonly [EngineeringPrinciple, EngineeringPrinciple, EngineeringPrinciple, EngineeringPrinciple];
   readonly services: readonly Capability[];
   readonly contact: {
     readonly email: string; readonly availability: string; readonly location: string; readonly headingLines: readonly string[]; readonly cursor: string;
@@ -77,6 +86,7 @@ export type PortfolioDocument = {
     readonly caseProgressAria: string; readonly usedIn: string; readonly experienceTechnologies: string;
     readonly capability: string; readonly discussProject: string;
     readonly experienceTimelineAria: string; readonly experienceScrollHint: string; readonly experienceExpand: string;
+    readonly principleSelectorAria: string; readonly educationLabel: string;
   };
 };
 export type Portfolio = Omit<PortfolioDocument, "projects"> & { readonly projects: readonly PortfolioProject[] };

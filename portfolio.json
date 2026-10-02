@@ -61,8 +61,8 @@
     },
     "about": {
       "index": "04",
-      "eyebrow": "About / Education",
-      "title": "Engineering should reduce uncertainty—not hide it."
+      "eyebrow": "About / Engineering",
+      "title": "What lens do you bring to engineering decisions?"
     },
     "services": {
       "index": "05",
@@ -363,6 +363,56 @@
       "Full-stack TypeScript"
     ]
   },
+  "engineeringPrinciples": [
+    {
+      "id": "features",
+      "label": "Features",
+      "statement": "Start with the problem, not the feature.",
+      "explanation": "I translate a stated problem into the smallest system that actually solves it — a facility team needed accurate records, not a dashboard; a logistics team needed faster sync, not a rewrite for its own sake.",
+      "evidence": [
+        { "label": "Problem", "descriptor": "Defined before code" },
+        { "label": "Scope", "descriptor": "Right-sized to the need" },
+        { "label": "Ownership", "descriptor": "Requirements to shipped" },
+        { "label": "Evidence", "descriptor": "Verified, not assumed" }
+      ]
+    },
+    {
+      "id": "systems",
+      "label": "Systems",
+      "statement": "Build the simplest system that remains understandable as it grows.",
+      "explanation": "I prefer systems whose boundaries, responsibilities and trade-offs remain understandable as the product evolves.",
+      "evidence": [
+        { "label": "Clarity", "descriptor": "Architecture" },
+        { "label": "Depth", "descriptor": "Systems thinking" },
+        { "label": "Ownership", "descriptor": "End to end" },
+        { "label": "Iteration", "descriptor": "Agentic workflows" }
+      ]
+    },
+    {
+      "id": "trade-offs",
+      "label": "Trade-offs",
+      "statement": "Every engineering decision moves complexity somewhere.",
+      "explanation": "Every case study I write documents the alternative I didn't choose and why — a decision is only honest once its cost is named, not just its benefit.",
+      "evidence": [
+        { "label": "Constraints", "descriptor": "Named, not hidden" },
+        { "label": "Alternatives", "descriptor": "Documented per decision" },
+        { "label": "Performance", "descriptor": "Weighed against simplicity" },
+        { "label": "Horizon", "descriptor": "Short term vs long term" }
+      ]
+    },
+    {
+      "id": "reliability",
+      "label": "Reliability",
+      "statement": "A system is only as reliable as the behavior you can verify.",
+      "explanation": "I treat verification as part of the deliverable — automated tests, independent checks and explicit failure handling, not code that happened to work once.",
+      "evidence": [
+        { "label": "Testing", "descriptor": "Automated (pytest, Vitest)" },
+        { "label": "Validation", "descriptor": "Independent verification" },
+        { "label": "Failure modes", "descriptor": "Explicit handling" },
+        { "label": "Deployment", "descriptor": "CI gated" }
+      ]
+    }
+  ],
   "services": [
     {
       "id": "full-stack-development",
@@ -471,6 +521,8 @@
     "discussProject": "Discuss a project",
     "experienceTimelineAria": "Career timeline, by year",
     "experienceScrollHint": "Scroll to change year",
-    "experienceExpand": "Read full story"
+    "experienceExpand": "Read full story",
+    "principleSelectorAria": "Engineering decision lenses",
+    "educationLabel": "Education"
   }
 }

@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { useScrollSceneEngine } from "./useParallaxEngine";
 import { layoutStackTiles } from "./stackLayout";
 import { portfolioStore, type PortfolioProjectView } from "./app/application/portfolioProjects";
-import type { Portfolio, TechnicalVisualData, Capability, Experience as ExperienceEntry } from "./app/domain/portfolioData";
+import type { Portfolio, TechnicalVisualData, Capability, Experience as ExperienceEntry, EngineeringPrinciple } from "./app/domain/portfolioData";
 import type { CaseStudy, CaseStudySection as CaseStudySectionData, CaseStudyVisual } from "./app/domain/caseStudy";
 import type { PortfolioStore } from "./app/application/PortfolioStore";
 import { noAnalytics, type AnalyticsPort } from "./app/application/AnalyticsPort";
@@ -568,15 +568,82 @@ function Stack({ portfolio }: PortfolioProps) {
   );
 }
 
+function PrincipleSelector({ principles, activeIndex, onSelect, aria }: { principles: Portfolio["engineeringPrinciples"]; activeIndex: number; onSelect: (index: number) => void; aria: string }) {
+  const refs = useRef<(HTMLButtonElement | null)[]>([]);
+  const [focusIndex, setFocusIndex] = useState(activeIndex);
+  const move = (delta: number) => {
+    const next = (focusIndex + delta + principles.length) % principles.length;
+    setFocusIndex(next);
+    refs.current[next]?.focus();
+  };
+  return (
+    <div className="principle-selector" role="tablist" aria-label={aria} aria-orientation="vertical">
+      {principles.map((principle, index) => (
+        <button
+          key={principle.id}
+          ref={(el) => { refs.current[index] = el; }}
+          type="button"
+          role="tab"
+          id={`principle-tab-${principle.id}`}
+          aria-selected={index === activeIndex}
+          aria-controls={`principle-panel-${principle.id}`}
+          tabIndex={index === activeIndex ? 0 : -1}
+          className="principle-tab"
+          onClick={() => { onSelect(index); setFocusIndex(index); }}
+          onKeyDown={(event) => {
+            if (event.key === "ArrowDown") { event.preventDefault(); move(1); }
+            else if (event.key === "ArrowUp") { event.preventDefault(); move(-1); }
+            else if (event.key === "Enter" || event.key === " ") { event.preventDefault(); onSelect(index); }
+          }}
+        >
+          <small className="principle-tab-index">0{index + 1}</small>
+          <span className="principle-tab-label">{principle.label}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function PrincipleContent({ principle }: { principle: EngineeringPrinciple }) {
+  const isFirstRender = useRef(true);
+  const [entered, setEntered] = useState(true);
+  useEffect(() => {
+    if (isFirstRender.current) { isFirstRender.current = false; return; }
+    setEntered(false);
+    const frame = requestAnimationFrame(() => setEntered(true));
+    return () => cancelAnimationFrame(frame);
+  }, [principle.id]);
+  return (
+    <div id={`principle-panel-${principle.id}`} role="tabpanel" aria-labelledby={`principle-tab-${principle.id}`} tabIndex={0} className={`principle-content${entered ? " is-entered" : ""}`}>
+      <h3 className="principle-statement">{principle.statement}</h3>
+      <p className="principle-explanation">{principle.explanation}</p>
+      <ul className="principle-evidence">
+        {principle.evidence.map((item) => (
+          <li key={item.label}>
+            <span className="principle-evidence-label">{item.label}</span>
+            <span className="principle-evidence-descriptor">{item.descriptor}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 function About({ portfolio }: PortfolioProps) {
+  const principles = portfolio.engineeringPrinciples;
+  const [activeIndex, setActiveIndex] = useState(1);
+  const active = principles[activeIndex];
   return (
     <section className="about page-section" id="about" data-scroll-scene>
       <SectionHeader {...portfolio.sections.about} />
-      <div className="about-layout reveal scroll-layer" data-scroll-layer data-y="14,0,-12" data-opacity="0.4,1,0.45">
-        <p>{portfolio.about.description}</p>
-        <div>{portfolio.education.map((item) => <span key={item.qualification}>{item.qualification}</span>)}<span>{portfolio.about.location}</span><span>{portfolio.about.exploration}</span></div>
+      <div className="principle-layout reveal scroll-layer" data-scroll-layer data-y="14,0,-12" data-opacity="0.4,1,0.45">
+        <PrincipleSelector principles={principles} activeIndex={activeIndex} onSelect={setActiveIndex} aria={portfolio.labels.principleSelectorAria} />
+        <PrincipleContent principle={active} />
       </div>
-      <div className="focus-line" aria-label={portfolio.about.interestsLabel}>{portfolio.about.interests.map((interest) => <span key={interest}>{interest}</span>)}</div>
+      <div className="about-education">
+        <p className="about-education-label">{portfolio.labels.educationLabel}</p>
+        <div className="about-education-list">{portfolio.education.map((item) => <span key={item.qualification}>{item.qualification}</span>)}</div>
+      </div>
     </section>
   );
 }

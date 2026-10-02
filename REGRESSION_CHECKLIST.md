@@ -156,11 +156,33 @@ scroll-stepped sticky timeline" and `MOTION_SYSTEM.md`'s matching entry for the 
 - [ ] No unintended click action or modal has been added to the informational stack tiles.
 - [ ] Tiles reveal once on entering the viewport and stay visible; reduced motion shows them immediately; an idle tile shows only its category (no "Used in" label over it), and hover/focus swaps category for reference instantly.
 
-## About / Education
+## About / Engineering (Decision Lens)
 
-- [ ] Engineering statement, education/location/interest content, and areas-of-interest labels render in the baseline hierarchy.
-- [ ] About copy reflows and reveals correctly without obscuring content or changing the surrounding section order.
-- [ ] The narrow-screen areas-of-interest strip supports its intentional local horizontal scrolling without causing page-level overflow or blocking vertical scrolling.
+About (2026-10-02) is a directly-interactive principle selector, not static copy — see `ARCHITECTURE.md`'s "About:
+Decision Lens principle selector" and `MOTION_SYSTEM.md`'s matching entry for the full mechanism.
+
+- [ ] On entering the section, "Systems" is the active principle by default: its tab is visually larger/darker than
+      the other three, and the right side shows its statement, explanation, and 4-item evidence row.
+- [ ] Clicking each of the 4 tabs (Features, Systems, Trade-offs, Reliability) selects it: `aria-selected` moves to
+      that tab, and the statement/explanation/evidence all update together — never a mismatch where the selector
+      shows one principle while the content shows another.
+- [ ] Scrolling through the section — slow, fast, in both directions, including repeatedly crossing the section's
+      top/bottom boundary — never changes which principle is selected. This is the key distinction from Experience:
+      About's interaction is direct selection only, with no scroll-driven advancement at all.
+- [ ] Keyboard: `Tab` reaches only the currently-selected tab (roving tabindex — the other three are not in the tab
+      order until reached via arrow keys); `ArrowUp`/`ArrowDown` move focus between tabs (wrapping at the ends)
+      *without* changing the selection; `Enter`/`Space` commits the focused tab's selection. Hovering a tab must
+      never, by itself, change `aria-selected`.
+- [ ] A visible `:focus-visible` outline appears on the focused tab.
+- [ ] The evidence row always shows exactly 4 items for the active principle, with vertical rules between them and
+      no card/box styling around any item.
+- [ ] Education still renders, as a quiet continuation below the evidence row (not the dominant content of the
+      section) — confirm it was not accidentally removed.
+- [ ] No horizontal overflow at any width; no overlap between the selector column and the content column.
+- [ ] At ≤800 px: the selector becomes a horizontal, wrapping tap row above a full-width panel; the active
+      principle remains visually obvious (not just by color).
+- [ ] Reduced motion: tab/content transitions become instant, but selection, keyboard interaction, and the final
+      correct layout all remain fully functional; content is never caught mid-transition at reduced opacity.
 
 ## Services
 
