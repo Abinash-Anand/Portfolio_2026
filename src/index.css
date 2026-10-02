@@ -315,6 +315,53 @@ footer span:nth-child(2){justify-self:center}footer a{justify-self:end;color:var
 .result-chapter>p:last-child { margin:0 0 0 25%;max-width:1000px;font-size:clamp(38px,5.5vw,88px);line-height:1;letter-spacing:-.055em; }
 .simple-detail { padding:12vw 20vw; }.simple-detail>span,.simple-detail small{display:block;text-transform:uppercase;letter-spacing:.12em;font-size:9px;color:#999994;margin-bottom:3vw}.simple-detail h2{margin-bottom:25px}.simple-detail h3{font-size:18px;font-weight:400;color:#aaa9a4}.simple-detail p{font-size:clamp(20px,2.5vw,38px);max-width:760px;letter-spacing:-.035em}.simple-detail>div{margin-top:5vw;border-top:1px solid #494945;padding-top:20px}.simple-detail a{display:inline-block;margin-top:5vw;border-bottom:1px solid;padding:10px 0}
 
+/* Case-study extension: additive detail content shown beneath the existing compact narrative within each
+   unchanged story-step chapter, present only when a project's portfolio.json supplies caseStudyContent. */
+.cs-overview,.cs-constraints,.cs-decisions,.cs-architecture-detail,.cs-results,.cs-learnings { margin-left:25%;max-width:900px; }
+.cs-overview { margin-top:5vw;display:flex;flex-direction:column;gap:3vw; }
+.cs-block { margin-top:4vw; }
+.cs-eyebrow { margin:0 0 1.2vw;text-transform:uppercase;font-size:9px;letter-spacing:.12em;color:#8e8e89; }
+.cs-block h4,.cs-decision h4 { margin:0 0 10px;font-size:13px;font-weight:500;color:#d6d6d1; }
+.cs-block p,.cs-decision p,.cs-results p,.cs-note { margin:0 0 14px;font-size:14px;line-height:1.7;color:#b7b7b1;max-width:62ch; }
+.cs-constraints .cs-block:first-child,.cs-decision p:last-child,.cs-results p:last-child { margin-bottom:0; }
+.cs-constraints { margin-top:3vw; }
+.cs-decisions { margin-top:5vw;display:flex;flex-direction:column;gap:3vw; }
+.cs-decision { border-top:1px solid #3a3a37;padding-top:3vw; }
+.cs-decision>.cs-block { margin-top:2.4vw; }
+.cs-alternatives,.cs-metrics { list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px; }
+.cs-alternatives li { display:flex;flex-direction:column;gap:4px;border-left:1px solid #454541;padding-left:16px; }
+.cs-alternatives strong { font-size:13px;color:#cfcfca; }
+.cs-alternatives span { font-size:13px;color:#9a9a95; }
+.cs-metrics { flex-direction:row;flex-wrap:wrap;gap:4vw; }
+.cs-metrics li { display:flex;flex-direction:column;gap:4px; }
+.cs-metrics b { font-size:clamp(22px,2.4vw,34px);font-weight:500;letter-spacing:-.03em;color:var(--light);font-variant-numeric:tabular-nums; }
+.cs-metrics span { font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#8e8e89; }
+.cs-metrics small { font-size:11px;color:#9a9a95; }
+.cs-architecture-detail { margin-top:3vw;display:flex;flex-direction:column;gap:3vw; }
+.cs-visual { border:1px solid #3a3a37;padding:2.4vw; }
+.cs-visual-caption { margin:0 0 16px;font-size:12px;color:#9a9a95; }
+.cs-visual-image { display:block;width:100%;height:auto;border:1px solid #454541; }
+.cs-nodes { list-style:none;margin:0 0 16px;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px; }
+.cs-nodes li { display:flex;flex-direction:column;gap:4px;border-left:1px solid #454541;padding-left:14px; }
+.cs-nodes strong { font-size:13px;color:#cfcfca; }
+.cs-nodes span { font-size:12px;color:#9a9a95; }
+.cs-connections { list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;font-size:12px;color:#aaa9a4; }
+.cs-connections li { display:flex;align-items:center;gap:10px;flex-wrap:wrap; }
+.cs-connections b { color:#6f6f6a;font-weight:400; }
+.cs-connections small { color:#8e8e89; }
+.cs-code { margin:0;border:1px solid #464642;padding:20px;font-size:12px;line-height:1.8;color:#c5c5bf;overflow-x:auto;white-space:pre-wrap; }
+.cs-results { margin-top:3vw; }
+.cs-links ul { list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:24px; }
+.cs-links a { font-size:13px;border-bottom:1px solid #555550;padding-bottom:3px;transition:border-color 200ms; }
+.cs-links a:hover { border-color:currentColor; }
+.cs-note { color:#8e8e89;font-style:normal; }
+
+@media (max-width: 800px) {
+  .cs-overview,.cs-decisions,.cs-architecture-detail,.cs-results,.cs-learnings { margin-left:0;max-width:none; }
+  .cs-nodes { grid-template-columns:1fr; }
+  .cs-metrics { flex-direction:column;gap:16px; }
+}
+
 @media (max-width: 800px) {
   .contact-actions-paired { grid-template-columns:1fr;margin-top:8vh; }
   .contact-actions-paired .contact-action { margin-top:0;padding-left:0;padding-right:0; }

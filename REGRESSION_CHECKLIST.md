@@ -90,6 +90,14 @@ Additional shared checks:
 - [ ] Desktop chapter markers follow Overview → Problem → Architecture → Implementation → Result; they are intentionally hidden at ≤800 px.
 - [ ] Document progress and detail chapter state remain separate during nested scrolling.
 
+### Case-study content (additive, present only when a project's portfolio.json supplies caseStudyContent)
+
+- [ ] A project with `caseStudyContent` (e.g. Northstar in the dev fixture) shows the additional Overview/Context/Role block in chapter 1, richer constraints and a "Technical decisions" block (with rationale/alternatives where supplied) in chapter 2, architecture prose and structured visual nodes/connections in chapter 3, implementation notes in chapter 4, and results (summary/metrics/links)/learnings/links in chapter 5 — all beneath the unchanged compact narrative content, never replacing it.
+- [ ] A project without `caseStudyContent` (e.g. Code Sentinel) renders no `cs-*` elements at all and is visually identical to the pre-change narrative-only detail.
+- [ ] A project with a sparse/`not-documented` case study (e.g. Facility Importer) shows the data-driven "no verified outcome" copy, not an invented result, and no empty section headings for absent fields.
+- [ ] The five `data-story-step` chapter anchors, the case-progress rail, `ArchitectureDiagram` hover/focus/click activation, nested overlay scrolling, Close/Escape, and focus restoration all work exactly as before on a case-study-bearing project.
+- [ ] New case-study blocks reflow at ≤800 px (no fixed left margin colliding with the case-progress rail) and contain no horizontal overflow.
+
 ## Experience
 
 - [ ] Aperture Systems, Fieldwork Labs, and Independent rows render in order with correct roles, technologies, and periods.
@@ -177,6 +185,8 @@ On touch/coarse-pointer devices and narrow layouts:
 - [ ] Document progress tracks top/middle/bottom positions and updates after relevant layout changes.
 - [ ] Reveals occur once and retain `.is-visible` after leaving/re-entering; content is not stranded by a reset reveal state. Preserve separate scene-driven opacity changes rather than expecting every layer to remain opaque throughout scroll.
 - [ ] Hero grid/art, contact grid, and project backdrop retain their CSS-owned normal-motion opacity; do not expect all written scene-opacity keyframes to be visually applied.
+- [ ] Structural content (hero title/summary/meta, section headers, project/experience/service rows, about, contact) settles to full opacity as each section centers and recedes — never to invisible, never below a readable floor — as it scrolls past; this is restored depth, not a regression, and must compose with (not replace) the one-time enter reveal: a layer already revealed must never re-run its entrance transition or go fully transparent.
+- [ ] Hovering a project/experience/service row while this scroll-linked opacity is mid-transition does not interfere with the existing hover/cursor feedback.
 - [ ] Parallax remains perceptibly layered without jitter, oscillation, unintended snapping, or positional corrections.
 - [ ] No visible feedback loop or hover/scroll transform overwrite occurs.
 - [ ] No scroll trapping/hijacking occurs; intentional modal body lock always releases after close.
