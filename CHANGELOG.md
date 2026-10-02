@@ -1319,3 +1319,76 @@ preceding same-day entries.
   already covered by the existing `Stripe` entry). These were deliberately not added to `technologies`, which is
   specifically a grid of concrete tools/frameworks/protocols, not a general competency list — consistent with the
   existing curated entries already there.
+
+## 2026-10-02 — Fix: capability rows permanently disappearing after selection
+
+### Context
+
+The user reported that clicking a capability in the Services section could make its row permanently vanish from the
+visible list (stuck invisible) while the row remained fully clickable and the section still behaved as if a detail
+was active. Investigated and root-caused before any fix was attempted, per the user's explicit request.
+
+### Fixed
+
+- **Root cause**: the shared reveal system (`useParallaxEngine.ts`) marks an element as revealed with a raw,
+  imperative `entry.target.classList.add("is-visible")` — a direct DOM mutation entirely outside React's own
+  tracking of that element's `className`. `.service-row`'s `className` used to be built from a template literal
+  with a conditional segment (`` `service-row reveal${selected?.id === service.id ? " is-selected" : ""}` ``). The
+  moment a row's `is-selected` suffix flipped (on click, and again on close), React saw that the className *string*
+  it had last rendered for that specific row had changed, and issued a real `element.className = "..."` write —
+  which replaces the live DOM node's entire class list, including whatever the engine had added imperatively and
+  React never knew about. Because the reveal `IntersectionObserver` calls `reveals.unobserve(entry.target)` after
+  firing once — a deliberate "a reveal must never be reversed" invariant — it never re-fires to restore the class,
+  so the row was left permanently matching `.service-row.reveal{opacity:0}`: invisible, but with every click
+  handler, hover rule and focus behavior still fully attached, which is exactly why it stayed interactive. This
+  only affected Services/Capabilities because `.service-row` was the only `.reveal`-classed element anywhere in the
+  codebase whose `className` string was ever recomputed after mount for a reason unrelated to the reveal state
+  itself (confirmed by inspection: `ProjectRow`'s and `.stack-tile`'s `className` are static strings, never
+  conditional).
+- **Fix** (`src/App.tsx`, `src/index.css`): selection state no longer touches `className` at all. The row's
+  `className` is now the static string `"service-row reveal"`, unconditionally, on every render — React performs
+  no DOM write for it regardless of selection, so the engine's imperatively-added "is-visible" class can never be
+  clobbered. Selection is now carried by a separate `data-selected` attribute (`data-selected={selected?.id ===
+  service.id ? "" : undefined}`), which React diffs and writes independently of `className`. CSS selectors updated
+  from `.service-row.is-selected` to `.service-row[data-selected]` (background sweep, color inversion, arrow
+  offset — same visual behavior, different, non-clobberable selector).
+
+### Preserved
+
+- The capabilities array, selection/open state, and the detail overlay itself are untouched — this was never a
+  data-removal or state-management bug (the capabilities list was never filtered, mutated or reordered; confirmed
+  during investigation, consistent with the user's own description that this was a rendering/visibility bug, not a
+  data bug). No visual design change: the dark-inversion sweep, padding shift and arrow offset on selection look
+  identical, just driven by an attribute selector instead of a class selector.
+
+### Regression Testing
+
+- `pnpm exec tsc --noEmit`: passed.
+- `node --experimental-strip-types --test tests/*.test.mjs`: 37 of 37 passed (one existing assertion updated to
+  match the new `data-selected` pattern; one new regression test added — see Notes).
+- `PORTFOLIO_DATA_MODE=fixture node scripts/sync-github.ts && vite build`: succeeded.
+- **Live reproduction before and after the fix, Playwright-driven Chromium against the dev server**, reading
+  `getComputedStyle(row).opacity` directly at each step rather than relying on screenshots alone:
+  - **Before the fix**: confirmed the exact bug — clicked row's opacity read `0` immediately after clicking, and
+    stayed `0` through scrolling with the overlay open, closing the overlay, and scrolling the page up and down
+    afterward. `display`/`visibility` remained `grid`/`visible` throughout (confirming it was an opacity problem,
+    not a DOM-removal or display problem), and the row was still clickable and still opened the overlay.
+  - **After the fix**: ran the identical sequence — the clicked row's opacity stayed `1` throughout clicking,
+    scrolling with the overlay open, closing, and scrolling up/down afterward.
+  - **Full checklist pass**: clicked each of the 5 capabilities in turn (open, then close via Escape) and confirmed
+    all 5 rows stayed at `count=5`, all non-yet-revealed rows aside, opacity `1` after every cycle; switched
+    directly between two capabilities without closing in between and confirmed the overlay content updated to the
+    newly-clicked one; confirmed the hover sweep (`::before` transform) still activates; confirmed a real
+    `Tab`-sequence reaches a `.service-row` and `Enter` opens its detail; confirmed 390px mobile and
+    `prefers-reduced-motion: reduce` both show all 5 rows at opacity `1` after a click-then-close cycle; zero
+    console errors and no horizontal overflow throughout.
+- **Not performed:** physical trackpad/mouse/touch input, cross-browser/device certification, a live-site check.
+
+### Notes
+
+- Added a new, permanent regression test (`tests/stack-bricks.test.mjs`, "service-row's className is never
+  recomputed by selection…") that asserts directly against the source pattern that caused the bug: no template
+  literal with a conditional segment in `service-row`'s `className`, a static `className="service-row reveal"`
+  string, and no leftover `.service-row.is-selected` class selector in the stylesheet. This encodes the root cause
+  as a standing check, not just a one-time fix, since the underlying hazard (imperative DOM mutation outside
+  React's tracking, vulnerable to any future conditional `className`) could otherwise recur on a different element.

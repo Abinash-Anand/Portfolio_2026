@@ -225,7 +225,7 @@ test("reveals are enter-triggered once; reduced motion and the capability hold s
   // its own transition classes, not a one-time fade-in.
   for (const selector of [".stack-tile.reveal", ".reveal .contact-actions"]) assert.ok(css.includes(selector), selector);
   assert.ok(css.includes(".experience-panel.is-entered"), "experience panel uses its own enter transition, not .reveal");
-  assert.match(css, /\.service-row\.is-selected::before/);
+  assert.match(css, /\.service-row\[data-selected\]::before/);
   assert.match(css, /cubic-bezier\(0\.16, 1, 0\.3, 1\)/);
   const reduced = css.slice(css.indexOf("@media (prefers-reduced-motion: reduce)"));
   assert.match(reduced, /\.reveal \*,\.reveal\{opacity:1!important/);
@@ -243,5 +243,21 @@ test("the capability row holds its inversion while its detail is open", () => {
   const document = structuredClone(realDocument);
   const html = render(document);
   assert.equal((html.match(/class="service-row reveal"/g) ?? []).length, document.services.length);
-  assert.ok(/selected\?\.id === service\.id \? " is-selected" : ""/.test(appSource));
+  assert.match(appSource, /data-selected=\{selected\?\.id === service\.id \? "" : undefined\}/);
+});
+
+test("service-row's className is never recomputed by selection, so React cannot clobber the engine's imperative reveal class", () => {
+  // Regression test for a real bug: clicking a capability made its row permanently disappear (stuck at
+  // opacity:0, via `.service-row.reveal{opacity:0}`) while remaining fully clickable. Root cause: the shared
+  // reveal system marks an element visible with a raw `entry.target.classList.add("is-visible")`, entirely
+  // outside React's own tracking of that element's className. `is-selected` used to be toggled by changing the
+  // className *string* itself (a template literal with a conditional segment); the moment React saw that string
+  // change for the clicked row, it wrote a brand-new `className` attribute, silently discarding whatever classes
+  // were already on the live DOM node -- including "is-visible". Because the reveal observer unobserves an
+  // element after firing once (by design: a reveal must never be reversed), it never came back. The fix:
+  // className must never change based on selection; the selected state is carried by a separate `data-selected`
+  // attribute instead, which React diffs independently and can never clobber a classList.
+  assert.ok(!/className=\{`service-row reveal\$\{/.test(appSource), "service-row's className must not be a template literal with a conditional segment");
+  assert.match(appSource, /className="service-row reveal"/, "service-row's className must be a static, unconditional string");
+  assert.ok(!/\.service-row\.is-selected/.test(css), "no leftover class-based selector for service-row selection, which would be clobbered the same way");
 });

@@ -173,6 +173,12 @@ scroll-stepped sticky timeline" and `MOTION_SYSTEM.md`'s matching entry for the 
       renders identically to before.
 - [ ] Close/Escape work and scrolling resumes after dismissal.
 - [ ] Narrow-screen labels and arrows remain readable and reachable.
+- [ ] After selecting each capability in turn and closing it, every row is still visible at `opacity: 1` (not just
+      present in the DOM) — this is a regression check for a real bug (2026-10-02): selection used to change
+      `service-row`'s `className` string, which let React's own diffing silently clobber the reveal system's
+      imperatively-added `is-visible` class, leaving the clicked row permanently invisible but still clickable.
+      Selection must stay on a separate `data-selected` attribute, never back on `className`, for any element that
+      also carries the shared `.reveal` class.
 
 ## Contact / Footer
 
