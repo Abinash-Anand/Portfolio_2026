@@ -600,3 +600,150 @@ This is a reusable entry template, not a completed change. Copy it for each mean
 - On the owner's approval the four project files were pushed as plain fast-forwards to each repository's `main` (`SynthGraph` `fe0792e`, `ParkRabbit` `41e807d`, `Eber-app` `79ecb6b`, `FounderX` `0f75fb0`), followed by this repository (`5e7fe8c`). `FounderX` had already been pinned on the GitHub profile. ParkRabbit and FounderX printed a protected-branch notice and accepted the push through the owner's rule bypass; no history was rewritten. The pre-push guard verified owner identity and no Claude or Anthropic attribution on each push.
 - CI passed for `5e7fe8c` and the Vercel production deployment succeeded. The live bundle embeds exactly the four pushed project revisions and the `5e7fe8c` portfolio revision, and contains no `Alex Morgan`, `PORTFOLIO_GH_TOKEN` or GitHub API host.
 - In the embedded Chromium pane at 1440 px (simulated viewport) the live page lists the projects as SynthGraph, ParkRabbit, Eber, FounderX, shows 26 stack tiles in rows of 5/6/4/5/3/3 that fill the field, shows the month-precise experience periods, loads Inter, requests only its own origin, has no horizontal overflow and logged no console error. The earlier statement that the project files were not pushed describes the state at commit time. The authenticated Vercel sync did run on the new files, which is the first real-data confirmation of this content pass; the other widths and the overlays were not re-audited on the live site.
+
+## 2026-10-02 — Restore structural scroll depth and render rich project case studies
+
+### Context
+
+The user reported two regressions/gaps and asked for both fixed: (1) the site had "lost" the sophisticated scroll
+behavior from an earlier version — sections no longer settled in/receded as the user scrolled; and (2) pinned
+repositories' `portfolio.json` files (confirmed live via SynthGraph, Eber-app and ParkRabbit) already carry rich
+`caseStudyContent` (overview, context, role, constraints, technical decisions with rationale/alternatives, results,
+learnings, structured visuals, links) that reaches the normalized data layer but was never rendered.
+
+### Root cause 1 — motion regression
+
+Git history (`c1e5452`, "Engineering Stack brick wall and focused motion refinement," 2026-10-02) deliberately
+removed all `data-opacity` scroll keyframes from structural content layers (hero title/summary/meta, section
+headers, project index/copy/meta, experience cells, about, service rows, contact), leaving only a one-time
+non-reversing enter reveal, and `MOTION_SYSTEM.md` was updated at the time to document that as the intended policy
+("content layers have no scroll-mapped opacity ... never fades back out with scroll position"). Decorative/ambient
+layers (hero grid/art, scroll cue, project backdrops/art/overlay, contact grid) and the project-detail overlay's own
+internals (`ProjectDetail`, `ArchitectureDiagram`) kept their original scroll-opacity the whole time — they were
+explicitly out of scope for that pass — which is why the overlay still felt "layered" while the main page flow felt
+flat. This was an intentional, documented prior decision, not an accidental bug; the user's request is an explicit,
+informed reversal of it for the main page flow specifically.
+
+### Root cause 2 — project-detail content gap
+
+`ProjectDetail` (`src/App.tsx`) only ever read `project.narrative.*` and `project.implementation.*`. `project.caseStudy`
+(populated by `normalizePortfolio.ts` from each pinned repository's `metadata.caseStudyContent`, validated by
+`projectContentContract.ts`) was fully wired through sync → validation → normalization → `PortfolioStore`, confirmed
+reaching the frontend's data layer intact, but no component ever read it — a data/UI mismatch, not a data-pipeline
+bug. `ARCHITECTURE.md` already recorded this as a known boundary ("not yet rendered as new detail sections").
+
+### Changed
+
+- **`src/App.tsx`** — Motion: added 3-point `data-opacity` keyframes (and light `data-phase` staggering) to the
+  structural `scroll-layer` elements in `Hero`, `SectionHeader`, `ProjectRow`, `Experience`, `About`, `Services`, and
+  `Contact`. Every keyframe rests at full opacity (`1`) in the middle and never dips below a `0.2` floor, so a layer
+  settles to full visibility as it centers and recedes — never disappears — as it scrolls past. This composes
+  multiplicatively with the existing, unchanged one-time `--reveal-opacity` (`.scroll-layer{opacity:calc(var(--scene-opacity,1)*var(--reveal-opacity,1))}`
+  in `index.css`, untouched): the reveal still gates *first* appearance exactly as before and never reverses or
+  replays; the restored scene opacity is a second, independent layer on top of it. No new CSS, no new engine code,
+  no new scheduler: the existing `useScrollSceneEngine`/`.scroll-layer` composition already supported this — the
+  regression was purely missing JSX attributes. Travel distances (`data-x`/`data-y`), easing, damping, hover/cursor
+  CSS, and reduced-motion handling are all unchanged.
+  Project-detail content: extended `ProjectDetail` to additively render `project.caseStudy` inside the existing five
+  `data-story-step` chapters when present — Overview/Context/Role in chapter 1 (header), richer constraints and a
+  "Technical decisions" list (decision/rationale/alternatives/implementation/result/learning) in chapter 2 (alongside
+  the unchanged `decision-grid`), architecture prose and structured visuals (all eight `CaseStudyVisual` kinds) in
+  chapter 3 (alongside the unchanged `ArchitectureDiagram`), implementation notes in chapter 4, and
+  results/metrics/links/learnings/links in chapter 5. New helper components: `CaseStudyParagraphs`, `CaseStudyField`,
+  `CaseStudyDecision`, `CaseStudyResults`, `CaseStudyLinks`, `CaseStudyVisualBlock`. The five chapter anchors,
+  `IntersectionObserver`, `ArchitectureDiagram`, `DetailOverlay` (portal, scroll lock, Close/Escape, focus
+  restoration), and the narrative/implementation fallback are byte-for-byte unchanged; nothing renders for a project
+  without `caseStudyContent`.
+- **`src/app/domain/portfolioData.ts` / `src/app/application/portfolioContract.ts`** — added an optional
+  `projectDetail.caseStudyLabels` field (overview, context, role, decisions, rationale, alternatives,
+  implementationDetail, learnings, metrics, links, undocumentedResult) and its validator, following the existing
+  pattern of data-driven UI chrome (`sectionLabels`, `decisionLabels`, etc.) rather than hardcoding new English
+  strings in `App.tsx`. Omitting it suppresses the new sections entirely, so no document is broken by the addition.
+- **`portfolio.json`, `fixtures/portfolio.fixture.json`** — populated `caseStudyLabels` with real values. Added a
+  full rich `caseStudyContent` example to the dev fixture's `northstar` project (overview, context, role, two
+  constraints, one technical decision with rationale+alternatives+implementation, one with a `not-documented` result,
+  architecture prose + one `architecture-diagram` visual with 5 nodes/4 connections, implementation notes, two
+  learnings, documented results with one metric, one link) so the new rendering path is exercised in development
+  without needing GitHub credentials. `facility-importer`'s existing sparse/`not-documented` case study is unchanged
+  and continues to exercise the minimal-data path.
+- **`src/index.css`** — added `.cs-*` rules for the new case-study blocks (indentation, eyebrow labels, decision
+  cards, alternatives list, metrics row, node/connection lists, code/terminal blocks, links), matching the existing
+  dark-overlay palette and typography; no box-shadow, border-radius beyond existing circular uses, gradients, or
+  bounce/elastic motion. Responsive fallback at the existing ≤800 px breakpoint (removes the 25% left margin, single-
+  column node grid). No changes to any pre-existing selector.
+- **`tests/stack-bricks.test.mjs`** — the two motion-policy tests encoding the prior "no scroll-opacity on content"
+  rule were updated, not deleted: the opacity ban is replaced with a positive check that every structural
+  `data-opacity` keyframe rests at `1` in the middle and never drops below `0.2`, so future work can't quietly widen
+  the fade into something that reads as content disappearing. The travel/no-scale/no-rotate test is unchanged and
+  still passes without modification (travel amounts were not changed).
+- **`tests/content-architecture.test.mjs`** — fixed a latent bug the richer fixture data exposed: the fixture-identity
+  audit assumed every project with `caseStudyContent` has a `results.note` (true only for a `not-documented` result);
+  it now filters to entries that actually have one before auditing.
+
+### Fixed
+
+- Structural page content (outside the project-detail overlay) no longer stays at a flat, scroll-position-independent
+  opacity after its one-time reveal; it now settles/recedes with scroll, matching the overlay's own motion language.
+- `ProjectDetail` now actually surfaces `caseStudyContent` that was already reaching the normalized data layer.
+- `.cs-constraints` and the `not-documented` branch of `CaseStudyResults` were initially missing the same `25%`
+  left-margin treatment as their sibling case-study blocks, which visually collided with the fixed `.case-progress`
+  rail (same pre-existing collision pattern already recorded for the base `decision-grid` at 1440 px) — caught during
+  this change's own browser verification and corrected before completion, not shipped.
+
+### Preserved
+
+- Native scrolling, the single central `useScrollSceneEngine` scheduler, geometry caching, read→calculate→write
+  batching, hover/cursor interactions across Projects/Experience/Stack/Services, existing easing
+  (`cubic-bezier(0.16,1,0.3,1)`) and durations, the one-time non-reversing reveal system, responsive breakpoints
+  (800 px layout / 600–1100 px engine strength), and reduced-motion behavior (the existing blanket
+  `.scroll-layer{opacity:1!important}` rule neutralizes all new `data-opacity` automatically — no reduced-motion CSS
+  was added or needed). Stack tiles deliberately were **not** given new scroll parallax: the brick wall is an
+  intentionally flat, geometric layout (introduced in `c1e5452`, never had per-tile scroll motion), so this is
+  restoration of depth that previously existed, not an invented addition to a system that never had it. The modal
+  transition, chapter-scroll indicator, architecture-node activation, Close/Escape, body scroll lock, and focus
+  restoration are all unchanged.
+
+### Regression Testing
+
+- `pnpm exec tsc --noEmit`: passed, no errors.
+- `pnpm exec tsc --noEmit --strict --skipLibCheck --target ES2022 --module nodenext --moduleResolution nodenext --allowImportingTsExtensions scripts/sync-github.ts scripts/portfolio-contract.ts`: passed.
+- `node --experimental-strip-types --test tests/*.test.mjs`: 36 of 36 passed, 0 failed, 1 skipped (pre-existing,
+  unrelated to this change), including the updated motion-policy tests and the built-bundle token/GitHub-host scan.
+- `PORTFOLIO_DATA_MODE=fixture node --experimental-strip-types scripts/sync-github.ts && vite build`: succeeded
+  (offline fixture build, same as CI; the real authenticated `sync:github`/production build was not run — no
+  `PORTFOLIO_GH_TOKEN` in this environment).
+- Browser verification (Playwright-driven Chromium against the local `vite dev` fixture server; **simulated input
+  only, not a physical trackpad/mouse/touch device, and not the live site**): zero console/page errors across every
+  pass below.
+  - Motion: sampled `.hero-title` computed opacity across a full top-to-bottom scroll sweep (11 points) — varied
+    0.30–0.91, confirming scroll-position depth is restored, and never dropped below the 0.2 floor. Opacity was
+    exactly `1` at initial load (hero's `data-scene-origin="visible"` starts centered, as designed).
+  - Project detail, rich case study (Northstar, fixture): opened via click, confirmed via DOM query — Overview block
+    present, 2 technical decisions rendered (matching the fixture's 2), 5 architecture-diagram nodes rendered
+    (matching the fixture's 5 nodes/4 connections), results block with 1 metric, 1 learnings block, 1 link. Escape
+    closed the overlay (`.overlay.open` count returned to 0).
+  - Project detail, no case study (Code Sentinel): 0 `cs-*` elements rendered, existing `decision-grid` narrative
+    still renders — fallback path confirmed clean.
+  - Project detail, sparse/`not-documented` case study (Facility Importer): rendered its data-driven
+    `undocumentedResult`/`note` copy with correct `25%` indentation, matching its siblings.
+  - Reduced motion (Playwright `reducedMotion: "reduce"` emulation): `.hero-title` opacity forced to `1` after
+    scrolling, confirming the existing blanket override still neutralizes the new scroll-opacity with no additional
+    code.
+  - 390×844 px viewport: no horizontal overflow (`scrollWidth` ≤ `clientWidth`).
+  - Visual review of screenshots at 1440 px confirmed the new case-study sections read as one continuous system with
+    the existing dark-overlay typography (uppercase eyebrow labels, hairline dividers, muted/light text colors) — no
+    box-shadow, gradient, rounded-corner, or bounce/elastic motion was introduced.
+- **Not performed:** physical trackpad/mouse-wheel/touch input, cross-browser/device certification, a measured
+  frame-rate/performance recording, the real authenticated GitHub sync/production build, and a live-site check (no
+  push was made; this is a local source change only, pending the user's review before any deploy).
+
+### Notes
+
+- The motion-policy reversal is a deliberate, explicit, user-requested override of a prior session's own documented
+  design decision (`c1e5452` / the "Motion hierarchy (2026-10-02)" principle in `MOTION_SYSTEM.md`), not a silent
+  rewrite: both documents have been updated in place to record the current policy and why it changed, and this entry
+  records the prior entry it supersedes rather than rewriting it.
+  - The pre-existing `.case-progress` rail / first-decision-column overlap at 1440 px (recorded in the
+    "Content pass" entry above) is unchanged and out of scope; the new case-study blocks were deliberately given the
+    same `25%` indentation as `.about-layout`/`.architecture>div` to avoid worsening it, not to fix it.
+- This change is local/uncommitted source only; no push, PR, or deployment was performed or requested.

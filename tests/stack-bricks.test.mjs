@@ -164,19 +164,36 @@ test("neither the component nor the layout contains a skill, category or project
 
 // --- Motion policy ----------------------------------------------------------------------------------------------------
 
-test("content layers carry no scroll-mapped opacity; only decorative and ambient layers may fade", () => {
+// 2026-10-02 (this change): the "focused motion refinement" pass (c1e5452) removed all scroll-mapped opacity from
+// structural content, leaving only a one-time enter reveal. The user explicitly asked for that depth restored across
+// the whole flow (incoming sections settling in, previous sections subtly receding). Structural layers may again
+// carry a 3-point data-opacity keyframe, composed multiplicatively with the unchanged one-time --reveal-opacity (see
+// `.scroll-layer` in index.css), so a layer still only becomes visible once (never stranded, never replayed) and then
+// continues to respond to scroll position for depth. This test now guards the *restraint* of that restoration instead
+// of forbidding it outright: every structural opacity curve must rest at full visibility (middle keyframe === 1) and
+// must never dip below a readable floor, so the effect stays "subtle" rather than causing content to disappear.
+test("content layers may carry a subtle scroll-mapped opacity that settles at full visibility and never drops below a readable floor", () => {
   const decorative = /\b(hero-grid|hero-art|scroll-cue|project-overlay|contact-grid)\b/;
+  const floor = 0.2;
   const parsed = ts.createSourceFile("App.tsx", appSource, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
-  const offenders = [];
+  const structural = [];
   (function inspect(node, insideOverlayDetail) {
     const inDetail = insideOverlayDetail || (ts.isFunctionDeclaration(node) && ["ProjectDetail", "ArchitectureDiagram"].includes(node.name?.text));
     if (!inDetail && (ts.isJsxSelfClosingElement(node) || ts.isJsxOpeningElement(node))) {
       const attributes = Object.fromEntries(node.attributes.properties.filter(ts.isJsxAttribute).map(attribute => [attribute.name.text, attribute.initializer && ts.isStringLiteral(attribute.initializer) ? attribute.initializer.text : "(expression)"]));
-      if ("data-opacity" in attributes && !decorative.test(attributes.className ?? "")) offenders.push(`${node.tagName.getText()}.${attributes.className}`);
+      if ("data-opacity" in attributes && !decorative.test(attributes.className ?? "")) structural.push([`${node.tagName.getText()}.${attributes.className}`, attributes["data-opacity"]]);
     }
     ts.forEachChild(node, child => inspect(child, inDetail));
   })(parsed, false);
-  assert.deepEqual(offenders, [], "page content must not fade with scroll position");
+  assert.ok(structural.length > 10, "expected structural content layers configured with scroll-opacity to be found");
+  for (const [layer, raw] of structural) {
+    assert.notEqual(raw, "(expression)", `${layer}: data-opacity must be a static literal so it can be checked`);
+    const frames = raw.split(",").map(Number);
+    assert.equal(frames.length, 3, `${layer}: data-opacity must be a 3-point entry,middle,exit keyframe`);
+    assert.ok(frames.every(Number.isFinite), `${layer}: data-opacity values must be numeric`);
+    assert.equal(frames[1], 1, `${layer}: must rest at full opacity (middle keyframe) so revealed content is never stranded dim`);
+    assert.ok(frames.every(frame => frame >= floor), `${layer}: opacity dips to ${Math.min(...frames)}, below the ${floor} readable floor`);
+  }
 });
 
 test("structural parallax travel is small, and no content layer scales or rotates with scroll", () => {

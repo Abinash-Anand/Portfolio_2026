@@ -100,6 +100,19 @@
     "architecture": {
       "activeLabel": "Active node",
       "descriptionSuffix": " is part of the project’s primary request and data path."
+    },
+    "caseStudyLabels": {
+      "overview": "Overview",
+      "context": "Context",
+      "role": "Role",
+      "decisions": "Technical decisions",
+      "rationale": "Rationale",
+      "alternatives": "Alternatives considered",
+      "implementationDetail": "Implementation notes",
+      "learnings": "Learnings",
+      "metrics": "Metrics",
+      "links": "Related links",
+      "undocumentedResult": "No verified outcome has been documented yet."
     }
   },
   "experience": [

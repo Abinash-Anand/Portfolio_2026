@@ -217,7 +217,7 @@ test("contact and analytics remain generic and omit personal payloads", () => {
 });
 
 test("application source contains no authored fixture identity or registry imports", () => {
-  const prohibited = [fixture.person.name, fixture.contact.email, fixture.contact.calendly, fixture.person.summary, ...fixture.experience.flatMap(item => [item.company, item.description]), ...fixture.projects.flatMap(item => [item.slug, item.metadata.title, item.metadata.summary]), ...fixture.projects.filter(item => item.metadata.caseStudyContent).flatMap(item => [item.metadata.caseStudyContent.results.note])];
+  const prohibited = [fixture.person.name, fixture.contact.email, fixture.contact.calendly, fixture.person.summary, ...fixture.experience.flatMap(item => [item.company, item.description]), ...fixture.projects.flatMap(item => [item.slug, item.metadata.title, item.metadata.summary]), ...fixture.projects.filter(item => item.metadata.caseStudyContent?.results?.note).map(item => item.metadata.caseStudyContent.results.note)];
   function audit(directory) {
     for (const entry of readdirSync(directory, {withFileTypes: true})) {
       if (entry.name === "generated") continue;

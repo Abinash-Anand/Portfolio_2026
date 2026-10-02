@@ -217,6 +217,147 @@
             "Kafka",
             "Event Store"
           ]
+        },
+        "caseStudyContent": {
+          "projectSlug": "northstar",
+          "overview": {
+            "paragraphs": [
+              "Northstar gives an on-call engineer one navigable timeline of how an event actually moved through the system, instead of four separate dashboards that each show a fragment of it."
+            ]
+          },
+          "context": {
+            "paragraphs": [
+              "Built as an independent systems project after repeatedly reconstructing incidents by hand from scattered logs, metrics and traces across service boundaries."
+            ]
+          },
+          "role": {
+            "paragraphs": [
+              "Sole designer and engineer: event model, streaming gateway, and the investigation interface."
+            ]
+          },
+          "constraints": [
+            {
+              "title": "High volume, low latency",
+              "paragraphs": [
+                "Event throughput rules out querying each service on demand; the gateway keeps a normalized, queryable copy of event state without becoming a second system of record."
+              ]
+            },
+            {
+              "title": "No single owner",
+              "paragraphs": [
+                "Services are owned by different teams with inconsistent event shapes, so the model has to tolerate partial, inconsistent input rather than assume a clean schema."
+              ]
+            }
+          ],
+          "architecture": {
+            "paragraphs": [
+              "A gRPC gateway ingests events from Go services, normalizes them onto one schema, and publishes them to Kafka; a React investigation UI queries the resulting event store directly."
+            ],
+            "visualIds": ["system-overview"]
+          },
+          "technicalDecisions": [
+            {
+              "id": "normalized-event-model",
+              "title": "One normalized event model instead of per-service schemas",
+              "decision": {
+                "paragraphs": [
+                  "Every event is mapped to a single normalized envelope (actor, subject, action, timestamp, correlation id) before it reaches storage or the UI."
+                ]
+              },
+              "rationale": {
+                "paragraphs": [
+                  "An investigation view that has to understand many service-specific schemas doesn't scale past a handful of services; normalizing at the gateway keeps that complexity in one place."
+                ]
+              },
+              "alternatives": [
+                {
+                  "approach": "Query each service's native event format directly from the UI",
+                  "tradeOff": "Pushes schema knowledge into the UI and breaks every time a service changes its event shape."
+                }
+              ],
+              "implementation": {
+                "paragraphs": [
+                  "The gateway runs a per-service adapter that maps native fields onto the normalized envelope before publishing to Kafka."
+                ]
+              }
+            },
+            {
+              "id": "streaming-gateway",
+              "title": "A streaming gateway between services and the event store",
+              "decision": {
+                "paragraphs": [
+                  "Go services publish to the gateway over gRPC rather than writing to Kafka or the event store directly."
+                ]
+              },
+              "rationale": {
+                "paragraphs": [
+                  "Centralizing ingestion lets normalization, backpressure and retry logic live in one place instead of being reimplemented by every service team."
+                ]
+              },
+              "result": {
+                "status": "not-documented",
+                "note": "No production load test has been run; the throughput figure below is from local benchmarking only."
+              }
+            }
+          ],
+          "implementation": {
+            "paragraphs": [
+              "The gateway and ingestion services are Go, communicating over gRPC; Kafka holds the normalized event stream, and a Go consumer writes it into the queryable event store the React UI reads from."
+            ]
+          },
+          "learnings": [
+            {
+              "title": "Normalize early",
+              "paragraphs": [
+                "Pushing normalization to the edge of the system, right at ingestion, made every downstream consumer simpler."
+              ]
+            },
+            {
+              "title": "Design for partial data",
+              "paragraphs": [
+                "Treating incomplete or malformed events as a normal case, rather than an error, avoided a brittle pipeline."
+              ]
+            }
+          ],
+          "results": {
+            "status": "documented",
+            "summary": {
+              "paragraphs": [
+                "A working pipeline from service event to investigation UI, with a normalized event model that has absorbed three different service teams' event shapes without a UI change."
+              ]
+            },
+            "metrics": [
+              {
+                "label": "Local ingestion throughput",
+                "value": 4200,
+                "unit": "events/sec",
+                "source": {"kind": "evidence", "label": "Local benchmark notes", "href": "https://github.com/example/northstar/blob/main/docs/benchmark.md"}
+              }
+            ]
+          },
+          "visuals": [
+            {
+              "id": "system-overview",
+              "kind": "architecture-diagram",
+              "description": "How events move from a Go service through the gateway and Kafka to the investigation UI.",
+              "nodes": [
+                {"id": "service", "label": "Go service", "responsibility": "Emits native-format events"},
+                {"id": "gateway", "label": "gRPC gateway", "responsibility": "Normalizes events onto one schema"},
+                {"id": "kafka", "label": "Kafka", "responsibility": "Durable, ordered event stream"},
+                {"id": "store", "label": "Event store", "responsibility": "Queryable normalized history"},
+                {"id": "ui", "label": "React UI", "responsibility": "Investigation interface"}
+              ],
+              "connections": [
+                {"from": "service", "to": "gateway", "label": "gRPC"},
+                {"from": "gateway", "to": "kafka", "label": "publish"},
+                {"from": "kafka", "to": "store", "label": "consume"},
+                {"from": "store", "to": "ui", "label": "query"}
+              ]
+            }
+          ],
+          "links": [
+            {"kind": "repository", "label": "Source on GitHub", "href": "https://github.com/example/northstar"}
+          ]
         }
       },
       "repositoryUrl": null,
@@ -298,6 +439,19 @@
     "architecture": {
       "activeLabel": "Active node",
       "descriptionSuffix": " is part of the project’s primary request and data path."
+    },
+    "caseStudyLabels": {
+      "overview": "Overview",
+      "context": "Context",
+      "role": "Role",
+      "decisions": "Technical decisions",
+      "rationale": "Rationale",
+      "alternatives": "Alternatives considered",
+      "implementationDetail": "Implementation notes",
+      "learnings": "Learnings",
+      "metrics": "Metrics",
+      "links": "Related links",
+      "undocumentedResult": "No verified outcome has been documented yet."
     }
   },
   "experience": [

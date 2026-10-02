@@ -4,6 +4,7 @@ import { useScrollSceneEngine } from "./useParallaxEngine";
 import { layoutStackTiles } from "./stackLayout";
 import { portfolioStore, type PortfolioProjectView } from "./app/application/portfolioProjects";
 import type { Portfolio, TechnicalVisualData, Capability } from "./app/domain/portfolioData";
+import type { CaseStudy, CaseStudySection as CaseStudySectionData, CaseStudyVisual } from "./app/domain/caseStudy";
 import type { PortfolioStore } from "./app/application/PortfolioStore";
 import { noAnalytics, type AnalyticsPort } from "./app/application/AnalyticsPort";
 
@@ -83,9 +84,9 @@ function Navigation({ portfolio, analytics = noAnalytics }: PortfolioProps) {
 function SectionHeader({ index, eyebrow, title, note }: { index: string; eyebrow: string; title: string; note?: string }) {
   return (
     <header className="section-header reveal" data-scroll-scene>
-      <div className="section-kicker reveal-label scroll-layer" data-scroll-layer data-y="8,0,-6"><span>{index}</span><span>{eyebrow}</span></div>
-      <h2 className="reveal-heading scroll-layer type-parallax" data-scroll-layer data-y="14,0,-10" data-damping="0.15">{title}</h2>
-      {note && <p className="section-note reveal-meta scroll-layer" data-scroll-layer data-y="10,0,-12" data-phase="-0.025">{note}</p>}
+      <div className="section-kicker reveal-label scroll-layer" data-scroll-layer data-y="8,0,-6" data-opacity="0.4,1,0.45"><span>{index}</span><span>{eyebrow}</span></div>
+      <h2 className="reveal-heading scroll-layer type-parallax" data-scroll-layer data-y="14,0,-10" data-opacity="0.3,1,0.4" data-damping="0.15" data-phase="-0.015">{title}</h2>
+      {note && <p className="section-note reveal-meta scroll-layer" data-scroll-layer data-y="10,0,-12" data-opacity="0.35,1,0.4" data-phase="-0.025">{note}</p>}
     </header>
   );
 }
@@ -108,14 +109,14 @@ function Hero({ portfolio }: PortfolioProps) {
     <section className="hero" id="top" data-scroll-scene data-scene-origin="visible">
       <div className="hero-sticky">
         <div className="hero-grid scroll-layer" data-scroll-layer data-y="-45,0,85" data-scale="1.025,1,0.99" data-opacity="0.85,1,0.78" aria-hidden="true" />
-        <div className="hero-meta scroll-layer" data-scroll-layer data-y="0,0,-20">
+        <div className="hero-meta scroll-layer" data-scroll-layer data-y="0,0,-20" data-opacity="1,1,0.4">
           <span>{portfolio.person.role}</span>
           <span>{portfolio.person.location}</span>
         </div>
-        <h1 className="hero-title scroll-layer type-parallax" data-scroll-layer data-y="0,0,-40" data-damping="0.13">
+        <h1 className="hero-title scroll-layer type-parallax" data-scroll-layer data-y="0,0,-40" data-opacity="1,1,0.3" data-damping="0.13" data-phase="-0.015">
           {portfolio.person.statement.split("\n").map((line) => <span key={line}>{line}</span>)}
         </h1>
-        <p className="hero-summary scroll-layer" data-scroll-layer data-y="0,0,-60" data-damping="0.18">{portfolio.person.summary}</p>
+        <p className="hero-summary scroll-layer" data-scroll-layer data-y="0,0,-60" data-opacity="1,1,0.25" data-damping="0.18" data-phase="-0.03">{portfolio.person.summary}</p>
         <div className="hero-art scroll-layer" data-scroll-layer data-y="-70,0,115" data-x="42,0,-36" data-scale="1.06,1,0.96" data-rotate="-1.2,0,1.4" data-opacity="0.48,0.78,0.38" data-pointer="18" data-damping="0.11" aria-hidden="true">
           <TechnicalVisual visual={portfolio.hero.visual} large />
         </div>
@@ -173,8 +174,81 @@ function ArchitectureDiagram({ nodes, labels }: { nodes: readonly string[]; labe
   );
 }
 
+type CaseStudyLabels = NonNullable<Portfolio["projectDetail"]["caseStudyLabels"]>;
+type CaseStudyDecisionData = NonNullable<CaseStudy["technicalDecisions"]>[number];
+
+function CaseStudyParagraphs({ section }: { section: CaseStudySectionData }) {
+  return <>{section.title && <h4>{section.title}</h4>}{section.paragraphs.map((paragraph, index) => <p key={index}>{paragraph}</p>)}</>;
+}
+
+function CaseStudyField({ eyebrow, section }: { eyebrow: string; section: CaseStudySectionData }) {
+  return <div className="cs-block"><p className="cs-eyebrow">{eyebrow}</p><CaseStudyParagraphs section={section} /></div>;
+}
+
+function CaseStudyDecision({ decision, labels }: { decision: CaseStudyDecisionData; labels: CaseStudyLabels }) {
+  return (
+    <div className="cs-decision">
+      <h4>{decision.title}</h4>
+      <CaseStudyParagraphs section={decision.decision} />
+      {decision.rationale && <CaseStudyField eyebrow={labels.rationale} section={decision.rationale} />}
+      {decision.alternatives && decision.alternatives.length > 0 && (
+        <div className="cs-block"><p className="cs-eyebrow">{labels.alternatives}</p>
+          <ul className="cs-alternatives">{decision.alternatives.map((alternative, index) => <li key={index}><strong>{alternative.approach}</strong><span>{alternative.tradeOff}</span></li>)}</ul>
+        </div>
+      )}
+      {decision.implementation && <CaseStudyParagraphs section={decision.implementation} />}
+      {decision.learning && <CaseStudyParagraphs section={decision.learning} />}
+    </div>
+  );
+}
+
+function CaseStudyLinks({ links, eyebrow }: { links: NonNullable<CaseStudy["links"]>; eyebrow: string }) {
+  return (
+    <div className="cs-block cs-links">
+      <p className="cs-eyebrow">{eyebrow}</p>
+      <ul>{links.map((link, index) => <li key={index}><a href={link.href} target={link.href.startsWith("http") ? "_blank" : undefined} rel={link.href.startsWith("http") ? "noopener noreferrer" : undefined}>{`${link.label} ↗`}</a></li>)}</ul>
+    </div>
+  );
+}
+
+function CaseStudyResults({ results, labels }: { results: NonNullable<CaseStudy["results"]>; labels: CaseStudyLabels }) {
+  if (results.status === "not-documented") return <div className="cs-results"><p className="cs-note">{results.note ?? labels.undocumentedResult}</p></div>;
+  return (
+    <div className="cs-results">
+      <CaseStudyParagraphs section={results.summary} />
+      {results.metrics && results.metrics.length > 0 && (
+        <div className="cs-block"><p className="cs-eyebrow">{labels.metrics}</p>
+          <ul className="cs-metrics">{results.metrics.map((metric, index) => <li key={index}><b>{metric.value}</b><span>{metric.unit}</span><small>{metric.label}</small></li>)}</ul>
+        </div>
+      )}
+      {results.links && results.links.length > 0 && <CaseStudyLinks links={results.links} eyebrow={labels.links} />}
+    </div>
+  );
+}
+
+function CaseStudyVisualBlock({ visual }: { visual: CaseStudyVisual }) {
+  if (visual.kind === "code-excerpt") return <div className="cs-visual"><p className="cs-visual-caption">{visual.description}</p><pre className="cs-code"><code>{visual.code}</code></pre></div>;
+  if (visual.kind === "terminal-excerpt") return <div className="cs-visual"><p className="cs-visual-caption">{visual.description}</p><pre className="cs-code">{visual.commands.map((command, index) => <Fragment key={index}>{`$ ${command}`}{"\n"}</Fragment>)}{visual.output}</pre></div>;
+  if (visual.kind === "ui-evidence") return <div className="cs-visual"><img className="cs-visual-image" src={visual.assetPath} alt={visual.alt} />{visual.caption && <p className="cs-visual-caption">{visual.caption}</p>}</div>;
+  if (visual.kind === "sequence-flow") return (
+    <div className="cs-visual">
+      <p className="cs-visual-caption">{visual.description}</p>
+      <ul className="cs-connections">{visual.steps.map((step, index) => <li key={index}><span>{visual.participants.find((participant) => participant.id === step.from)?.label ?? step.from}</span><b aria-hidden="true">→</b><span>{visual.participants.find((participant) => participant.id === step.to)?.label ?? step.to}</span>{step.message}</li>)}</ul>
+    </div>
+  );
+  return (
+    <div className="cs-visual">
+      <p className="cs-visual-caption">{visual.description}</p>
+      <ul className="cs-nodes">{visual.nodes.map((node) => <li key={node.id}><strong>{node.label}</strong>{node.responsibility && <span>{node.responsibility}</span>}</li>)}</ul>
+      {visual.connections.length > 0 && <ul className="cs-connections">{visual.connections.map((connection, index) => <li key={index}><span>{visual.nodes.find((node) => node.id === connection.from)?.label ?? connection.from}</span><b aria-hidden="true">→</b><span>{visual.nodes.find((node) => node.id === connection.to)?.label ?? connection.to}</span>{connection.label && <small>{connection.label}</small>}</li>)}</ul>}
+    </div>
+  );
+}
+
 function ProjectDetail({ project, detail, labels }: { project: Project; detail: Portfolio["projectDetail"]; labels: Portfolio["labels"] }) {
   const decisions = [[detail.decisionLabels[0], project.narrative.problem], [detail.decisionLabels[1], project.narrative.constraints], [detail.decisionLabels[2], project.narrative.decision], [detail.decisionLabels[3], project.narrative.result]];
+  const caseStudy = project.caseStudy;
+  const cs = detail.caseStudyLabels;
   const detailRef = useRef<HTMLElement>(null);
   const [activeStep, setActiveStep] = useState(0);
   const storySteps = detail.storySteps;
@@ -201,6 +275,13 @@ function ProjectDetail({ project, detail, labels }: { project: Project; detail: 
         <div className="detail-meta"><span>{project.metadata.year}</span><span>{project.metadata.category}</span><span>{project.metadata.role}</span></div>
         <h2 className="scroll-layer type-parallax" data-scroll-layer data-y="75,0,-85" data-scale="0.96,1,0.94" data-opacity="0.18,1,0.28">{project.metadata.title}</h2>
         <p className="scroll-layer" data-scroll-layer data-y="46,0,-68" data-opacity="0.1,1,0.2" data-phase="-0.03">{project.metadata.description}</p>
+        {caseStudy && cs && (caseStudy.overview || caseStudy.context || caseStudy.role) && (
+          <div className="cs-overview">
+            {caseStudy.overview && <CaseStudyField eyebrow={cs.overview} section={caseStudy.overview} />}
+            {caseStudy.context && <CaseStudyField eyebrow={cs.context} section={caseStudy.context} />}
+            {caseStudy.role && <CaseStudyField eyebrow={cs.role} section={caseStudy.role} />}
+          </div>
+        )}
       </header>
       <div className="detail-art" data-scroll-scene><div className="detail-art-layer scroll-layer" data-scroll-layer data-y="90,0,-90" data-scale="1.08,1,1.06" data-opacity="0.25,1,0.35"><TechnicalVisual visual={project.visual} large /></div></div>
       <section data-story-step="1" data-scroll-scene>
@@ -208,18 +289,43 @@ function ProjectDetail({ project, detail, labels }: { project: Project; detail: 
         <div className="decision-grid">
           {decisions.map(([label, copy], index) => <div className="scroll-layer" data-scroll-layer data-y={`${55 + index * 10},0,${-35 - index * 8}`} data-opacity={`${0.18 + index * 0.05},1,0.35`} data-phase={`${index * -0.025}`} key={label}><span>0{index + 1}</span><h3>{label}</h3><p>{copy}</p></div>)}
         </div>
+        {caseStudy && caseStudy.constraints && caseStudy.constraints.length > 0 && (
+          <div className="cs-block cs-constraints"><p className="cs-eyebrow">{detail.decisionLabels[1]}</p>
+            {caseStudy.constraints.map((constraint, index) => <CaseStudyParagraphs key={index} section={constraint} />)}
+          </div>
+        )}
+        {caseStudy && cs && caseStudy.technicalDecisions && caseStudy.technicalDecisions.length > 0 && (
+          <div className="cs-decisions">
+            <p className="cs-eyebrow">{cs.decisions}</p>
+            {caseStudy.technicalDecisions.map((decision) => <CaseStudyDecision key={decision.id} decision={decision} labels={cs} />)}
+          </div>
+        )}
       </section>
       <section data-story-step="2" data-scroll-scene>
         <p className="detail-label">{detail.sectionLabels[1]}</p>
         <ArchitectureDiagram nodes={project.narrative.architecture} labels={detail.architecture} />
+        {caseStudy && (caseStudy.architecture || (caseStudy.visuals && caseStudy.visuals.length > 0)) && (
+          <div className="cs-architecture-detail">
+            {caseStudy.architecture && <CaseStudyParagraphs section={caseStudy.architecture} />}
+            {caseStudy.visuals?.map((visualItem) => <CaseStudyVisualBlock key={visualItem.id} visual={visualItem} />)}
+          </div>
+        )}
       </section>
       <section className="implementation" data-story-step="3" data-scroll-scene>
         <p className="detail-label">{detail.sectionLabels[2]}</p>
         <div className="scroll-layer" data-scroll-layer data-y="70,0,-55" data-opacity="0.15,1,0.35"><code>{project.implementation.lines.map((line, index) => <Fragment key={index}>{line}{index < project.implementation.lines.length - 1 && <br />}</Fragment>)}</code><p>{project.implementation.summary}</p></div>
+        {caseStudy && cs && caseStudy.implementation && <CaseStudyField eyebrow={cs.implementationDetail} section={caseStudy.implementation} />}
       </section>
       <section className="result-chapter" data-story-step="4" data-scroll-scene>
         <p className="detail-label">{detail.sectionLabels[3]}</p>
         <p className="scroll-layer" data-scroll-layer data-y="90,0,-45" data-scale="0.97,1,0.98" data-opacity="0.08,1,0.35">{project.narrative.result}</p>
+        {caseStudy && cs && caseStudy.results && <CaseStudyResults results={caseStudy.results} labels={cs} />}
+        {caseStudy && cs && caseStudy.learnings && caseStudy.learnings.length > 0 && (
+          <div className="cs-block cs-learnings"><p className="cs-eyebrow">{cs.learnings}</p>
+            {caseStudy.learnings.map((learning, index) => <CaseStudyParagraphs key={index} section={learning} />)}
+          </div>
+        )}
+        {caseStudy && cs && caseStudy.links && caseStudy.links.length > 0 && <CaseStudyLinks links={caseStudy.links} eyebrow={cs.links} />}
       </section>
     </article>
   );
@@ -229,9 +335,9 @@ function ProjectRow({ project, index, onOpen, labels }: { project: Project; inde
   const visualTravel = [44, 52, 48, 58][index % 4];
   return (
     <button className="project-row reveal" onClick={onOpen} data-cursor={labels.projectCursor}>
-      <span className="project-index scroll-layer" data-scroll-layer data-y="6,0,-8">0{index + 1}</span>
-      <span className="project-copy scroll-layer" data-scroll-layer data-y="12,0,-10"><span className="project-title">{project.metadata.title}</span><span className="project-description">{project.metadata.description}</span><span className="project-cta">{`${labels.projectCta} `}<b>↗</b></span></span>
-      <span className="project-meta scroll-layer" data-scroll-layer data-y="8,0,-10"><span>{project.metadata.category}</span><span>{project.metadata.year}</span></span>
+      <span className="project-index scroll-layer" data-scroll-layer data-y="6,0,-8" data-opacity="0.35,1,0.45">0{index + 1}</span>
+      <span className="project-copy scroll-layer" data-scroll-layer data-y="12,0,-10" data-opacity="0.3,1,0.4" data-phase="-0.015"><span className="project-title">{project.metadata.title}</span><span className="project-description">{project.metadata.description}</span><span className="project-cta">{`${labels.projectCta} `}<b>↗</b></span></span>
+      <span className="project-meta scroll-layer" data-scroll-layer data-y="8,0,-10" data-opacity="0.3,1,0.35" data-phase="-0.03"><span>{project.metadata.category}</span><span>{project.metadata.year}</span></span>
       <span className="project-visual">
         <span className="project-visual-backdrop scroll-layer" data-scroll-layer data-y={`${-visualTravel * 0.35},0,${visualTravel * 0.35}`} data-scale="1.08,1.04,1.08" aria-hidden="true" />
         <span className="project-art-layer scroll-layer" data-scroll-layer data-y={`${visualTravel},0,${-visualTravel}`} data-x="22,0,-18" data-scale="1.1,1.04,1.1" data-rotate="-1,0,1"><TechnicalVisual visual={project.visual} /></span>
@@ -264,11 +370,11 @@ function Experience({ portfolio }: PortfolioProps) {
       <div className="experience-list reveal-content">
         {portfolio.experience.map((item, index) => (
           <button key={item.id} className="experience-row reveal" data-scroll-scene onClick={() => setSelected(item)} data-cursor={portfolio.labels.experienceCursor}>
-            <span className="scroll-layer" data-scroll-layer data-x="-4,0,2">0{index + 1}</span>
-            <strong className="scroll-layer" data-scroll-layer data-x="-6,0,3">{item.company}</strong>
-            <span className="scroll-layer" data-scroll-layer data-y="5,0,-3">{item.role}</span>
-            <span className="scroll-layer" data-scroll-layer data-y="4,0,-3">{item.tech}</span>
-            <span className="scroll-layer" data-scroll-layer data-x="4,0,-3">{item.period}</span><b>↗</b>
+            <span className="scroll-layer" data-scroll-layer data-x="-4,0,2" data-opacity="0.55,1,0.6">0{index + 1}</span>
+            <strong className="scroll-layer" data-scroll-layer data-x="-6,0,3" data-opacity="0.4,1,0.5" data-phase="-0.01">{item.company}</strong>
+            <span className="scroll-layer" data-scroll-layer data-y="5,0,-3" data-opacity="0.5,1,0.55" data-phase="-0.02">{item.role}</span>
+            <span className="scroll-layer" data-scroll-layer data-y="4,0,-3" data-opacity="0.5,1,0.55" data-phase="-0.025">{item.tech}</span>
+            <span className="scroll-layer" data-scroll-layer data-x="4,0,-3" data-opacity="0.55,1,0.6" data-phase="-0.03">{item.period}</span><b>↗</b>
           </button>
         ))}
       </div>
@@ -303,7 +409,7 @@ function About({ portfolio }: PortfolioProps) {
   return (
     <section className="about page-section" id="about" data-scroll-scene>
       <SectionHeader {...portfolio.sections.about} />
-      <div className="about-layout reveal scroll-layer" data-scroll-layer data-y="14,0,-12">
+      <div className="about-layout reveal scroll-layer" data-scroll-layer data-y="14,0,-12" data-opacity="0.4,1,0.45">
         <p>{portfolio.about.description}</p>
         <div>{portfolio.education.map((item) => <span key={item.qualification}>{item.qualification}</span>)}<span>{portfolio.about.location}</span><span>{portfolio.about.exploration}</span></div>
       </div>
@@ -318,7 +424,7 @@ function Services({ portfolio, analytics = noAnalytics }: PortfolioProps) {
     <section className="services page-section" id="services" data-scroll-scene>
       <SectionHeader {...portfolio.sections.services} />
       <div className="service-list">
-        {portfolio.services.map((service, index) => <button className={`service-row reveal${selected?.id === service.id ? " is-selected" : ""}`} data-scroll-scene key={service.id} onClick={() => setSelected(service)} data-cursor={portfolio.labels.serviceCursor}><span className="scroll-layer" data-scroll-layer data-x="-6,0,3">0{index + 1}</span><strong className="scroll-layer" data-scroll-layer data-y="10,0,-8">{service.title}</strong><i className="scroll-layer" data-scroll-layer data-x="8,0,-6" data-y="4,0,-6">↗</i></button>)}
+        {portfolio.services.map((service, index) => <button className={`service-row reveal${selected?.id === service.id ? " is-selected" : ""}`} data-scroll-scene key={service.id} onClick={() => setSelected(service)} data-cursor={portfolio.labels.serviceCursor}><span className="scroll-layer" data-scroll-layer data-x="-6,0,3" data-opacity="0.45,1,0.5">0{index + 1}</span><strong className="scroll-layer" data-scroll-layer data-y="10,0,-8" data-opacity="0.3,1,0.4" data-phase="-0.015">{service.title}</strong><i className="scroll-layer" data-scroll-layer data-x="8,0,-6" data-y="4,0,-6">↗</i></button>)}
       </div>
       <DetailOverlay open={!!selected} onClose={() => setSelected(null)} label={portfolio.labels.serviceOverlay} labels={portfolio.labels.overlay}>
         {selected && <article className="simple-detail"><span>{portfolio.labels.capability}</span><h2>{selected.title}</h2><p>{selected.description}</p><a href={`mailto:${portfolio.contact.email}`} onClick={() => analytics.track({name: "contact_click", kind: "email"})}>{`${portfolio.labels.discussProject} `}<b>↗</b></a></article>}
@@ -332,13 +438,13 @@ function Contact({ portfolio, analytics = noAnalytics }: PortfolioProps) {
     <section className="contact" id="contact" data-scroll-scene>
       <div className="contact-sticky reveal">
         <div className="contact-grid scroll-layer" data-scroll-layer data-y="-80,0,90" data-scale="1.04,1,0.98" data-opacity="0.45,0.9,0.5" aria-hidden="true" />
-        <div className="contact-meta reveal-label scroll-layer" data-scroll-layer data-y="10,0,-24"><span>{portfolio.contact.availability}</span><span>{portfolio.contact.location}</span></div>
-        <h2 className="reveal-heading scroll-layer type-parallax" data-scroll-layer data-y="24,0,-20" data-damping="0.14">{portfolio.contact.headingLines.map((line, index) => <Fragment key={index}>{line}{index < portfolio.contact.headingLines.length - 1 && <br />}</Fragment>)}</h2>
+        <div className="contact-meta reveal-label scroll-layer" data-scroll-layer data-y="10,0,-24" data-opacity="0.4,1,0.5"><span>{portfolio.contact.availability}</span><span>{portfolio.contact.location}</span></div>
+        <h2 className="reveal-heading scroll-layer type-parallax" data-scroll-layer data-y="24,0,-20" data-opacity="0.3,1,0.4" data-damping="0.14" data-phase="-0.02">{portfolio.contact.headingLines.map((line, index) => <Fragment key={index}>{line}{index < portfolio.contact.headingLines.length - 1 && <br />}</Fragment>)}</h2>
         <div className={portfolio.contact.calendly ? "contact-actions contact-actions-paired" : "contact-actions"}>
-          <a className="contact-action magnetic scroll-layer" data-scroll-layer data-y="14,0,-24" href={`mailto:${portfolio.contact.email}`} onClick={() => analytics.track({name: "contact_click", kind: "email"})} data-cursor={portfolio.contact.cursor}>{`${portfolio.contact.email} `}<span aria-hidden="true">↗</span></a>
-          {portfolio.contact.calendly && portfolio.contact.booking && <a className="contact-action contact-booking magnetic scroll-layer" data-scroll-layer data-y="14,0,-24" href={portfolio.contact.calendly} target="_blank" rel="noopener noreferrer" aria-label={portfolio.contact.booking.accessibleLabel} onClick={() => analytics.track({name: "contact_click", kind: "calendly"})} data-cursor={portfolio.contact.cursor}><div>{portfolio.contact.booking.label}<small>{portfolio.contact.booking.detail}</small></div><span aria-hidden="true">↗</span></a>}
+          <a className="contact-action magnetic scroll-layer" data-scroll-layer data-y="14,0,-24" data-opacity="0.35,1,0.4" data-phase="-0.03" href={`mailto:${portfolio.contact.email}`} onClick={() => analytics.track({name: "contact_click", kind: "email"})} data-cursor={portfolio.contact.cursor}>{`${portfolio.contact.email} `}<span aria-hidden="true">↗</span></a>
+          {portfolio.contact.calendly && portfolio.contact.booking && <a className="contact-action contact-booking magnetic scroll-layer" data-scroll-layer data-y="14,0,-24" data-opacity="0.35,1,0.4" data-phase="-0.03" href={portfolio.contact.calendly} target="_blank" rel="noopener noreferrer" aria-label={portfolio.contact.booking.accessibleLabel} onClick={() => analytics.track({name: "contact_click", kind: "calendly"})} data-cursor={portfolio.contact.cursor}><div>{portfolio.contact.booking.label}<small>{portfolio.contact.booking.detail}</small></div><span aria-hidden="true">↗</span></a>}
         </div>
-        <div className="social-links reveal-meta scroll-layer" data-scroll-layer data-y="12,0,-26">{portfolio.contact.socials.map((link) => <a key={link.href} href={link.href} onClick={() => analytics.track({name: "contact_click", kind: "social"})}>{`${link.label} ↗`}</a>)}</div>
+        <div className="social-links reveal-meta scroll-layer" data-scroll-layer data-y="12,0,-26" data-opacity="0.4,1,0.5" data-phase="-0.04">{portfolio.contact.socials.map((link) => <a key={link.href} href={link.href} onClick={() => analytics.track({name: "contact_click", kind: "social"})}>{`${link.label} ↗`}</a>)}</div>
       </div>
     </section>
   );

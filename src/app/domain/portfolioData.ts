@@ -42,6 +42,12 @@ export type PortfolioDocument = {
     readonly sectionLabels: readonly [string, string, string, string];
     readonly implementation: ProjectImplementation;
     readonly architecture: { readonly activeLabel: string; readonly descriptionSuffix: string };
+    readonly caseStudyLabels?: {
+      readonly overview: string; readonly context: string; readonly role: string;
+      readonly decisions: string; readonly rationale: string; readonly alternatives: string;
+      readonly implementationDetail: string; readonly learnings: string;
+      readonly metrics: string; readonly links: string; readonly undocumentedResult: string;
+    };
   };
   readonly experience: readonly Experience[];
   readonly technologies: readonly { readonly label: string; readonly items: readonly { readonly name: string; readonly usedIn: string }[] }[];
