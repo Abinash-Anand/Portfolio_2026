@@ -30,7 +30,7 @@ This philosophy is a constraint on future work. The implementation details below
 - **Responsive:** same document-based indicator across layouts, with range recomputed on geometry invalidation. Overlay scrolling does not drive its value.
 - **Reduced motion:** remains functional; it is not a `.scroll-layer` and its informative scale is not disabled.
 
-Project details have a separate five-chapter indicator: an overlay-rooted IntersectionObserver selects the active chapter. Marker color, 4 px horizontal shift, and line scale (`.35` → `1`) transition over 350 ms with the primary ease. It is hidden at ≤800 px; reduced motion makes transitions near-instant without removing chapter state.
+Project details have a separate five-chapter indicator: an overlay-rooted IntersectionObserver selects the active chapter. Marker color, font-weight, 5 px horizontal shift (was 4 px), and line scale/opacity (`.3`→`1` scale, `.6`→`1` opacity) transition over 350 ms with the primary ease — strengthened in this change for clearer wayfinding, same mechanism and timing. It is hidden at ≤800 px; reduced motion makes transitions near-instant without removing chapter state. It remains informational, not clickable. The case-study content additively rendered within each chapter (see `ARCHITECTURE.md`) now also carries its own `data-scroll-layer` opacity/translate, composed the same way as the chapter's pre-existing internals (`decision-grid` cells, `ArchitectureDiagram`, the implementation/result blocks) — same engine, same `.scroll-layer` composition, no new motion system.
 
 ### Section reveal
 

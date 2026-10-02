@@ -747,3 +747,121 @@ bug. `ARCHITECTURE.md` already recorded this as a known boundary ("not yet rende
     "Content pass" entry above) is unchanged and out of scope; the new case-study blocks were deliberately given the
     same `25%` indentation as `.about-layout`/`.architecture>div` to avoid worsening it, not to fix it.
 - This change is local/uncommitted source only; no push, PR, or deployment was performed or requested.
+
+## 2026-10-02 — Project case-study redesign: five-question chapter structure
+
+### Context
+
+Following a reference composition the user supplied (dominant statement, one-line definition, compact evidence row,
+and a five-chapter progression each answering a specific question), the user asked for the project case-study
+overlay to be restructured into a guided technical story, with the existing chapter rail elevated to a primary
+wayfinding device, using only the existing `caseStudyContent` data model and without redesigning the rest of the
+site. This directly follows the earlier same-day change that first rendered `caseStudyContent` at all.
+
+### Changed
+
+- **`src/App.tsx` (`ProjectDetail` and its case-study helper components)** — remapped which `caseStudyContent`
+  fields render in which of the five existing, unchanged `data-story-step` chapters, so each chapter now answers one
+  question instead of the Problem chapter carrying all four compact narrative fields plus the full technical-decision
+  list:
+  - **01 Overview**: added a data-driven two-up "evidence row" (project category and role, reusing existing
+    `metadata.category`/`metadata.role`, captioned by new chrome labels) beneath the existing title/description, then
+    `overview` (styled as a larger "lede" statement) and `role` prose. `context` moved out (see Problem).
+  - **02 Problem**: the compact `decision-grid` now shows only its first two cells (Problem, Constraint) instead of
+    all four — `context` (moved here from Overview) and the richer `constraints` list follow.
+  - **03 Architecture**: the compact grid's third cell (Decision) now renders here as its own single-cell block,
+    directly above the existing `ArchitectureDiagram`; `technicalDecisions` moved here from Problem (each decision's
+    `rationale`/`alternatives`/`implementation`/`result`/`learning` stay together as one unit, rather than splitting
+    a single decision's own implementation notes into the Implementation chapter).
+  - **04 Implementation**: unchanged placement, `implementation` prose added as before.
+  - **05 Result**: the compact grid's fourth cell (Result) is no longer rendered as a separate small cell — the
+    chapter's existing large-statement `<p>{narrative.result}</p>` was already showing the identical text, so this
+    removes a pre-existing duplication rather than any content. `results`/`learnings`/`links` unchanged placement.
+  - `.decision-grid`'s CSS changed from a fixed 4-column grid to `repeat(auto-fit, minmax(240px,1fr))` so it renders
+    correctly with 2 cells (Problem chapter), 1 cell (Architecture chapter), or 4 (any document that still puts them
+    all in one place, e.g. if a future fixture does).
+  - Added one new `projectDetail.caseStudyLabels` field, `category`, for the evidence row's caption (the existing
+    `role` label is reused for its other tile) — same data-driven-chrome pattern as the eleven labels added earlier
+    today, not hardcoded in `App.tsx`.
+- **`src/index.css`** — `.case-progress` (the chapter rail) strengthened for clearer wayfinding: larger gap, 9px
+  (was 8px) type, font-weight shift on the active item, longer/more opaque tick mark, 5px (was 4px) active shift —
+  same mechanism, same 350ms primary-ease transition, still fixed/always-visible and still purely informational
+  (not clickable). Added `.cs-evidence-row`/`.cs-evidence-value`/`.cs-evidence-label` (the new Overview tiles),
+  `.cs-lede` (larger Overview statement type), and a subtle `:hover`/`:focus-within` border treatment on
+  `.cs-nodes li` (the existing per-node responsibility list) for "architecture elements having subtle interaction
+  where the data supports it." Added `data-scroll-layer`/`data-opacity`/`data-phase` to every new case-study block
+  (evidence row, Overview prose, Problem's context+constraints, Architecture's decisions/visuals, Implementation's
+  notes, Result's results/learnings/links), composed through the existing `.scroll-layer` opacity formula exactly
+  like the chapter's pre-existing internals (`decision-grid` cells, `ArchitectureDiagram`, implementation/result
+  blocks) — no new motion system, same engine, same easing.
+- **`src/app/domain/portfolioData.ts` / `src/app/application/portfolioContract.ts`** — added the `category` field to
+  the optional `caseStudyLabels` contract (validated, additive, no document is broken by its absence).
+- **`portfolio.json`, `fixtures/portfolio.fixture.json`** — added the `category` label value.
+
+### Fixed
+
+- **Two indentation bugs caught during this change's own browser verification, before being considered done**: the
+  new Overview evidence row and the Problem chapter's `context` field were initially missing the layout treatment
+  that keeps case-study content clear of the fixed `.case-progress` rail (`grid-column:2` for the former, since
+  `<header>` is a grid container unlike the other chapters; `margin-left:25%` for the latter, since `<section>`
+  chapters are plain blocks) — both produced visible text overlap with the rail in a first-pass screenshot. Also
+  fixed `.cs-links` (used by `caseStudy.links` in the Result chapter), which had the same indentation gap from the
+  *earlier* same-day change and had gone uncaught then. Root-caused each to its exact DOM context (grid vs. block)
+  rather than applying a blanket fix, and verified visually afterward. A new generic `.cs-indent` utility class
+  centralizes this for future additions in a block context.
+
+### Preserved
+
+- The five `data-story-step` chapter anchors and their `IntersectionObserver` (unchanged `rootMargin`/`threshold`),
+  `ArchitectureDiagram`'s hover/focus/click activation (verified still works after the restructure — clicking a
+  node updates the active label and explanatory text exactly as before), `DetailOverlay`'s portal/body-scroll-lock/
+  Close/Escape/focus-restoration, the narrative/implementation fallback for projects without `caseStudyContent`
+  (byte-for-byte unchanged rendering, confirmed against both a dev-fixture project and the real Eber-app data, which
+  has no `caseStudyContent`), responsive behavior (chapter rail hidden ≤800px per existing baseline, two-column
+  evidence row reflows without a media-query override needed), and reduced-motion (the existing blanket
+  `.scroll-layer{opacity:1!important}` rule neutralizes all new case-study motion automatically, confirmed by
+  emulation). No change to the main page flow, the motion engine, or any system outside the project-detail overlay.
+
+### Regression Testing
+
+- `pnpm exec tsc --noEmit` and the strict build-script check: both passed, no errors.
+- `node --experimental-strip-types --test tests/*.test.mjs`: 36 of 36 passed, 0 failed, 0 skipped.
+- `PORTFOLIO_DATA_MODE=fixture node scripts/sync-github.ts && vite build`: succeeded.
+- **Primary test case verification against the real SynthGraph and Eber-app data** (per this request): the dev
+  fixture's `northstar`/`code-sentinel` entries were temporarily swapped for the exact real `portfolio.json`
+  content from the `SynthGraph` and `Eber-app` pinned repositories (shared with this session earlier, not
+  fabricated), verified interactively with Playwright-driven Chromium against the dev server, then the fixture was
+  restored from a pre-swap backup (confirmed via `git diff` showing only the intended files changed). **Simulated
+  input only, not physical devices, not the live site:**
+  - Rail labels and active-chapter advancement: correct at every chapter (`01 OVERVIEW` → `05 RESULT`), confirmed
+    the active item changes via the existing `IntersectionObserver` while scrolling, with no manual intervention.
+  - SynthGraph (rich): evidence row showed "Data lineage platform" / "Builder & core maintainer" correctly
+    captioned; Overview lede rendered; Problem chapter showed exactly 2 compact cells plus Context, zero technical
+    decisions; Architecture chapter showed exactly 1 compact cell (Decision) plus all 4 of SynthGraph's real
+    technical decisions and the 4-node/3-connection architecture diagram; clicking an architecture node updated its
+    active state and label text correctly; Result chapter showed the documented results summary (0 metrics, matching
+    SynthGraph's real data which has none), 3 links, and 4 learnings. Escape closed the overlay. Zero console errors.
+  - Eber-app (no `caseStudyContent`): zero `cs-*` elements rendered; Problem/Architecture chapters still correctly
+    show 2/1 compact cells from the unchanged narrative split. Zero console errors.
+  - Keyboard focus: a real `Tab`-sequence (not scripted `.focus()`, which does not reliably trigger
+    `:focus-visible` in Chromium) landed on an architecture-node button and showed the existing, unchanged 1px
+    `:focus-visible` outline after its pre-existing 300ms transition completed.
+  - Reduced-motion emulation: new case-study block opacity forced to 1 as expected.
+  - 390px viewport: no horizontal overflow; evidence row reflows to two narrow columns correctly with no media query
+    needed; chapter rail correctly hidden per existing ≤800px baseline.
+- **Final confirmation pass against the actual (post-restore) fixture content**: Northstar (rich, from the earlier
+  same-day change) showed 2 technical decisions correctly in the Architecture chapter; Facility Importer (sparse,
+  pre-existing `not-documented` example) showed only its present fields (Problem/Constraint cells, one minimal
+  technical decision, the data-driven "no verified outcome" note) with no empty-section headings for absent fields
+  (no Overview block, no Architecture-detail block, no Learnings/Links blocks); Code Sentinel (no `caseStudyContent`
+  at all) rendered zero `cs-*` elements. Zero console errors across all three.
+- **Not performed:** physical trackpad/mouse/touch input, cross-browser/device certification, a measured
+  frame-rate/performance recording, the real authenticated GitHub sync/production build, and a live-site check.
+
+### Notes
+
+- This is local/uncommitted-at-write-time source work (committed separately); no push, PR, or deployment is implied
+  by this entry.
+- The `caseStudyLabels` schema (eleven fields from the earlier same-day entry, one more here) is now used across
+  all five chapters; a document that omits it continues to render the compact narrative/implementation fallback
+  only, exactly as before either change.

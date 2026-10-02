@@ -105,6 +105,7 @@
       "overview": "Overview",
       "context": "Context",
       "role": "Role",
+      "category": "Category",
       "decisions": "Technical decisions",
       "rationale": "Rationale",
       "alternatives": "Alternatives considered",
