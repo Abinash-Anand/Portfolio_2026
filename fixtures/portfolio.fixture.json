@@ -446,13 +446,22 @@
       "role": "Role",
       "category": "Category",
       "decisions": "Technical decisions",
-      "rationale": "Rationale",
-      "alternatives": "Alternatives considered",
+      "rationale": "Why",
+      "alternatives": "Alternative",
+      "chosen": "Chosen approach",
       "implementationDetail": "Implementation notes",
+      "technicalSurface": "Technical surface",
       "learnings": "Learnings",
       "metrics": "Metrics",
       "links": "Related links",
-      "undocumentedResult": "No verified outcome has been documented yet."
+      "undocumentedResult": "No verified outcome has been documented yet.",
+      "questions": [
+        "What is this?",
+        "Why did this need to exist?",
+        "How does it work?",
+        "What did I actually build?",
+        "What changed?"
+      ]
     }
   },
   "experience": [

@@ -54,7 +54,7 @@ const document: Check<PortfolioDocument> = object({
   hero: object({visual, scrollCue: object({label: text, section})}),
   sections: object({projects: heading, experience: heading, stack: heading, about: heading, services: heading}),
   projects: array(object({slug: text, metadata, repositoryUrl: nullable(url), liveUrl: nullable(url)})),
-  projectDetail: object({storySteps: tuple(5), decisionLabels: tuple(4), sectionLabels: tuple(4), implementation, architecture: object({activeLabel: text, descriptionSuffix: text}), caseStudyLabels: optional(object({overview: text, context: text, role: text, category: text, decisions: text, rationale: text, alternatives: text, implementationDetail: text, learnings: text, metrics: text, links: text, undocumentedResult: text}))}),
+  projectDetail: object({storySteps: tuple(5), decisionLabels: tuple(4), sectionLabels: tuple(4), implementation, architecture: object({activeLabel: text, descriptionSuffix: text}), caseStudyLabels: optional(object({overview: text, context: text, role: text, category: text, decisions: text, rationale: text, alternatives: text, chosen: text, implementationDetail: text, technicalSurface: text, learnings: text, metrics: text, links: text, undocumentedResult: text, questions: tuple(5)}))}),
   experience: array(object({id: text, company: text, role: text, period: text, tech: text, description: text})),
   technologies: array(object({label: text, items: array(object({name: text, usedIn: text}))})),
   education: array(object({qualification: text})),

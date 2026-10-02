@@ -865,3 +865,146 @@ site. This directly follows the earlier same-day change that first rendered `cas
 - The `caseStudyLabels` schema (eleven fields from the earlier same-day entry, one more here) is now used across
   all five chapters; a document that omits it continues to render the compact narrative/implementation fallback
   only, exactly as before either change.
+
+## 2026-10-02 — Project-detail visual composition: premium editorial rework
+
+### Context
+
+The user supplied a detailed visual-composition specification (exact layout proportions, a full typography scale,
+per-chapter content rules, a vertical-rhythm directive, and a repeated "no generic SaaS cards" constraint) asking
+that the project-detail/case-study UI — structurally correct after the same-day chapter-remapping change above, but
+"still too document-like" — be refined into a premium editorial technical walkthrough consistent with the main
+portfolio, using only the existing `ProjectDetail` system, data contracts, and motion engine, and explicitly scoped
+to the project-detail experience only.
+
+### Changed
+
+- **`src/App.tsx` (`ProjectDetail` and its helpers)** — restructured the component's DOM rather than its data
+  mapping (which was already correct from the prior entry):
+  - Split the overlay into a `.detail-intro` header (kicker/title/summary/meta — the "orientation screen", no
+    overview prose dumped here) and a `.detail-body` CSS Grid pairing the chapter rail with `.detail-chapters`.
+  - The chapter rail (`.case-progress`) changed from viewport-pinned `position:fixed` to a `position:sticky` grid
+    column. This was a structural fix, not a styling tweak: every prior round's rail/content-collision bugs were a
+    direct consequence of a fixed-position rail needing ad-hoc `margin-left`/`grid-column` compensation on every new
+    content block; a sticky grid column cannot overlap its sibling column, eliminating the whole bug class.
+  - Added `CaseStudyDiagram`, a new interactive component for graph-shaped `CaseStudyVisual`s (`architecture-diagram`,
+    `request-flow`, `data-flow`, `component-map`, `deployment-topology`): hover/focus/click a node to invert it, mute
+    unrelated nodes, highlight its connections, and reveal its `responsibility` text — the same interaction pattern
+    `ArchitectureDiagram` already used, extended to case-study-authored graphs rather than duplicated as a competing
+    mechanism. `CaseStudyVisualBlock` now delegates graph-kind visuals to it and keeps its existing static rendering
+    for the other three visual kinds (code/terminal excerpt, UI evidence, sequence flow).
+  - Added `TechnicalSurface` (a thin-ruled list, not a card) and `EvidenceGrid` (a non-card grid of short claims,
+    splitting a leading numeral/stat from its caption when present, e.g. `"230+"` / `"automated tests gated by
+    CI/CD"`, otherwise rendering plain body text) — both newly consuming `project.metadata.stack` and
+    `project.metadata.highlights`, fields `ProjectDetail` had never rendered before despite already being validated,
+    normalized, and present on every project. Both render whenever `caseStudyLabels` is present, independent of
+    whether a project supplies `caseStudyContent`, so this elevates every project's fallback experience, not only
+    documented ones — see Notes.
+  - Restyled `CaseStudyDecision` with a numbered column (`01 DECISION` / why / alternative / chosen, per the user's
+    spec) and **moved the full `technicalDecisions` list from the Architecture chapter to Implementation**, so "what
+    was engineered" and "why each technical choice was made" live together, per the user's explicit instruction.
+  - Rebuilt chapter content per the spec: Overview keeps its evidence row; Problem now states `narrative.problem`
+    and splits `context`/`constraints` into a two-column row (`.cs-split-row`, collapsing to one column via
+    `:has(>:only-child)` when only one side has content); Architecture states `narrative.decision` inline above the
+    diagrams; Implementation gained the Technical Surface and the relocated decisions list; Result gained the
+    evidence grid above the existing results/learnings/links.
+  - Added a new `caseStudyLabels.questions` (five-tuple) field, rendered as a small per-chapter prompt
+    (`cs.questions[n]`) beneath each chapter label — purely data-driven chrome, same pattern as every other label in
+    this object.
+- **`src/index.css`** — full rewrite of the project-detail section to the user's typography/spacing scale: modal
+  width `min(1180px, calc(100vw - 48px))`, 48px side padding, chapter titles/statements on a `clamp()` scale,
+  11px/10px rail type, 1px rules in place of card borders throughout (`.cs-split-row`, `.cs-decisions`,
+  `.cs-surface`, `.cs-evidence-grid` all use thin top/left/right rules and whitespace, never `border-radius` or a
+  filled card background), and the explicit chapter/section vertical-rhythm values from the spec. Rewrote the
+  `≤800px` responsive block for this section: the chapter rail changes from `display:none` to a horizontal,
+  sticky, horizontally-scrollable indicator (`flex-direction:row;overflow-x:auto`) per the spec's explicit
+  instruction not to simply hide it on mobile; `.detail-body` collapses to a single column; the split row, evidence
+  grid, and decision units collapse to one column/stacked; diagram node flows reflow vertically. A separate,
+  already-dead `≤800px` block further down the stylesheet (referencing classes removed by the DOM restructure) was
+  consolidated into the new one rather than left as an orphaned duplicate.
+- Motion: every new/restructured block reuses the existing `.scroll-layer`/`data-scroll-layer`/`data-y`/
+  `data-opacity`/`data-phase` composition and the engine's existing easing — no new animation system, no per-word
+  or per-paragraph motion. Stagger ordering (label → statement → body → evidence) follows the existing per-element
+  `data-phase` offsets used throughout `ProjectDetail` already; this change did not introduce a new stagger
+  mechanism, only applied the existing one to the restructured blocks.
+
+### Fixed
+
+- **Possible duplicate-label bug, caught during this change's own final review (before being considered done):**
+  the Architecture chapter's `<p className="chapter-label">` was reading `detail.sectionLabels[2]` — the same index
+  Implementation uses — instead of `sectionLabels[1]`, so both chapters would have displayed "03 / Technical
+  implementation" as their label. Root-caused by re-reading the actual chapter JSX rather than assuming the prior
+  summary's description was correct, fixed to `sectionLabels[1]`, and reverified in-browser (see Regression
+  Testing) that Architecture now shows "02 / System architecture" and Implementation shows "03 / Technical
+  implementation" as two visually distinct labels.
+- **CSS selector collision caught by visual screenshot review, not automated assertions:** `.cs-evidence-grid span`
+  was broad enough to also style `EvidenceGrid`'s plain-sentence fallback span (used when a highlight has no leading
+  numeral), rendering full sentences as tiny uppercase caption text instead of normal readable body copy. Fixed by
+  giving the caption its own `cs-evidence-caption` class and scoping the CSS selector to it specifically, leaving
+  the plain-sentence span's own, separate styling untouched. This was not caught by the Playwright script's element-
+  count assertions, only by reading the resulting screenshot.
+
+### Preserved
+
+- The existing modal lifecycle (`DetailOverlay` portal, body-scroll lock, Close/Escape, focus save-and-restore),
+  the five `data-story-step` anchors and their `IntersectionObserver`-driven chapter indicator, `ArchitectureDiagram`
+  itself (unchanged, not replaced by `CaseStudyDiagram`), the fallback rendering for projects without
+  `caseStudyContent`, reduced-motion behavior (the existing blanket `.scroll-layer{opacity:1!important}` rule still
+  neutralizes every new block's motion automatically), and keyboard/focus behavior. No change to the main page,
+  motion engine, or any system outside the project-detail overlay, per the user's explicit scope boundary.
+
+### Regression Testing
+
+- `pnpm exec tsc --noEmit`: passed, no errors (checked both before and after the Architecture-label fix above).
+- `node --experimental-strip-types --test tests/*.test.mjs`: 36 of 36 passed, 0 failed.
+- `PORTFOLIO_DATA_MODE=fixture node scripts/sync-github.ts && vite build`: succeeded (run after the Architecture-
+  label fix and after the fixture was restored to its real, non-swapped content).
+- **Verification against real SynthGraph data, then real Eber-app data, then a fallback project, per the user's
+  explicit request order.** The dev fixture's `northstar`/`code-sentinel` entries were temporarily swapped for the
+  real `portfolio.json` content from the `SynthGraph` and `Eber-app` pinned repositories (the same source used for
+  the prior entry's verification, not fabricated), verified interactively with Playwright-driven Chromium against
+  the dev server, then the fixture was restored from a pre-swap backup (confirmed via `git diff` showing only the
+  intended `caseStudyLabels` schema additions remained changed). **Simulated input only, not physical devices, not
+  the live site:**
+  - SynthGraph (rich): rail item count and active-item text correct at open; evidence row showed the real category/
+    role values; Overview statement rendered; Problem chapter showed exactly 2 split columns (context, constraints);
+    Architecture chapter showed 4 `CaseStudyDiagram` nodes and confirmed **zero** `.cs-decision` elements present
+    (the relocation away from this chapter); hovering a diagram node produced the `active` class, muted its
+    unrelated siblings, lit its connections, and showed its responsibility text; Implementation chapter showed 7
+    Technical Surface items (SynthGraph's real stack) and 4 technical decisions (the relocated list); Result chapter
+    showed 5 evidence-grid tiles (SynthGraph's real highlights) with the rail's active item correctly advanced to
+    "05 RESULT"; Escape closed the overlay; zero console errors.
+  - Eber-app (no `caseStudyContent`): zero console errors; fallback statement (`metadata.description`) rendered
+    correctly; screenshot-reviewed and confirmed clean (title/summary/meta/diagram render with no stray `cs-*`
+    content).
+  - 390px mobile (SynthGraph): no horizontal overflow; the chapter rail is now visible as a horizontal sticky
+    indicator (previously hidden) — confirmed both by an `isVisible()` check and by screenshot, including a
+    mid-scroll screenshot showing the architecture diagram's node flow correctly reflowed to a vertical column with
+    `↓` connectors between stacked nodes, and the rail's active state correctly reading "03 ARCHITECTURE"; zero
+    console errors.
+  - Keyboard focus: a real `Tab`-sequence (not scripted `.focus()`, which does not reliably trigger `:focus-visible`
+    in Chromium) landed on a `CaseStudyDiagram` node button and showed a non-`none` `:focus-visible` outline after
+    its existing CSS transition completed.
+  - Reduced-motion emulation: `.cs-decisions` opacity forced to 1 as expected, confirming the existing blanket
+    override still neutralizes the relocated decisions list's motion.
+  - **Final confirmation pass against the actual (post-restore, non-swapped) dev fixture**, run after the
+    Architecture-label fix: opened Northstar (the fixture's richest project), confirmed the Architecture chapter's
+    label now reads "02 / System architecture" and the Implementation chapter's reads "03 / Technical
+    implementation" — two distinct strings, where before the fix both would have read the Implementation value;
+    confirmed Escape-close and zero console errors; screenshot-reviewed the fallback intro rendering.
+- **Not performed:** physical trackpad/mouse/touch input, cross-browser/device certification, a measured frame-rate
+  or performance recording, the real authenticated GitHub sync/production build, and a live-site check. The
+  dev-fixture projects (Northstar, Code Sentinel, Facility Importer, VC Brain) have no `caseStudyContent` of their
+  own, so this round's rich-content verification relied on the temporarily-swapped real repository data rather than
+  the shipped fixture; the shipped fixture was only used to confirm the fallback path and the label fix.
+
+### Notes
+
+- **Design decision surfaced for confirmation, not assumed:** Technical Surface and the evidence grid are gated on
+  the document-level `caseStudyLabels` being present, not on a project's own `caseStudyContent`. This means they
+  render for every project that has baseline `metadata.stack`/`metadata.highlights` values, including projects with
+  no case-study document at all (verified against Eber-app above, which has `caseStudyContent` undefined but would
+  still show these two blocks if its metadata carried stack/highlights values). This was a deliberate reading of the
+  user's "whenever the JSON contains a concrete implementation fact, prefer a visual/evidence treatment" instruction
+  — applied to the baseline metadata every project already has, not only to rich case studies — but it is called out
+  here explicitly in case the intent was for these to stay scoped to documented case studies only.

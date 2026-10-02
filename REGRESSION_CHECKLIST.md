@@ -87,22 +87,24 @@ Additional shared checks:
 - [ ] Hover a project while scrolling and reversing direction; copy/art motion remains composed rather than overwritten.
 - [ ] Desktop rows stick within their tracks; ≤800 px rows no longer stick and remain directly tappable.
 - [ ] Architecture nodes activate by hover, focus, and click and update explanatory text.
-- [ ] Desktop chapter markers follow Overview → Problem → Architecture → Implementation → Result; they are intentionally hidden at ≤800 px.
+- [ ] Desktop chapter markers follow Overview → Problem → Architecture → Implementation → Result in a sticky rail beside the content grid; at ≤800 px they become a horizontal, sticky, scrollable indicator instead of disappearing.
 - [ ] Document progress and detail chapter state remain separate during nested scrolling.
 
 ### Case-study content (additive, present only when a project's portfolio.json supplies caseStudyContent)
 
-Each chapter answers one question; verify a rich project (e.g. Northstar in the dev fixture) shows the right content in the right chapter, never duplicated across chapters:
+Each chapter answers one question (shown as a small `caseStudyLabels.questions[n]` prompt when present); verify a rich project (e.g. SynthGraph's real repository data, or Northstar in the dev fixture) shows the right content in the right chapter, never duplicated across chapters:
 
-- [ ] **01 Overview**: existing title/description, plus a two-up evidence row (category, role, data-driven captions) and overview/role prose.
-- [ ] **02 Problem**: existing compact Problem/Constraint cells (now 2, not 4), plus context and the richer constraints list. No technical decisions appear here.
-- [ ] **03 Architecture**: existing compact Decision cell (now its own single-cell block) and the existing `ArchitectureDiagram` (hover/focus/click activation unchanged), plus architecture prose, structured visuals, and the full technical-decisions list (each with rationale/alternatives/implementation/result/learning where supplied).
-- [ ] **04 Implementation**: existing implementation code/summary, plus implementation prose.
-- [ ] **05 Result**: existing large result statement (the sole place `narrative.result` appears — no longer duplicated in a small Problem-chapter cell), plus results (summary/metrics/links), learnings, and top-level links.
-- [ ] A project without `caseStudyContent` (e.g. Code Sentinel) renders no `cs-*` elements at all; its Problem/Architecture cells still show the unchanged 2-cell/1-cell compact narrative split.
+- [ ] **01 Overview**: existing title/description, plus a two-up evidence row (category, role, data-driven captions) and overview/role prose. No arbitrary empty gap before the evidence row.
+- [ ] **02 Problem**: `narrative.problem` as the chapter statement, problem prose, then a two-column split row (context beside constraints; falls back to `narrative.constraints` when `constraints` is absent, and collapses to one column when only one side has content — no empty second column).
+- [ ] **03 Architecture**: `narrative.decision` framing, the existing `ArchitectureDiagram` (hover/focus/click activation unchanged), then any graph-shaped visuals rendered as interactive `CaseStudyDiagram`s (hover/focus/click a node: it inverts, unrelated nodes mute, its connections highlight, its responsibility text appears — verify with a real pointer hover and with keyboard Tab, not just `.focus()`), any remaining visual kinds via the existing static block, then architecture prose. **No technical-decisions list appears in this chapter** (moved to Implementation — verify it is actually absent here, not just unlabeled).
+- [ ] **04 Implementation**: implementation prose, the existing implementation code/summary, a Technical Surface list (from `metadata.stack`, thin-ruled, no boxes), and the full technical-decisions list (numbered units, each with rationale/alternatives/implementation/result/learning where supplied) — this is where technical decisions now live.
+- [ ] **05 Result**: existing large result statement (the sole place `narrative.result` appears), a non-card evidence grid (from `metadata.highlights`; a leading numeral/stat renders large with its remainder as a caption, a plain sentence renders as normal body text — check this split visually, not just by element count), then results (summary/metrics/links), learnings, and top-level links.
+- [ ] A project without `caseStudyContent` (e.g. Eber, Code Sentinel) renders no `cs-*` elements from `caseStudyContent` itself, but — since `caseStudyLabels` is document-level chrome, not gated on a project's own case study — the evidence row, Technical Surface, and evidence grid still render from baseline `metadata` fields alone; confirm this is the intended, correct elevation of the universal fallback rather than a leak of rich-project chrome onto bare projects.
 - [ ] A project with a sparse/`not-documented` case study (e.g. Facility Importer) shows the data-driven "no verified outcome" copy, not an invented result, and no empty section headings for absent fields.
-- [ ] The chapter rail ("01 OVERVIEW" … "05 RESULT") stays visible throughout scroll, its active item advances naturally with the IntersectionObserver as each chapter centers, and it remains purely informational (not clickable). The five `data-story-step` anchors, nested overlay scrolling, Close/Escape, and focus restoration all work exactly as before.
-- [ ] No new case-study block overlaps the fixed case-progress rail at any width ≥801 px; all reflow correctly at ≤800 px (rail hidden, per existing baseline) with no horizontal overflow.
+- [ ] The chapter rail ("01 OVERVIEW" … "05 RESULT") stays visible throughout scroll as a sticky grid column beside the content (not viewport-fixed), its active item advances naturally with the IntersectionObserver as each chapter centers, and it remains purely informational (not clickable). The five `data-story-step` anchors, nested overlay scrolling, Close/Escape, and focus restoration all work exactly as before.
+- [ ] No case-study block overlaps the rail at any width — this should no longer require per-block margin/grid-column fixes, since the rail/content relationship is now a single CSS Grid with a sticky column rather than a fixed-position rail requiring ad-hoc indentation.
+- [ ] At ≤800 px: the rail becomes a horizontal sticky scrollable indicator (not hidden), the two-column Problem split and the evidence grid collapse to one column, technical-decision units stack vertically, and architecture diagram node flows reflow vertically — with no horizontal page overflow at any point.
+- [ ] Vertical rhythm between chapters and within each chapter looks intentional, not arbitrary — no very large unexplained empty gaps between a chapter's label/statement/body/evidence.
 
 ## Experience
 
