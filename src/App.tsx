@@ -275,10 +275,17 @@ function ProjectDetail({ project, detail, labels }: { project: Project; detail: 
         <div className="detail-meta"><span>{project.metadata.year}</span><span>{project.metadata.category}</span><span>{project.metadata.role}</span></div>
         <h2 className="scroll-layer type-parallax" data-scroll-layer data-y="75,0,-85" data-scale="0.96,1,0.94" data-opacity="0.18,1,0.28">{project.metadata.title}</h2>
         <p className="scroll-layer" data-scroll-layer data-y="46,0,-68" data-opacity="0.1,1,0.2" data-phase="-0.03">{project.metadata.description}</p>
-        {caseStudy && cs && (caseStudy.overview || caseStudy.context || caseStudy.role) && (
-          <div className="cs-overview">
-            {caseStudy.overview && <CaseStudyField eyebrow={cs.overview} section={caseStudy.overview} />}
-            {caseStudy.context && <CaseStudyField eyebrow={cs.context} section={caseStudy.context} />}
+        {caseStudy && cs && (
+          <div className="cs-evidence-wrap scroll-layer" data-scroll-layer data-y="40,0,-30" data-opacity="0.2,1,0.3" data-phase="-0.01">
+            <div className="cs-evidence-row">
+              <div><p className="cs-evidence-value">{project.metadata.category}</p><p className="cs-evidence-label">{cs.category}</p></div>
+              <div><p className="cs-evidence-value">{project.metadata.role}</p><p className="cs-evidence-label">{cs.role}</p></div>
+            </div>
+          </div>
+        )}
+        {caseStudy && cs && (caseStudy.overview || caseStudy.role) && (
+          <div className="cs-overview scroll-layer" data-scroll-layer data-y="45,0,-35" data-opacity="0.15,1,0.3" data-phase="-0.02">
+            {caseStudy.overview && <div className="cs-block cs-lede"><p className="cs-eyebrow">{cs.overview}</p><CaseStudyParagraphs section={caseStudy.overview} /></div>}
             {caseStudy.role && <CaseStudyField eyebrow={cs.role} section={caseStudy.role} />}
           </div>
         )}
@@ -287,45 +294,53 @@ function ProjectDetail({ project, detail, labels }: { project: Project; detail: 
       <section data-story-step="1" data-scroll-scene>
         <p className="detail-label">{detail.sectionLabels[0]}</p>
         <div className="decision-grid">
-          {decisions.map(([label, copy], index) => <div className="scroll-layer" data-scroll-layer data-y={`${55 + index * 10},0,${-35 - index * 8}`} data-opacity={`${0.18 + index * 0.05},1,0.35`} data-phase={`${index * -0.025}`} key={label}><span>0{index + 1}</span><h3>{label}</h3><p>{copy}</p></div>)}
+          {decisions.slice(0, 2).map(([label, copy], index) => <div className="scroll-layer" data-scroll-layer data-y={`${55 + index * 10},0,${-35 - index * 8}`} data-opacity={`${0.18 + index * 0.05},1,0.35`} data-phase={`${index * -0.025}`} key={label}><span>0{index + 1}</span><h3>{label}</h3><p>{copy}</p></div>)}
         </div>
-        {caseStudy && caseStudy.constraints && caseStudy.constraints.length > 0 && (
-          <div className="cs-block cs-constraints"><p className="cs-eyebrow">{detail.decisionLabels[1]}</p>
-            {caseStudy.constraints.map((constraint, index) => <CaseStudyParagraphs key={index} section={constraint} />)}
-          </div>
-        )}
-        {caseStudy && cs && caseStudy.technicalDecisions && caseStudy.technicalDecisions.length > 0 && (
-          <div className="cs-decisions">
-            <p className="cs-eyebrow">{cs.decisions}</p>
-            {caseStudy.technicalDecisions.map((decision) => <CaseStudyDecision key={decision.id} decision={decision} labels={cs} />)}
+        {caseStudy && cs && (caseStudy.context || (caseStudy.constraints && caseStudy.constraints.length > 0)) && (
+          <div className="cs-indent scroll-layer" data-scroll-layer data-y="50,0,-35" data-opacity="0.18,1,0.32" data-phase="-0.015">
+            {caseStudy.context && <CaseStudyField eyebrow={cs.context} section={caseStudy.context} />}
+            {caseStudy.constraints && caseStudy.constraints.length > 0 && (
+              <div className="cs-block cs-constraints"><p className="cs-eyebrow">{detail.decisionLabels[1]}</p>
+                {caseStudy.constraints.map((constraint, index) => <CaseStudyParagraphs key={index} section={constraint} />)}
+              </div>
+            )}
           </div>
         )}
       </section>
       <section data-story-step="2" data-scroll-scene>
         <p className="detail-label">{detail.sectionLabels[1]}</p>
+        <div className="decision-grid">
+          <div className="scroll-layer" data-scroll-layer data-y="55,0,-40" data-opacity="0.2,1,0.33"><span>03</span><h3>{decisions[2][0]}</h3><p>{decisions[2][1]}</p></div>
+        </div>
         <ArchitectureDiagram nodes={project.narrative.architecture} labels={detail.architecture} />
-        {caseStudy && (caseStudy.architecture || (caseStudy.visuals && caseStudy.visuals.length > 0)) && (
-          <div className="cs-architecture-detail">
-            {caseStudy.architecture && <CaseStudyParagraphs section={caseStudy.architecture} />}
+        {caseStudy && caseStudy.architecture && (
+          <div className="cs-architecture-detail scroll-layer" data-scroll-layer data-y="45,0,-35" data-opacity="0.18,1,0.32" data-phase="-0.015">
+            <CaseStudyParagraphs section={caseStudy.architecture} />
             {caseStudy.visuals?.map((visualItem) => <CaseStudyVisualBlock key={visualItem.id} visual={visualItem} />)}
+          </div>
+        )}
+        {caseStudy && cs && caseStudy.technicalDecisions && caseStudy.technicalDecisions.length > 0 && (
+          <div className="cs-decisions scroll-layer" data-scroll-layer data-y="50,0,-35" data-opacity="0.15,1,0.3" data-phase="-0.02">
+            <p className="cs-eyebrow">{cs.decisions}</p>
+            {caseStudy.technicalDecisions.map((decision) => <CaseStudyDecision key={decision.id} decision={decision} labels={cs} />)}
           </div>
         )}
       </section>
       <section className="implementation" data-story-step="3" data-scroll-scene>
         <p className="detail-label">{detail.sectionLabels[2]}</p>
         <div className="scroll-layer" data-scroll-layer data-y="70,0,-55" data-opacity="0.15,1,0.35"><code>{project.implementation.lines.map((line, index) => <Fragment key={index}>{line}{index < project.implementation.lines.length - 1 && <br />}</Fragment>)}</code><p>{project.implementation.summary}</p></div>
-        {caseStudy && cs && caseStudy.implementation && <CaseStudyField eyebrow={cs.implementationDetail} section={caseStudy.implementation} />}
+        {caseStudy && cs && caseStudy.implementation && <div className="scroll-layer" data-scroll-layer data-y="40,0,-30" data-opacity="0.2,1,0.3"><CaseStudyField eyebrow={cs.implementationDetail} section={caseStudy.implementation} /></div>}
       </section>
       <section className="result-chapter" data-story-step="4" data-scroll-scene>
         <p className="detail-label">{detail.sectionLabels[3]}</p>
         <p className="scroll-layer" data-scroll-layer data-y="90,0,-45" data-scale="0.97,1,0.98" data-opacity="0.08,1,0.35">{project.narrative.result}</p>
-        {caseStudy && cs && caseStudy.results && <CaseStudyResults results={caseStudy.results} labels={cs} />}
+        {caseStudy && cs && caseStudy.results && <div className="scroll-layer" data-scroll-layer data-y="45,0,-35" data-opacity="0.2,1,0.3" data-phase="-0.01"><CaseStudyResults results={caseStudy.results} labels={cs} /></div>}
         {caseStudy && cs && caseStudy.learnings && caseStudy.learnings.length > 0 && (
-          <div className="cs-block cs-learnings"><p className="cs-eyebrow">{cs.learnings}</p>
+          <div className="cs-block cs-learnings scroll-layer" data-scroll-layer data-y="45,0,-35" data-opacity="0.18,1,0.3" data-phase="-0.02"><p className="cs-eyebrow">{cs.learnings}</p>
             {caseStudy.learnings.map((learning, index) => <CaseStudyParagraphs key={index} section={learning} />)}
           </div>
         )}
-        {caseStudy && cs && caseStudy.links && caseStudy.links.length > 0 && <CaseStudyLinks links={caseStudy.links} eyebrow={cs.links} />}
+        {caseStudy && cs && caseStudy.links && caseStudy.links.length > 0 && <div className="scroll-layer" data-scroll-layer data-y="45,0,-35" data-opacity="0.18,1,0.3" data-phase="-0.03"><CaseStudyLinks links={caseStudy.links} eyebrow={cs.links} /></div>}
       </section>
     </article>
   );

@@ -92,11 +92,17 @@ Additional shared checks:
 
 ### Case-study content (additive, present only when a project's portfolio.json supplies caseStudyContent)
 
-- [ ] A project with `caseStudyContent` (e.g. Northstar in the dev fixture) shows the additional Overview/Context/Role block in chapter 1, richer constraints and a "Technical decisions" block (with rationale/alternatives where supplied) in chapter 2, architecture prose and structured visual nodes/connections in chapter 3, implementation notes in chapter 4, and results (summary/metrics/links)/learnings/links in chapter 5 — all beneath the unchanged compact narrative content, never replacing it.
-- [ ] A project without `caseStudyContent` (e.g. Code Sentinel) renders no `cs-*` elements at all and is visually identical to the pre-change narrative-only detail.
+Each chapter answers one question; verify a rich project (e.g. Northstar in the dev fixture) shows the right content in the right chapter, never duplicated across chapters:
+
+- [ ] **01 Overview**: existing title/description, plus a two-up evidence row (category, role, data-driven captions) and overview/role prose.
+- [ ] **02 Problem**: existing compact Problem/Constraint cells (now 2, not 4), plus context and the richer constraints list. No technical decisions appear here.
+- [ ] **03 Architecture**: existing compact Decision cell (now its own single-cell block) and the existing `ArchitectureDiagram` (hover/focus/click activation unchanged), plus architecture prose, structured visuals, and the full technical-decisions list (each with rationale/alternatives/implementation/result/learning where supplied).
+- [ ] **04 Implementation**: existing implementation code/summary, plus implementation prose.
+- [ ] **05 Result**: existing large result statement (the sole place `narrative.result` appears — no longer duplicated in a small Problem-chapter cell), plus results (summary/metrics/links), learnings, and top-level links.
+- [ ] A project without `caseStudyContent` (e.g. Code Sentinel) renders no `cs-*` elements at all; its Problem/Architecture cells still show the unchanged 2-cell/1-cell compact narrative split.
 - [ ] A project with a sparse/`not-documented` case study (e.g. Facility Importer) shows the data-driven "no verified outcome" copy, not an invented result, and no empty section headings for absent fields.
-- [ ] The five `data-story-step` chapter anchors, the case-progress rail, `ArchitectureDiagram` hover/focus/click activation, nested overlay scrolling, Close/Escape, and focus restoration all work exactly as before on a case-study-bearing project.
-- [ ] New case-study blocks reflow at ≤800 px (no fixed left margin colliding with the case-progress rail) and contain no horizontal overflow.
+- [ ] The chapter rail ("01 OVERVIEW" … "05 RESULT") stays visible throughout scroll, its active item advances naturally with the IntersectionObserver as each chapter centers, and it remains purely informational (not clickable). The five `data-story-step` anchors, nested overlay scrolling, Close/Escape, and focus restoration all work exactly as before.
+- [ ] No new case-study block overlaps the fixed case-progress rail at any width ≥801 px; all reflow correctly at ≤800 px (rail hidden, per existing baseline) with no horizontal overflow.
 
 ## Experience
 
