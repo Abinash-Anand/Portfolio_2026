@@ -131,12 +131,12 @@
       "company": "HFT Stuttgart",
       "role": "Student Assistant, Facility Data Systems",
       "period": "Jun—Aug 2026",
-      "tech": "Python · Automation · Automated testing",
-      "description": "Replaced a fully manual facility-data workflow with a production automation pipeline — 200+ records, zero errors.",
+      "tech": "Python · SOAP/WSDL · Automated testing (pytest)",
+      "description": "Owned and delivered a facility-automation tool end to end for the HISinOne platform — architecture through live production and verification.",
       "story": {
         "paragraphs": [
-          "HFT Stuttgart's facility team was entering building and room data by hand from spreadsheets into their system of record — slow, and quietly error-prone. Duplicate rooms, missed floors, records that drifted out of sync with reality. There was no way to know how many mistakes existed until someone happened to find one.",
-          "I designed a hierarchical resolution pipeline that normalizes facility data through building → floor → room, resolving each level independently and flagging ambiguous matches instead of guessing. Automatic detection catches missing records before they reach production, and an automated test suite — 100% passing — runs against every change.",
+          "HFT Stuttgart's facility team needed to keep two separate platforms, WebUntis and HISinOne, in sync by hand — entering building and room data from spreadsheets into the system of record. It was slow and quietly error-prone: duplicated rooms, missed floors, records that drifted out of sync with reality, with no way to know how many mistakes existed until someone found one.",
+          "I owned the tool end to end. I built a SOAP/WSDL client against WebUntis (via Zeep) and an authenticated API client against HISinOne, then designed a hierarchical resolution pipeline that normalizes facility data through building → floor → room, resolving each level independently and flagging ambiguous matches instead of guessing. Automatic detection catches missing records before they reach production, and a pytest-driven automated test suite — 100% passing — runs against every change.",
           "The tool processed 200+ records across 10+ buildings in its first live run with zero errors, and ran independent post-import verification to prove that, not just claim it. It's now how the team actually imports facility data, not a one-off script someone ran once."
         ]
       },
@@ -151,18 +151,19 @@
       "company": "Letstream",
       "role": "Software Development Engineer I",
       "period": "Dec 2024—Apr 2025",
-      "tech": "Angular · GraphQL · Lazy loading",
+      "tech": "Angular · RxJS · GraphQL",
       "description": "Rebuilt Letstream's real-time logistics dashboard in Angular and led the team's migration off Vue.",
       "story": {
         "paragraphs": [
           "The logistics dashboard was built in Vue, but the rest of the team's stack had already moved to Angular — so it was both out of step with everything else and slow under real load, with sync lag and initial loads that made the tool frustrating to use during live tracking.",
-          "I rebuilt it as a reactive Angular application, replacing broad data fetches with custom lazy-loading and GraphQL fragment optimization — cutting initial load time by 40% and improving real-time sync speed by 25%. Alongside the rebuild, I led two developers through the Vue-to-Angular migration myself, pairing on patterns and reviews until the team was fluent, which cut code-review cycle time by 15%.",
-          "I worked directly with backend engineers on end-to-end testing before every release, because a logistics dashboard that's wrong under load is worse than one that's just slow."
+          "I rebuilt it as a reactive, role-based Angular application using RxJS streams, replacing broad data fetches with custom lazy-loading and GraphQL fragment optimization — cutting initial load time by 40% and improving real-time sync speed by 25%. I also reduced server overhead by 30% through debounce techniques and disciplined Angular lifecycle management (OnInit/OnDestroy), and led two developers through the Vue-to-Angular migration myself, establishing coding standards and mentoring practices that cut code-review cycle time by 15%.",
+          "I partnered closely with backend engineers on end-to-end testing across the platform, validating that data flowed correctly between frontend and backend services and catching integration issues before release — because a logistics dashboard that's wrong under load is worse than one that's just slow."
         ]
       },
       "highlights": [
         "25% faster real-time sync",
         "40% faster initial load",
+        "30% less server overhead",
         "15% faster code-review cycle"
       ]
     },
@@ -172,12 +173,13 @@
       "role": "Software Engineer, Full Stack Intern (MEAN)",
       "period": "Oct 2023—Oct 2024",
       "tech": "Angular · Node.js · MongoDB",
-      "description": "Built the backend and real-time infrastructure for a full-stack ride-booking platform, start to finish.",
+      "description": "Built Eber end to end — the Angular frontend and the Node.js/Express/MongoDB backend — for a full-stack, on-demand ride-booking platform.",
       "story": {
         "paragraphs": [
-          "Elluminati Ventures needed a ride-booking platform that handled the full lifecycle of a ride — request, match, track, pay, complete — not a UI mockup of one. I owned the backend: a Node.js, Express and MongoDB service exposing REST APIs for every stage of that lifecycle.",
-          "Real-time tracking ran over WebSockets, so a rider's location updates continuously instead of on a polling delay. I integrated Stripe for payments and built multi-channel notifications — browser push plus in-app — so riders and drivers stay informed without refreshing anything.",
-          "On the admin side, I built a dashboard with ride history, filtering, export and live trip visualization on Google Maps, and added PWA support so the whole platform worked reliably as an installable app, not just a browser tab left open."
+          "Elluminati Ventures needed a ride-booking platform that handled the full lifecycle of a ride — request, match, track, pay, complete — not a UI mockup of one, built across the whole stack by one person.",
+          "I built the Angular 18 frontend: real-time Google Maps tracking, live ride updates over WebSockets, and Stripe payment processing, inside a responsive, PWA-enabled interface.",
+          "On the backend, I built the Node.js/Express/MongoDB service powering the full ride lifecycle — from driver assignment through trip completion, dynamic pricing and automated invoice generation — and the REST APIs for that lifecycle, tested in Postman and designed to be consumed by both the admin panel and future mobile clients.",
+          "I implemented multi-channel notifications (Twilio SMS, Nodemailer email, browser push) to keep riders and drivers updated at every stage of a trip, and built an admin dashboard with ride history, filtering, CSV export and live trip-path visualization using Google Maps polylines."
         ]
       },
       "highlights": [
@@ -213,7 +215,11 @@
         },
         {
           "name": "RxJS",
-          "usedIn": "Eber"
+          "usedIn": "Eber · Letstream"
+        },
+        {
+          "name": "PrimeNG",
+          "usedIn": "Letstream"
         }
       ]
     },
@@ -251,6 +257,14 @@
         {
           "name": "LangGraph",
           "usedIn": "FounderX"
+        },
+        {
+          "name": "SOAP/WSDL",
+          "usedIn": "HFT Stuttgart"
+        },
+        {
+          "name": "Twilio",
+          "usedIn": "Eber"
         }
       ]
     },
@@ -280,6 +294,14 @@
         {
           "name": "GraphQL",
           "usedIn": "Letstream"
+        },
+        {
+          "name": "Redis",
+          "usedIn": "Eber"
+        },
+        {
+          "name": "Google Maps API",
+          "usedIn": "Letstream · Eber"
         }
       ]
     },
@@ -300,7 +322,11 @@
         },
         {
           "name": "CI / CD",
-          "usedIn": "SynthGraph · FounderX"
+          "usedIn": "SynthGraph · FounderX · Eber"
+        },
+        {
+          "name": "Kubernetes",
+          "usedIn": "Eber"
         },
         {
           "name": "Vitest",
@@ -308,7 +334,11 @@
         },
         {
           "name": "Pytest",
-          "usedIn": "SynthGraph · FounderX"
+          "usedIn": "SynthGraph · FounderX · HFT Stuttgart"
+        },
+        {
+          "name": "Authentication systems",
+          "usedIn": "Eber · HFT Stuttgart"
         }
       ]
     }

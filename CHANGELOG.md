@@ -1234,3 +1234,88 @@ the user before implementation began.
   updated to describe the new contract (what must now be preserved going forward) rather than the old one;
   `STABLE_BASELINE.md` was deliberately left untouched, since it is an explicitly frozen historical snapshot of a
   specific past commit, not a living description of current behavior.
+
+## 2026-10-02 — Content: real LinkedIn-sourced detail for Experience and the engineering stack
+
+### Context
+
+The user shared their actual LinkedIn experience entries (bullet points and per-role skill lists) for all three
+roles and asked that this real detail replace the earlier, less complete `story`/`highlights`/`description` content
+written from the original resume bullets alone, and that the richer per-role skill lists also populate the
+`technologies` (engineering stack) section. Content-only, no schema or component change — the fields involved
+(`description`, `story.paragraphs`, `highlights`, `tech`, `technologies[].items`) all already existed from the two
+preceding same-day entries.
+
+### Changed
+
+- **`portfolio.json` — `experience`**:
+  - **HFT Stuttgart**: `description`/`story.paragraphs` rewritten to include the two platforms actually integrated
+    (WebUntis via a SOAP/WSDL client built with Zeep, and an authenticated HISinOne API client) — previously
+    described only as "a Python automation tool" without naming what it talked to. `tech` updated to
+    `"Python · SOAP/WSDL · Automated testing (pytest)"`. `highlights` unchanged (still accurate).
+  - **Letstream**: `story.paragraphs` gained a previously-missing fact — a 30% server-overhead reduction via
+    debounce techniques and disciplined Angular lifecycle management (`OnInit`/`OnDestroy`) — added as a new 4th
+    `highlights` entry (`"30% less server overhead"`) alongside the existing three. `tech` updated to
+    `"Angular · RxJS · GraphQL"` (RxJS was a real, newly-surfaced detail of the rebuild).
+  - **Elluminati Ventures**: `description`/`story.paragraphs` corrected and expanded. The previous version said "I
+    owned the backend," implying someone else built the frontend; the real scope was full-stack — the Angular 18
+    frontend (Google Maps tracking, WebSocket live updates, Stripe) *and* the Node.js/Express/MongoDB backend (ride
+    lifecycle, dynamic pricing, invoicing), plus REST APIs tested in Postman and multi-channel notifications
+    (Twilio SMS, Nodemailer, browser push). `story.paragraphs` grew from 3 to 4 paragraphs to hold this without
+    cramming frontend and backend into one. `highlights` and `tech` left unchanged (still accurate, already concise).
+- **`portfolio.json` — `technologies`**: added 7 new concrete technologies surfaced by the real per-role skill
+  lists, each attributed to the correct employer via `usedIn` (never fabricated — every addition is a real,
+  specific technology named in the shared skill lists, not a LinkedIn soft-skill tag like "Cross-team
+  Collaboration" or "Software Design", which were deliberately excluded as non-technologies): `PrimeNG` and
+  `Google Maps API` (Letstream), `SOAP/WSDL` and `Authentication systems` (HFT Stuttgart), `Twilio`, `Redis`, and
+  `Kubernetes` (Eber/Elluminati). Also extended three existing entries' `usedIn` with employers now confirmed to
+  have used them: `RxJS` → `+ Letstream`, `Pytest` → `+ HFT Stuttgart`, `CI / CD` → `+ Eber`.
+
+### Fixed
+
+- **Brick-wall seam-stagger regression, caught by the existing `tests/stack-bricks.test.mjs` real-data check (not
+  shipped — caught before being considered done):** adding the 7 new technologies shifted row boundaries in the
+  stack grid such that rows 5 and 6 (at the `lg`/12-column breakpoint) landed on the same internal seam position,
+  which the existing test explicitly forbids for the real data (`ARCHITECTURE.md`'s own authoring note already
+  warned "order inside a category can also matter for seam stagger"). Rather than weaken the test, the new
+  `Engineering` group items were reordered (`Kubernetes` moved next to `CI / CD`, `Authentication systems` moved
+  to the end) — same items, same `usedIn` values, different sequence — found via an exhaustive search over orderings
+  of just that group, verified to produce zero aligned seams at both the `lg` and `md` breakpoints.
+
+### Preserved
+
+- No code, schema, or test file changed — this is `portfolio.json` data only (confirmed via `git status`: the only
+  modified file in this round). The `fixtures/portfolio.fixture.json` synthetic identity was not touched (confirmed
+  restored byte-for-byte via `git diff` after the temporary verification swap described below).
+
+### Regression Testing
+
+- `node -e "JSON.parse(...)"` and the project's own `validatePortfolioDocument`: both passed against the edited
+  `portfolio.json`.
+- `pnpm exec tsc --noEmit`: passed (no TypeScript surface changed by this round, checked anyway).
+- `node --experimental-strip-types --test tests/*.test.mjs`: initially 35/36 (the brick-wall seam-stagger check
+  failed, see Fixed above); 36/36 after the reorder fix.
+- `PORTFOLIO_DATA_MODE=fixture node scripts/sync-github.ts && vite build`: succeeded.
+- **Browser verification, Playwright-driven Chromium against the dev server**, using the same temporary-fixture-
+  swap methodology as the three preceding same-day entries (`experience`, `technologies`, `labels`, and
+  `sections.experience` swapped in from the real, edited `portfolio.json`; backed up first, restored after —
+  confirmed via `git diff` showing zero residual change to the fixture). **Simulated input only, not physical
+  devices, not the live site:**
+  - Elluminati's full-story overlay showed all 4 paragraphs (frontend, then backend, then notifications/admin),
+    screenshot-reviewed for correct wrapping and no overflow.
+  - Letstream's panel showed all 4 highlights wrapping cleanly to two rows at 1440px, no overflow.
+  - The stack grid rendered all 33 tiles (26 original + 7 new) with no horizontal overflow; the pre-existing
+    hover/focus "category ↔ used-in" opacity crossfade was re-verified still correct on one of the new tiles
+    (`SOAP/WSDL`) after an initial false alarm from a screenshot taken with a stale cursor position from a prior
+    action, root-caused via direct `getComputedStyle` opacity checks rather than assumed to be a bug.
+  - Zero console errors across every pass.
+- **Not performed:** physical trackpad/mouse/touch input, cross-browser/device certification, the real
+  authenticated GitHub sync/production build, and a live-site check.
+
+### Notes
+
+- The LinkedIn skill lists included many non-technology competency tags (e.g. "Cross-team Collaboration," "Software
+  Design," "Testing & data integrity," "Product Design," "Parallel Computing," "Web Caching," "Payment Gateways"
+  already covered by the existing `Stripe` entry). These were deliberately not added to `technologies`, which is
+  specifically a grid of concrete tools/frameworks/protocols, not a general competency list — consistent with the
+  existing curated entries already there.
