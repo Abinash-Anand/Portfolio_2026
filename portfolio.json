@@ -107,7 +107,7 @@
       "id": "hft-stuttgart",
       "company": "HFT Stuttgart",
       "role": "Student Assistant, Facility Data Systems",
-      "period": "2026",
+      "period": "Jun—Aug 2026",
       "tech": "Python · Automation · Automated testing",
       "description": "Built and shipped a Python automation tool that replaced manual facility-data entry, processing 200+ records across 10+ buildings in a live production run with zero errors. Added a hierarchical resolution and verification pipeline with automatic detection of missing records, an automated test suite (100% passing) and independent post-import verification."
     },
@@ -115,7 +115,7 @@
       "id": "letstream",
       "company": "Letstream",
       "role": "Software Development Engineer I",
-      "period": "2024—2025",
+      "period": "Dec 2024—Apr 2025",
       "tech": "Angular · GraphQL · Lazy loading",
       "description": "Built a reactive Angular dashboard for logistics tracking that improved real-time data sync speed by 25%, and cut initial load times by 40% through custom lazy-loading and GraphQL fragment optimization. Led the migration of two developers from Vue.js to Angular, reducing code-review cycle time by 15%, and collaborated with backend engineers on end-to-end testing before release."
     },
@@ -123,7 +123,7 @@
       "id": "elluminati-ventures",
       "company": "Elluminati Ventures",
       "role": "Software Engineer, Full Stack Intern (MEAN)",
-      "period": "2023—2024",
+      "period": "Oct 2023—Oct 2024",
       "tech": "Angular · Node.js · MongoDB",
       "description": "Built a full-stack ride-booking platform with an Angular frontend and a Node.js, Express and MongoDB backend, including real-time tracking, Stripe payments and multi-channel notifications. Developed the REST APIs for the complete ride lifecycle, WebSocket live tracking, browser push notifications, PWA support and an admin dashboard with ride history, filtering, export and live trip visualization via Google Maps."
     }
@@ -134,19 +134,23 @@
       "items": [
         {
           "name": "TypeScript",
-          "usedIn": "SynthGraph"
+          "usedIn": "SynthGraph · FounderX · Eber"
+        },
+        {
+          "name": "React",
+          "usedIn": "ParkRabbit · FounderX"
         },
         {
           "name": "Angular",
           "usedIn": "Eber · Letstream"
         },
         {
-          "name": "React",
-          "usedIn": "ParkRabbit"
-        },
-        {
           "name": "Next.js",
           "usedIn": "SynthGraph"
+        },
+        {
+          "name": "JavaScript",
+          "usedIn": "Eber · ParkRabbit"
         },
         {
           "name": "RxJS",
@@ -159,23 +163,35 @@
       "items": [
         {
           "name": "Node.js",
-          "usedIn": "Eber"
-        },
-        {
-          "name": "Express",
-          "usedIn": "Eber"
+          "usedIn": "Eber · SynthGraph"
         },
         {
           "name": "NestJS",
           "usedIn": "SynthGraph"
         },
         {
+          "name": "Express",
+          "usedIn": "Eber"
+        },
+        {
+          "name": "Python",
+          "usedIn": "SynthGraph · HFT Stuttgart"
+        },
+        {
+          "name": "FastAPI",
+          "usedIn": "FounderX"
+        },
+        {
           "name": "Spring Boot",
           "usedIn": "ParkRabbit"
         },
         {
-          "name": "Python",
-          "usedIn": "SynthGraph SDK · HFT Stuttgart"
+          "name": "Stripe",
+          "usedIn": "Eber"
+        },
+        {
+          "name": "LangGraph",
+          "usedIn": "FounderX"
         }
       ]
     },
@@ -188,7 +204,11 @@
         },
         {
           "name": "MongoDB",
-          "usedIn": "Eber"
+          "usedIn": "Eber · FounderX"
+        },
+        {
+          "name": "TypeORM",
+          "usedIn": "SynthGraph"
         },
         {
           "name": "RabbitMQ",
@@ -208,30 +228,38 @@
       "label": "Engineering",
       "items": [
         {
+          "name": "REST APIs",
+          "usedIn": "Eber · SynthGraph · ParkRabbit · FounderX"
+        },
+        {
           "name": "Docker",
           "usedIn": "SynthGraph · ParkRabbit"
         },
         {
-          "name": "CI / CD",
-          "usedIn": "SynthGraph"
-        },
-        {
           "name": "Automated testing",
-          "usedIn": "SynthGraph · HFT Stuttgart"
+          "usedIn": "SynthGraph · FounderX · HFT Stuttgart"
         },
         {
-          "name": "REST APIs",
-          "usedIn": "Eber · SynthGraph"
+          "name": "CI / CD",
+          "usedIn": "SynthGraph · FounderX"
+        },
+        {
+          "name": "Vitest",
+          "usedIn": "SynthGraph · FounderX"
+        },
+        {
+          "name": "Pytest",
+          "usedIn": "SynthGraph · FounderX"
         }
       ]
     }
   ],
   "education": [
     {
-      "qualification": "M.Sc. · Software Technology, HFT Stuttgart"
+      "qualification": "M.Sc. · Software Technology, HFT Stuttgart · 2025—2027 (expected)"
     },
     {
-      "qualification": "B.Tech. · Information Technology, Pune"
+      "qualification": "B.Tech. · Information Technology, Bharati Vidyapeeth (DU) College of Engineering, Pune · 2020—2024"
     }
   ],
   "about": {

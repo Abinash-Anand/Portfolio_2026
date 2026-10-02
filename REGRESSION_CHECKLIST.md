@@ -105,6 +105,7 @@ Additional shared checks:
 - [ ] Desktop hover and visible keyboard focus invert the tile to the dark surface, shift the name 6 px and replace the category with the correct “Used in” text; Tab order follows data order.
 - [ ] Tile text never clips or leaves its tile, long names get wider tiles, and there is no horizontal page overflow at 1920/1440/1280/1024/768/390/~360 px.
 - [ ] Narrow layout (≤800 px) keeps the category label and intentionally hides the reference text.
+- [ ] After any change to `usedIn` text or to the stack data order, the longest “Used in” value fits its tile without touching the skill name at 1920, 1440, 1280, 1101, 1100, 1024 and 801 px, and no tile row is a single full-width tile.
 - [ ] Changing the stack in `portfolio.json` (add, remove, reorder, recategorize, many skills) changes the wall with no component change.
 - [ ] No unintended click action or modal has been added to the informational stack tiles.
 - [ ] Tiles reveal once on entering the viewport and stay visible; reduced motion shows them immediately; an idle tile shows only its category (no "Used in" label over it), and hover/focus swaps category for reference instantly.
