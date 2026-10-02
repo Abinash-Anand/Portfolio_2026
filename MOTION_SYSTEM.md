@@ -35,7 +35,7 @@ Project details have a separate five-chapter indicator: an overlay-rooted Inters
 ### Section reveal
 
 - **Trigger / elements:** engine IntersectionObserver at threshold `0.12` observes `.reveal`, adds `.is-visible` once, then unobserves it. These include section headers, project rows, stack groups, service rows, and About copy.
-- **Properties:** header/About `--reveal-opacity` and `--reveal-y` transition from invisible/26 px to visible/zero. Row/group reveals animate opacity. As of this change, structural content layers (hero title/summary/meta, section headers, project index/copy/meta, about, service index/title, contact meta/headline/actions/socials) again carry a 3-point `data-opacity` keyframe (entry/middle/exit), composed multiplicatively with `--reveal-opacity` so the one-time reveal still gates first appearance, never reverses, and the layer always rests at full opacity (middle keyframe `1`) — only the entry/exit edges dip, bounded to a readable floor (≥0.2, enforced by `tests/stack-bricks.test.mjs`) so scroll-position depth never reads as content disappearing. Decorative/ambient layers (hero grid and art, scroll cue, project annotation, contact grid) and the detail overlay's internals keep their wider-range scene opacity, unchanged. Project and service rows, stack tiles and the contact content still use the same once-only enter reveal at the row/button level (`.is-visible` is added once and never removed); the restored opacity is a second, independent layer composed on top of it, not a replacement. Experience no longer participates in this shared reveal system at all — see "Experience: scroll-stepped sticky timeline" below for its own, separate discrete-step transition system. Stack tiles stagger by their position in a row (45 ms per column, capped); stack tiles themselves were deliberately left without scroll parallax (see Notes in the relevant changelog entry) since the brick wall is an intentionally flat, geometric layout.
+- **Properties:** header/About `--reveal-opacity` and `--reveal-y` transition from invisible/26 px to visible/zero. Row/group reveals animate opacity. As of this change, structural content layers (hero title/summary/meta, section headers, project index/copy/meta, about, service index/title, contact meta/headline/actions/socials) again carry a 3-point `data-opacity` keyframe (entry/middle/exit), composed multiplicatively with `--reveal-opacity` so the one-time reveal still gates first appearance, never reverses, and the layer always rests at full opacity (middle keyframe `1`) — only the entry/exit edges dip, bounded to a readable floor (≥0.2, enforced by `tests/stack-bricks.test.mjs`) so scroll-position depth never reads as content disappearing. Decorative/ambient layers (hero grid and art, scroll cue, project annotation, contact grid) and the detail overlay's internals keep their wider-range scene opacity, unchanged. Project and service rows, stack tiles and the contact content still use the same once-only enter reveal at the row/button level (`.is-visible` is added once and never removed); the restored opacity is a second, independent layer composed on top of it, not a replacement. Experience no longer participates in this shared reveal system at all — see "Experience: scroll-stepped sticky timeline" below for its own, separate discrete-step transition system. Stack tiles stagger by their position in a row (45 ms per column, capped) for this once-only reveal. As of this change stack tiles additionally carry their own per-tile scroll-driven assembly motion on a separate inner element — see "Stack: assembly motion and category emphasis" below — but their final resting position is the same flat, geometric brick-wall layout as before; nothing about the layout itself moved.
 - **Timing/easing:** header/About 800 ms primary ease; heading delay 100 ms, note delay 180 ms; project/stack/service opacity 700 ms primary ease.
 - **Responsive:** reveal mechanism remains; reflow does not introduce a second observer system.
 - **Reduced motion:** CSS forces reveal content visible, removes offsets/transforms, and minimizes transition durations. Observer behavior remains, but content does not depend on its entrance animation to be visible under this preference.
@@ -148,13 +148,35 @@ duplicate Experience's scroll-stepping language here, selection only ever change
   sits outside any `.reveal` ancestor and needed its own explicit override). `aria-selected`/focus state remain
   fully functional; only the animated transition is removed.
 
-### Stack hover
+### Stack: assembly motion and category emphasis (2026-10-02; extends the former hover-only tile)
 
-- **Trigger / elements:** a brick-wall tile button (`.stack-tile button`) on hover or `:focus-visible`; its “Used in” reference replaces its category label in the same slot.
-- **Properties:** the tile inverts to `--dark` with light text, the name shifts 6 px right, and the reference fades/slides in (`translateX(-6px)` to rest) as the category fades out. Tiles do not open details on click and carry no scroll parallax.
-- **Timing/easing:** 350 ms primary ease for background, colour and name; 300 ms for the category/reference swap. The entrance is the once-only reveal: 700 ms opacity, delayed 45 ms per column position (capped at five).
-- **Responsive:** above 1100 px a 12-column field, 801–1100 px a 7-column field, ≤800 px a 2-column field; spans for each come from `src/stackLayout.ts`. At ≤800 px the reference is hidden and the category stays.
-- **Reduced motion:** the reveal is forced visible, the name/reference transforms are removed, and on desktop the category/reference swap is an instant `display` change rather than an animation.
+Two independent motion channels on the same tile, deliberately kept on two different elements (see
+`ARCHITECTURE.md`'s "Engineering Stack: assembly motion and category emphasis") so neither's reduced-motion override
+can cancel the other.
+
+- **Assembly (scroll-driven, `.stack-tile-motion`):** as each tile's own scroll scene crosses the viewport, it
+  animates from a per-tile displaced/faded entry position to its resting position (zero displacement, full opacity)
+  at the scene's midpoint, and back out on the way past — continuous and fully reversible with scroll direction, not
+  a one-shot entrance. Displacement direction/magnitude and the opacity floor come from `stackTileMotion(tile)`
+  (`src/stackLayout.ts`), a pure function of the tile's index/column only (never its name or category), drawn from a
+  fixed 8-direction palette so assembly is varied per tile without being random or hand-authored per technology.
+  Bounded to this codebase's existing structural-layer limits: ≤60 px travel per axis, opacity resting at 1 with a
+  ≥0.2 floor, no scale or rotate (reserved for decorative-only layers elsewhere).
+- **Category emphasis (hover/focus-driven, the outer `button`):** hovering or focusing any tile sets
+  `data-emphasis="self"|"category"|"muted"` on every `<li>` from component state compared against `data-category`.
+  The hovered tile inverts exactly as the former hover-only treatment did (`--dark` background, name shift, used-in
+  swap); same-category tiles are left at full strength; every other tile's button drops to `opacity:.4`. Keyboard
+  focus produces the identical state as pointer hover, so the effect works without a pointer.
+- **Timing/easing:** assembly settles through the shared engine's smoothstep/damping sampling, same
+  `cubic-bezier(0.16, 1, 0.3, 1)` as every other scene. Emphasis background/colour/name transitions stay at 350 ms
+  primary ease; the muted-opacity transition is 350 ms primary ease; the category/reference swap is 300 ms.
+- **Responsive:** above 1100 px a 12-column field, 801–1100 px a 7-column field, ≤800 px a 2-column field; spans for
+  each come from `src/stackLayout.ts`. At ≤800 px the reference is hidden and the category stays; assembly motion and
+  emphasis both still apply, unchanged from desktop.
+- **Reduced motion:** assembly collapses through the sitewide `.scroll-layer{transform:none!important;
+  opacity:1!important}` rule, so tiles render directly at their resting position with no entrance to skip. Category
+  emphasis is on a different element and is untouched by that rule, so hover/focus highlighting (including the muted
+  `opacity:.4` tier) keeps working identically under reduced motion. Tiles still do not open details on click.
 
 ### Custom cursor
 

@@ -155,6 +155,11 @@ scroll-stepped sticky timeline" and `MOTION_SYSTEM.md`'s matching entry for the 
 - [ ] Changing the stack in `portfolio.json` (add, remove, reorder, recategorize, many skills) changes the wall with no component change.
 - [ ] No unintended click action or modal has been added to the informational stack tiles.
 - [ ] Tiles reveal once on entering the viewport and stay visible; reduced motion shows them immediately; an idle tile shows only its category (no "Used in" label over it), and hover/focus swaps category for reference instantly.
+- [ ] Scrolling the section into view assembles each tile from a displaced, faded position to its exact final brick-wall position with no layout shift; scrolling back up reverses the assembly; stepped/alternating-direction scrolling never leaves a tile stuck mid-transition or snaps it instantly.
+- [ ] The direction/magnitude each tile assembles from is consistent across reloads for the same data (deterministic, not random) and does not depend on technology name or category.
+- [ ] Hovering or focusing a tile emphasizes it (existing inverted treatment), leaves same-category tiles at full strength, and visibly mutes every other category's tiles; moving focus/hover away clears all emphasis. Keyboard `Tab` focus produces the same three-tier effect as mouse hover.
+- [ ] Reduced motion: tiles render directly at their resting position with no assembly animation, but hover/focus category emphasis (including the muted tier) still works exactly as under full motion.
+- [ ] No tile ever scales or rotates during assembly or emphasis; travel stays small and opacity never drops low enough to read as the tile disappearing.
 
 ## About / Engineering (Decision Lens)
 

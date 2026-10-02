@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useScrollSceneEngine } from "./useParallaxEngine";
-import { layoutStackTiles } from "./stackLayout";
+import { layoutStackTiles, stackTileMotion } from "./stackLayout";
 import { portfolioStore, type PortfolioProjectView } from "./app/application/portfolioProjects";
 import type { Portfolio, TechnicalVisualData, Capability, Experience as ExperienceEntry, EngineeringPrinciple } from "./app/domain/portfolioData";
 import type { CaseStudy, CaseStudySection as CaseStudySectionData, CaseStudyVisual } from "./app/domain/caseStudy";
@@ -550,19 +550,32 @@ function Experience({ portfolio }: PortfolioProps) {
 
 function Stack({ portfolio }: PortfolioProps) {
   const tiles = layoutStackTiles(portfolio.technologies);
+  const [active, setActive] = useState<{ index: number; category: string } | null>(null);
   return (
     <section className="stack page-section" id="stack" data-scroll-scene>
       <SectionHeader {...portfolio.sections.stack} />
       <ul className="stack-field" aria-label={portfolio.sections.stack.eyebrow}>
-        {tiles.map((tile) => (
-          <li key={tile.index} className="stack-tile reveal" data-category={tile.category} style={{ "--span-lg": tile.spans.lg, "--span-md": tile.spans.md, "--span-sm": tile.spans.sm, "--tile-col": tile.column } as CSSProperties}>
-            <button type="button">
-              <small className="stack-tile-index">{String(tile.index + 1).padStart(2, "0")}</small>
-              <span className="stack-tile-name">{tile.name}</span>
-              <span className="stack-tile-foot"><small className="stack-tile-category">{tile.category}</small><small className="stack-tile-ref">{portfolio.labels.usedIn}<br /><b>{tile.usedIn}</b></small></span>
-            </button>
-          </li>
-        ))}
+        {tiles.map((tile) => {
+          const motion = stackTileMotion(tile);
+          const emphasis = !active ? undefined : tile.index === active.index ? "self" : tile.category === active.category ? "category" : "muted";
+          return (
+            <li key={tile.index} className="stack-tile reveal" data-scroll-scene data-category={tile.category} data-emphasis={emphasis} style={{ "--span-lg": tile.spans.lg, "--span-md": tile.spans.md, "--span-sm": tile.spans.sm, "--tile-col": tile.column } as CSSProperties}>
+              <button
+                type="button"
+                onMouseEnter={() => setActive({ index: tile.index, category: tile.category })}
+                onFocus={() => setActive({ index: tile.index, category: tile.category })}
+                onMouseLeave={() => setActive(null)}
+                onBlur={() => setActive(null)}
+              >
+                <span className="stack-tile-motion scroll-layer" data-scroll-layer data-x={motion.x} data-y={motion.y} data-opacity={motion.opacity}>
+                  <small className="stack-tile-index">{String(tile.index + 1).padStart(2, "0")}</small>
+                  <span className="stack-tile-name">{tile.name}</span>
+                  <span className="stack-tile-foot"><small className="stack-tile-category">{tile.category}</small><small className="stack-tile-ref">{portfolio.labels.usedIn}<br /><b>{tile.usedIn}</b></small></span>
+                </span>
+              </button>
+            </li>
+          );
+        })}
       </ul>
     </section>
   );

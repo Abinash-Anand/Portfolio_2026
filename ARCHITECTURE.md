@@ -254,13 +254,51 @@ explicit instruction not to duplicate Experience's scroll-stepping here.
   document (same pattern as `storySteps`/`decisionLabels`); the component has no `if principle.id === "systems"`
   branch anywhere — it renders whichever principle is active identically, by shape.
 
+### Engineering Stack: assembly motion and category emphasis
+
+Each `.stack-tile` keeps the exact final brick-wall position `layoutStackTiles` already computed (`ARCHITECTURE.md`'s
+existing packing algorithm is unchanged); only its *entrance* now carries motion, and a second, independent emphasis
+channel reads category membership on hover/focus. Two concerns that could have collided onto one element are
+deliberately split onto two:
+
+- **Assembly is the existing continuous engine, not a new one**: each `<li>` is its own `data-scroll-scene` (the
+  engine already supports a scene nested inside another scene's ancestry — `Stack` is simply the first place every
+  tile in a repeating list is its own scene rather than the whole list sharing one), and a `<span class="stack-tile-motion
+  scroll-layer" data-scroll-layer>` wrapping the tile's visible content carries per-tile `data-x`/`data-y`/`data-opacity`
+  3-point keyframes. As the tile's own scene crosses the viewport, the shared engine's existing phase/smoothstep/damping
+  pipeline animates it from a displaced, faded entry position to its resting position at progress 0.5 (full opacity, zero
+  displacement) and back out, with no bespoke scroll listener, stepping logic, or second scheduler — the same
+  read-native-scroll → calculate → batch-write pass already serving Hero, Experience's panel fades and every other
+  scene handles this too. Scrolling back up reverses it for free, because the engine always samples the *current*
+  scroll position rather than playing a one-shot animation.
+- **Deterministic, not random or hand-authored**: `stackTileMotion(tile)` (`src/stackLayout.ts`) is a pure function
+  of `tile.index`/`tile.column` only — never `tile.name`/`tile.category` — indexing into a fixed 8-entry palette of
+  displacement directions so the same data always assembles the same way and no technology is special-cased. It
+  stays within the codebase's existing structural-layer bounds (≤60 px travel per axis, opacity resting at 1 with a
+  ≥0.2 floor) and deliberately omits scale/rotate even though they are visually plausible for a "coming together"
+  effect: the existing, enforced motion-policy tests reserve those two properties for decorative-only layers, and
+  introducing them here would have meant weakening that guard rather than extending the section.
+- **Category emphasis is a second, non-scroll channel**: hovering or focusing any tile's `<button>` sets component
+  state (`{index, category}`); every `<li>` then carries `data-emphasis="self"|"category"|"muted"` (or none) computed
+  from that state against its own `data-category`, and CSS alone renders the three-tier response (hovered tile
+  inverted, same-category tiles unaffected, other tiles' buttons at `opacity:.4`). This is deliberately **not** part
+  of the scroll-scene's `data-opacity` keyframes — it lives on the outer `<button>`, a different element than the
+  inner `.stack-tile-motion` the scroll engine writes to, specifically so the reduced-motion stylesheet's
+  `.scroll-layer{opacity:1!important}` (which must always win over scroll-driven opacity) cannot also cancel out
+  category muting, which must keep working under reduced motion. Keyboard focus drives the identical state as mouse
+  hover, so the behavior is available without a pointer.
+- **Reduced motion**: the assembly keyframes collapse through the existing `.scroll-layer{transform:none!important;
+  opacity:1!important}` rule already shared by every scene layer sitewide — tiles simply render at their resting
+  position with no entrance to skip. Category emphasis is untouched by that rule (different element, as above), so
+  hover/focus highlighting keeps working exactly as under full motion.
+
 ## Motion Architecture
 
 | Responsibility | Current owner and mechanism |
 | --- | --- |
 | Document scroll progress | Engine reads `window.scrollY` and cached document range; writes root `--progress`; CSS scales the fixed bar. |
 | Detail chapter progress | `ProjectDetail` observer updates React `activeStep`; `.case-progress` styles the current marker. This is separate from document progress. |
-| Reveal | Engine IntersectionObserver adds `.is-visible` once at threshold `0.12`, then unobserves; CSS animates reveal opacity/offset and header staggering. The completed reveal state persists independently of scene-driven opacity: a reveal still only ever gates *when* content first becomes visible, never reversing. As of this change, structural content layers again carry their own scene-driven opacity on top of that one-time reveal (composed multiplicatively), so a revealed layer can still settle/recede with scroll position, bounded to a readable floor (≥0.2) and always resting at full opacity when centered — restoring the depth a prior "focused motion refinement" pass (2026-10-02, `c1e5452`) had removed. Rows, stack tiles and the contact content use the same once-only reveal at the row/button level; stack tiles themselves remain without scroll parallax, unchanged, since the brick wall is intentionally flat. |
+| Reveal | Engine IntersectionObserver adds `.is-visible` once at threshold `0.12`, then unobserves; CSS animates reveal opacity/offset and header staggering. The completed reveal state persists independently of scene-driven opacity: a reveal still only ever gates *when* content first becomes visible, never reversing. As of this change, structural content layers again carry their own scene-driven opacity on top of that one-time reveal (composed multiplicatively), so a revealed layer can still settle/recede with scroll position, bounded to a readable floor (≥0.2) and always resting at full opacity when centered — restoring the depth a prior "focused motion refinement" pass (2026-10-02, `c1e5452`) had removed. Rows and the contact content use the same once-only reveal at the row/button level. Stack tiles also use it at the `<li>` level, and additionally now carry their own per-tile scroll-driven assembly motion (see "Engineering Stack: assembly motion and category emphasis" above) plus a separate, non-scroll hover/focus category-emphasis channel; the brick wall's final resting layout is unchanged. |
 | Parallax | Engine discovers scenes/layers and samples keyframes from native scroll state; CSS consumes scene variables. |
 | Hover | CSS owns project title/disclosure/art scaling, experience feedback, stack disclosure, service sweep/arrows, and contact/link feedback. |
 | Cursor | Engine writes positional variables; `Cursor` sets contextual labels; CSS owns shape/label transitions and pointer fallbacks. |

@@ -107,6 +107,30 @@ function spansFor(names: readonly string[], grid: Grid): { spans: number[]; colu
   return { spans, column };
 }
 
+export type StackTileMotion = { readonly x: string; readonly y: string; readonly opacity: string };
+
+// Deterministic per-tile assembly motion for the Engineering Stack's scroll-driven entrance: each tile gets one of
+// a small set of displacement directions/magnitudes, chosen purely from its own index and row column (never its
+// name or category), so the same data always produces the same motion and no technology is special-cased. Bounded
+// to the site's existing structural-layer conventions: <=60px travel per axis, opacity resting at 1 with a >=0.2
+// floor, no scale/rotate (reserved for decorative-only layers elsewhere in the stylesheet).
+const motionProfiles: readonly { readonly x: number; readonly y: number }[] = [
+  { x: -42, y: 0 },
+  { x: 44, y: 0 },
+  { x: 0, y: -36 },
+  { x: 0, y: 40 },
+  { x: -26, y: -20 },
+  { x: 28, y: 18 },
+  { x: -18, y: 24 },
+  { x: 20, y: -16 },
+];
+
+export function stackTileMotion(tile: StackTile): StackTileMotion {
+  const profile = motionProfiles[(tile.index + tile.column) % motionProfiles.length];
+  const floor = 0.22 + (tile.index % 4) * 0.04;
+  return { x: `${profile.x},0,${profile.x}`, y: `${profile.y},0,${profile.y}`, opacity: `${floor.toFixed(2)},1,${floor.toFixed(2)}` };
+}
+
 export function layoutStackTiles(groups: readonly StackGroup[]): StackTile[] {
   const flat = groups.flatMap((group) => group.items.map((item) => ({ name: item.name, category: group.label, usedIn: item.usedIn })));
   const names = flat.map((item) => item.name);

@@ -1513,3 +1513,113 @@ rather than introduce new ones. Main-page layout/interaction change, treated as 
 - `STABILITY_CONTRACT.md` gained a new About clause (the previous contract had none, since the old section had no
   real interaction to protect); `STABLE_BASELINE.md` was deliberately left untouched, as it is an explicitly frozen
   historical snapshot of a specific past commit, not a living description of current behavior.
+
+## 2026-10-02 — Engineering Stack: scroll-driven tile assembly and hover/focus category emphasis
+
+### Context
+
+The user asked to make the brick-wall Engineering Stack "feel alive": as the section scrolls into view, individual
+tiles should assemble from scattered/displaced positions into the existing final grid (deterministic per tile, not
+random, not hardcoded per technology), reversible with scroll direction; separately, hovering or focusing a tile
+should emphasize its whole category (e.g. all Frontend tiles) while muting the rest, in a three-tier scheme
+(hovered tile / same-category / other categories). Explicit constraints: preserve the exact existing puzzle layout,
+no cards/scale/dramatic effects, reduced motion must skip the assembly but keep category highlighting working, and
+the whole thing must stay data-driven with no `if technology === "Angular"`-style branching. Main-page
+motion/interaction change, treated as a protected-system change per `AGENTS.md`/`CHANGE_PROTOCOL.md`.
+
+### Changed
+
+- **`src/stackLayout.ts`** — added `stackTileMotion(tile)`, a pure function of `tile.index`/`tile.column` only
+  (never `tile.name`/`tile.category`) that indexes into a fixed 8-entry palette of x/y displacement directions and
+  derives a per-tile opacity floor, returning 3-point `{x, y, opacity}` keyframe strings in the same
+  `"entry,middle,exit"` format every other `data-scroll-layer` on the site already uses. `layoutStackTiles` itself
+  and its brick-wall packing algorithm are completely unchanged — this only adds assembly metadata on top of the
+  positions it already computes.
+- **`src/App.tsx`** — `Stack` now holds `active: {index, category} | null` hover/focus state. Each `<li>` gained
+  `data-scroll-scene` (making every tile its own scroll scene) and `data-emphasis="self"|"category"|"muted"`
+  (computed from `active` against the tile's own `data-category`). The tile's visible content (index/name/footer)
+  now sits inside a new inner `<span class="stack-tile-motion scroll-layer" data-scroll-layer>` carrying the
+  computed `data-x`/`data-y`/`data-opacity` from `stackTileMotion`, deliberately a different element than the outer
+  `<button>` that the hover/focus emphasis styling targets. `onMouseEnter`/`onFocus`/`onMouseLeave`/`onBlur` on the
+  button set/clear `active`.
+- **`src/index.css`** — moved the tile's grid/padding from `.stack-tile button` onto the new `.stack-tile-motion`
+  element (the scroll-driven one), leaving `.stack-tile button` to own only background/color/opacity (the
+  hover/focus/emphasis-driven ones) — see Notes for why this split matters. Merged `[data-emphasis="self"]` into
+  the existing hover/`:focus-visible` selectors (background invert, name shift, category/reference swap) so
+  keyboard focus and the new emphasis state produce the identical visual treatment hover already had. Added
+  `.stack-tile[data-emphasis="muted"] button{opacity:.4}`. Updated the `≤800px` override block to match the new
+  element split (`min-height` stays on `button`, padding moves to `.stack-tile-motion`).
+- **`tests/stack-bricks.test.mjs`** — added `stackTileMotion` to the imports; added `"Stack"` to the two existing
+  AST-based exemption lists (the opacity-literal-keyframe check and the travel/no-scale-or-rotate check) that
+  already exempt `ProjectDetail`/`ArchitectureDiagram`, since per-tile computed motion inherently needs a JS
+  expression rather than a literal JSX string — the same accommodation already established for those two
+  components. Added a new test asserting `stackTileMotion`'s output directly (3-point keyframes, middle frame at
+  rest/full opacity, ≤60 px travel, ≥0.2 opacity floor, never carries `scale`/`rotate`) against the real stack plus
+  two synthetic tile counts, so the removed per-JSX-literal coverage is replaced with an equally strict,
+  function-level guarantee rather than weakened. Rewrote the `renderedTiles()` test helper to locate each `<li>`'s
+  own attributes and its index/name text independently of the markup between them (it previously hardcoded the
+  exact old DOM structure as one single regex and broke when the new wrapper span was introduced).
+
+### Preserved
+
+- The final, resting brick-wall layout — every tile's exact grid position/span at every breakpoint — is byte-for-byte
+  the same `layoutStackTiles` output as before; assembly only affects the displaced *entry* state, never the
+  settled position, confirmed by screenshot comparison (see below) showing no layout shift once centered.
+- The existing once-only `.reveal` entrance, the `usedIn`/category hover swap's existing 350/300 ms timings, and
+  the responsive 12/7/2-column grid switch are all unchanged — assembly and emphasis are additive layers on top of
+  the existing tile, not a replacement for it.
+- No tile opens a detail/modal on click (confirmed still true — only `onMouseEnter`/`onFocus`/`onMouseLeave`/
+  `onBlur` were added, no `onClick`).
+
+### Regression Testing
+
+- `pnpm exec tsc --noEmit`: passed, no errors.
+- `node --experimental-strip-types --test tests/*.test.mjs`: 38 of 38 passed, including the new
+  `stackTileMotion` bounds test and the rewritten `renderedTiles()`-dependent tests.
+- `PORTFOLIO_DATA_MODE=fixture node scripts/sync-github.ts && vite build`: succeeded.
+- **Browser verification, Playwright-driven Chromium against the dev server (fixture data), simulated input only,
+  not a physical device:**
+  - Scrolled the Stack section's first tile from off-screen to vertically centered: its `.stack-tile-motion`
+    transform read a non-identity translate (`-42px` on the configured axis) while off-center, and settled to
+    within a fraction of a pixel of identity with opacity ≈1 once centered — confirming the assembly keyframes are
+    actually live and scroll-coupled, not just configured. Scrolling back to the top reproduced the displaced
+    transform again, confirming reversal. (An initial run of this check used `window.scrollTo` without an explicit
+    `behavior`, which inherits the site's `html{scroll-behavior:smooth}` and animates asynchronously — the first
+    pass under-waited and incorrectly looked like the motion wasn't engaging at all; re-run with
+    `behavior:"instant"` and adequate waits confirmed the feature works correctly. Documented here since it could
+    otherwise look like a false "all good.")
+  - Hovered a Frontend tile: its own `data-emphasis` read `self`; another Frontend tile read `category`; a
+    Backend/Data/AI-Systems tile read `muted` with its button's computed opacity at `0.4`. Moving the pointer away
+    cleared `data-emphasis` on all tiles. Keyboard-focusing a tile (no mouse) produced the identical `self`
+    emphasis, confirming the two activation paths share one code path.
+  - Reduced motion (`reducedMotion:"reduce"` context): `.stack-tile-motion`'s transform read `none` regardless of
+    scroll position (assembly skipped, as required); hovering a tile still produced `data-emphasis="self"` and the
+    muted tile's opacity still read `0.4` (category highlighting still fully functional under reduced motion, as
+    required).
+  - 390 px mobile viewport: button `min-height` and the motion span's padding matched the existing `≤800px`
+    override values, confirming the responsive layout split wasn't disturbed by the new inner element.
+  - Screenshot-reviewed the settled section (identical to the pre-existing puzzle layout, no shift) and the hover
+    state (hovered tile inverted, same-category tiles at full strength, every other category visibly muted) against
+    real portfolio category names (Frontend/Backend/Data/AI-Systems) via a temporary fixture data swap, confirming
+    the three-tier scheme is visually correct, not just attribute-correct.
+  - Zero console errors across every pass.
+- **Not performed:** physical trackpad/mouse/touch input, cross-browser/device certification, a measured
+  frame-rate/performance recording, the real authenticated GitHub sync/production build, and a live-site check.
+
+### Notes
+
+- The spec suggested rotation as part of the "coming together" feel. This was deliberately **not** implemented:
+  the codebase's existing, enforced motion-policy tests forbid `data-scale`/`data-rotate` on any non-decorative
+  structural layer, reserving them for a specific decorative-only exemption list Stack tiles are not part of.
+  Rotation/scale here would have meant weakening that existing guard rather than extending the section, and the
+  spec's own overall language elsewhere ("not a pinball machine," avoiding gratuitous/spring-like motion) supports
+  the more restrained x/y/opacity-only treatment actually built.
+- Assembly motion (`.stack-tile-motion`, scroll-driven) and category emphasis (the outer `button`, hover/focus-
+  driven) are deliberately kept on two different elements. Had they shared one element, the sitewide reduced-motion
+  rule `.scroll-layer{opacity:1!important}` — which must always force assembly opacity to settle — would also have
+  forced away the muted-category opacity on the same element, breaking the requirement that highlighting keep
+  working under reduced motion. Splitting them avoids that collision without any reduced-motion-specific exception
+  in the component itself.
+- Temporarily added `playwright` as a devDependency for this round's browser verification; reverted
+  (`git checkout -- package.json pnpm-lock.yaml && pnpm install --frozen-lockfile`) before committing, same as
+  every prior round this session that used it.

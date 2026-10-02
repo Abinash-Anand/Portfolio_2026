@@ -15,7 +15,7 @@ import * as stackLayout from "../src/stackLayout.ts";
 // Engineering Stack brick wall: the layout is a pure function of the normalized technologies data, and the unchanged
 // component renders whatever that data contains. Motion-policy checks guard the reveal model against regressions.
 
-const { layoutStackTiles, stackGrids } = stackLayout;
+const { layoutStackTiles, stackGrids, stackTileMotion } = stackLayout;
 const root = resolve(import.meta.dirname, "..");
 const read = path => readFileSync(resolve(root, path), "utf8");
 const fixture = JSON.parse(read("fixtures/portfolio.fixture.json"));
@@ -41,11 +41,16 @@ runInNewContext(compiled, {
 });
 const render = document => renderToStaticMarkup(React.createElement(appModule.exports.default, {store: storeFor(document)}));
 
-/** The tiles in the rendered stack field, in document order. */
+/** The tiles in the rendered stack field, in document order. Matches each <li>'s own attributes and its index/name text
+ * independently of the wrapper markup between them, so it survives presentational changes inside the tile. */
 function renderedTiles(html) {
   const field = html.match(/<ul class="stack-field"[^>]*>([\s\S]*?)<\/ul>/)?.[1] ?? "";
-  return [...field.matchAll(/<li class="stack-tile reveal" data-category="([^"]*)" style="([^"]*)"><button type="button"><small class="stack-tile-index">(\d+)<\/small><span class="stack-tile-name">([^<]*)<\/span>/g)]
-    .map(([, category, style, number, name]) => ({category, name, number: Number(number), style}));
+  return [...field.matchAll(/<li class="stack-tile reveal"[^>]*>[\s\S]*?<\/li>/g)].map(([li]) => ({
+    category: li.match(/data-category="([^"]*)"/)?.[1] ?? "",
+    style: li.match(/style="([^"]*)"/)?.[1] ?? "",
+    number: Number(li.match(/stack-tile-index">(\d+)</)?.[1]),
+    name: li.match(/stack-tile-name">([^<]*)</)?.[1] ?? "",
+  }));
 }
 const withStack = groups => { const document = structuredClone(realDocument); document.technologies = groups; return document; };
 const names = count => Array.from({length: count}, (_, index) => ({name: ["Go", "Docker", "TypeScript", "Kubernetes", "PostgreSQL", "Automated testing", "WebSockets", "CI / CD", "React", "Observability"][index % 10] + (index >= 10 ? ` ${index}` : ""), usedIn: `project ${index}`}));
@@ -178,7 +183,13 @@ test("content layers may carry a subtle scroll-mapped opacity that settles at fu
   const parsed = ts.createSourceFile("App.tsx", appSource, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
   const structural = [];
   (function inspect(node, insideOverlayDetail) {
-    const inDetail = insideOverlayDetail || (ts.isFunctionDeclaration(node) && ["ProjectDetail", "ArchitectureDiagram"].includes(node.name?.text));
+    // `Stack` is also exempted: its per-tile assembly keyframes are computed by the pure, deterministic
+    // `stackTileMotion()` (stackLayout.ts) from each tile's own index/column, not hand-authored per element the
+    // way every other structural layer is -- so the JSX attribute is necessarily a `{...}` expression, not a
+    // literal. The same floor/resting-opacity invariants this test enforces are instead asserted directly against
+    // `stackTileMotion()`'s output in "stack tile assembly motion stays within the structural travel/opacity
+    // bounds" below, across the real tile set.
+    const inDetail = insideOverlayDetail || (ts.isFunctionDeclaration(node) && ["ProjectDetail", "ArchitectureDiagram", "Stack"].includes(node.name?.text));
     if (!inDetail && (ts.isJsxSelfClosingElement(node) || ts.isJsxOpeningElement(node))) {
       const attributes = Object.fromEntries(node.attributes.properties.filter(ts.isJsxAttribute).map(attribute => [attribute.name.text, attribute.initializer && ts.isStringLiteral(attribute.initializer) ? attribute.initializer.text : "(expression)"]));
       if ("data-opacity" in attributes && !decorative.test(attributes.className ?? "")) structural.push([`${node.tagName.getText()}.${attributes.className}`, attributes["data-opacity"]]);
@@ -201,7 +212,9 @@ test("structural parallax travel is small, and no content layer scales or rotate
   const decorative = /\b(hero-grid|hero-art|scroll-cue|project-visual-backdrop|project-art-layer|project-overlay|contact-grid|detail-art-layer)\b/;
   const travel = [];
   (function inspect(node, inDetail) {
-    const nowInDetail = inDetail || (ts.isFunctionDeclaration(node) && ["ProjectDetail", "ArchitectureDiagram"].includes(node.name?.text));
+    // See the matching note in the opacity test above: `Stack`'s per-tile keyframes are computed, not literal, and
+    // are instead bounds-checked directly against `stackTileMotion()` below.
+    const nowInDetail = inDetail || (ts.isFunctionDeclaration(node) && ["ProjectDetail", "ArchitectureDiagram", "Stack"].includes(node.name?.text));
     if (!nowInDetail && (ts.isJsxSelfClosingElement(node) || ts.isJsxOpeningElement(node))) {
       const attributes = Object.fromEntries(node.attributes.properties.filter(ts.isJsxAttribute).map(attribute => [attribute.name.text, attribute.initializer && ts.isStringLiteral(attribute.initializer) ? attribute.initializer.text : null]));
       if ("data-scroll-layer" in attributes && !decorative.test(attributes.className ?? "")) {
@@ -214,6 +227,33 @@ test("structural parallax travel is small, and no content layer scales or rotate
   assert.ok(travel.length > 15, "expected the structural layers to be found");
   for (const [layer, axis, amount] of travel) assert.ok(amount <= 60, `${layer} ${axis} travels ${amount}px`);
   assert.ok(Math.max(...travel.map(entry => entry[2])) <= 60);
+});
+
+test("stack tile assembly motion stays within the structural travel/opacity bounds, for any tile count", () => {
+  // `Stack` is exempted from the two generic structural-layer tests above (its keyframes are computed per tile,
+  // not literal JSX attributes) -- this test enforces the exact same invariants directly against the pure
+  // `stackTileMotion()` function instead: <=60px travel per axis, no scale/rotate (not even an attribute for it
+  // exists), opacity resting at 1 with a >=0.2 floor, and a 3-point entry/middle/exit keyframe shape.
+  const floor = 0.2;
+  const real = layoutStackTiles(realDocument.technologies);
+  assert.ok(real.length > 10, "expected the real stack to have enough tiles to meaningfully check");
+  for (const tiles of [real, layoutStackTiles(chunk(names(45), 9)), layoutStackTiles(chunk(names(3), 2))]) {
+    for (const tile of tiles) {
+      const motion = stackTileMotion(tile);
+      for (const [axis, raw] of [["x", motion.x], ["y", motion.y]]) {
+        const frames = raw.split(",").map(Number);
+        assert.equal(frames.length, 3, `tile ${tile.index} ${axis}: must be a 3-point entry,middle,exit keyframe`);
+        assert.ok(frames.every(Number.isFinite), `tile ${tile.index} ${axis}: values must be numeric`);
+        assert.equal(frames[1], 0, `tile ${tile.index} ${axis}: must rest at zero displacement (assembled) in the middle keyframe`);
+        assert.ok(frames.every(frame => Math.abs(frame) <= 60), `tile ${tile.index} ${axis}: travels ${Math.max(...frames.map(Math.abs))}px, above the 60px structural ceiling`);
+      }
+      const opacityFrames = motion.opacity.split(",").map(Number);
+      assert.equal(opacityFrames.length, 3, `tile ${tile.index} opacity: must be a 3-point entry,middle,exit keyframe`);
+      assert.equal(opacityFrames[1], 1, `tile ${tile.index} opacity: must rest at full opacity`);
+      assert.ok(opacityFrames.every(frame => frame >= floor), `tile ${tile.index} opacity dips to ${Math.min(...opacityFrames)}, below the ${floor} readable floor`);
+    }
+  }
+  assert.ok(!("scale" in stackTileMotion(real[0])) && !("rotate" in stackTileMotion(real[0])), "stack tile motion must never include scale or rotate");
 });
 
 test("reveals are enter-triggered once; reduced motion and the capability hold state are covered by the stylesheet", () => {
