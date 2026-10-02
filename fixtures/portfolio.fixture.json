@@ -598,7 +598,26 @@
   ],
   "education": [
     {
-      "qualification": "MSc · Computer Science"
+      "id": "foundation",
+      "chapterLabel": "Foundation",
+      "yearStart": "2016",
+      "yearEnd": "2019",
+      "institution": "Fixture State University",
+      "degreeShort": "BSc",
+      "field": "Computer Engineering",
+      "metaPrimary": { "label": "Degree", "value": "Bachelor of Science" },
+      "metaSecondary": { "label": "Period", "value": "2016 → 2019" }
+    },
+    {
+      "id": "depth",
+      "chapterLabel": "Depth",
+      "yearStart": "2019",
+      "yearEnd": "2021",
+      "institution": "Fixture Institute of Technology",
+      "degreeShort": "MSc",
+      "field": "Computer Science",
+      "metaPrimary": { "label": "Focus", "value": "Distributed Systems · Platforms" },
+      "metaSecondary": { "label": "Status", "value": "Completed" }
     }
   ],
   "about": {

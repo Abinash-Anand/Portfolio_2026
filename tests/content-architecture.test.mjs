@@ -14,6 +14,7 @@ import { PortfolioStore } from "../src/app/application/PortfolioStore.ts";
 import { noAnalytics, analyticsPayload } from "../src/app/application/AnalyticsPort.ts";
 import { discoverPinnedRepositories, syncPortfolio } from "../scripts/sync-github.ts";
 import * as stackLayout from "../src/stackLayout.ts";
+import * as educationMotion from "../src/educationMotion.ts";
 
 const root = resolve(import.meta.dirname, "..");
 const fixture = JSON.parse(readFileSync(resolve(root, "fixtures/portfolio.fixture.json"), "utf8"));
@@ -26,6 +27,7 @@ const module = {exports: {}};
 const load = name => {
   if (name === "./useParallaxEngine") return {useScrollSceneEngine: () => {}};
   if (name === "./stackLayout") return stackLayout;
+  if (name === "./educationMotion") return educationMotion;
   if (name === "./app/application/portfolioProjects") return {portfolioStore: storeFor(fixture)};
   if (name === "./app/application/AnalyticsPort") return {noAnalytics};
   if (name === "react-dom") return {createPortal: () => null};

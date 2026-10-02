@@ -1623,3 +1623,140 @@ motion/interaction change, treated as a protected-system change per `AGENTS.md`/
 - Temporarily added `playwright` as a devDependency for this round's browser verification; reverted
   (`git checkout -- package.json pnpm-lock.yaml && pnpm install --frozen-lockfile`) before committing, same as
   every prior round this session that used it.
+
+## 2026-10-02 — About: Education progression (replaces the former quiet qualification list)
+
+### Context
+
+The user asked to replace the About section's quiet education list with an interactive, scroll-driven progression
+showing the two degrees as two layers of the same technical foundation: Foundation (B.Tech) initially emphasized,
+Depth (M.Sc.) becoming emphasized as the user scrolls deeper, reversible with scroll direction, with large
+architectural year typography, a subtle progression indicator near the center divider, and the existing two-column
+composition preserved exactly (never a carousel, tabs, accordion, or vertical timeline). Explicit constraints: this
+had to feel like a third, visually distinct interaction language from both Experience's scroll-stepping and the
+Decision Lens selector's click/keyboard activation directly above it in the same section; concise, not another
+resume; fully data-driven with no degree-specific content hardcoded in the component; reduced motion must keep the
+content readable and keyboard-accessible with no animated transitions. Protected-system change under
+`AGENTS.md`/`CHANGE_PROTOCOL.md` — the system affected, the reason, the regression risk and the test plan were
+stated to the user before any edit, per `AGENTS.md`'s "Before Modifying A Protected System."
+
+### Changed
+
+- **`src/app/domain/portfolioData.ts`, `src/app/application/portfolioContract.ts`** — replaced the old
+  `education: readonly { qualification: string }[]` free-form list with a fixed 2-tuple,
+  `education: readonly [EducationChapter, EducationChapter]` (tuple position is the role: index 0 = Foundation,
+  index 1 = Depth — the same fixed-tuple discipline already used for `engineeringPrinciples`). Each
+  `EducationChapter` carries `institution`/`degreeShort`/`field`/`yearStart`/`yearEnd` plus two generic
+  `metaPrimary`/`metaSecondary` `{label, value}` rows, so the component renders whichever two facts a chapter's own
+  data supplies without any chapter-specific branching. Added a `tuple2()` contract helper (mirroring the existing
+  `tuple4()`) and a uniqueness check on `education[].id`, matching the pattern already used for `experience`/
+  `services`.
+- **`src/educationMotion.ts`** (new file) — `educationChapterMotion(index: 0 | 1)`, a pure function of only the
+  chapter's fixed tuple position (never its institution/degree/field) returning mirrored 3-point `data-opacity`/
+  `data-y` keyframe strings: the two chapters' curves are exact complements of each other (Foundation 1→0.6→0.2,
+  Depth 0.2→0.6→1), meeting at a shared `0.6` "transition zone" at the scroll midpoint, bounded to a `0.2` floor and
+  ≤10 px travel. Also exports `educationIndicatorHeight`/`educationMarkerTravel`, the single source of truth shared
+  between the progression indicator's CSS track height and its scroll-driven travel distance so the two can never
+  drift out of sync.
+- **`src/App.tsx`** — added `EducationProgression`, which renders the fixed 2-tuple as `.education-track` (a
+  `position:sticky` pin shell reusing the same generic tall-track-plus-sticky-inner-panel pattern Hero/Contact/
+  Experience already established, sized as a fixed `190svh` since this is always exactly two chapters, not a
+  per-entry-count track like Experience's) containing two `.education-chapter` `data-scroll-layer` elements (each
+  reading `educationChapterMotion()`) and a `.education-indicator-dot` layer (reading `educationMarkerTravel`) that
+  translates along a fixed track from the Foundation end to the Depth end. No `IntersectionObserver`, no React state
+  tracking "which chapter is active," no click handler changing emphasis — the crossfade is purely the shared
+  engine's existing phase/smoothstep/damping sampling of live scroll position, which is also what makes it
+  reversible for free: scrolling up simply samples the same curve at an earlier progress value. `About` now renders
+  `<EducationProgression chapters={portfolio.education} />` inside the same `about-education` wrapper (same thin top
+  rule, same small label) the old quiet list used.
+- **`src/index.css`** — added `.education-track`/`.education-sticky`/`.education-grid` (the pin shell and the
+  `1fr auto 1fr` two-column-plus-divider grid), `.education-chapter-index`/`.education-year`/`.education-year-rule`/
+  `.education-institution`/`.education-subline`/`.education-meta*` (the architectural year typography and
+  supporting-fact rows, reusing the site's existing `var(--ink)`/`var(--muted)`/`var(--line)` tokens and thin-rule
+  idiom — no new colors, cards, gradients or shadows), and `.education-indicator`/`.education-indicator-track`/
+  `.education-indicator-dot` (the progression line and its moving marker, sized from the same
+  `--indicator-height` custom property the component sets from `educationIndicatorHeight`). Added a ≤800 px override
+  (grid becomes a single stacked column with a thin rule between chapters, the indicator is hidden) and a reduced-
+  motion override (`.education-track{height:auto!important}.education-sticky{position:relative;min-height:auto}`,
+  matching Hero/Contact/Experience's own reduced-motion un-pinning) — both chapters then settle at the sitewide
+  `.scroll-layer{opacity:1!important}` rule shared by every scene layer, with no Education-specific code needed for
+  that fallback.
+- **`tests/stack-bricks.test.mjs`** — imported `educationMotion` and added `"EducationProgression"` to the same two
+  AST-based exemption lists already covering `Stack` (the generic opacity-literal and travel/no-scale-or-rotate
+  checks), since Education's crossfade intentionally rests at `0.6`, not `1`, at the scene's middle keyframe — a
+  genuine design difference from the "reveal-then-rest-at-full-opacity" semantics those generic checks protect, not
+  an oversight. Added a dedicated test asserting the real invariants directly against `educationChapterMotion()`'s
+  output: 3-point keyframes, readable `0.2` floor, each curve reaching near-full opacity somewhere in its range
+  (never permanently dim), the two chapters' curves being exact mirrors of each other, Foundation starting fully
+  emphasized and Depth ending fully emphasized, ≤20 px travel, no scale/rotate, and the marker's travel keyframe
+  matching `educationIndicatorHeight` exactly. `tests/content-architecture.test.mjs` and
+  `tests/github-activation.test.mjs` also compile `App.tsx` in their own sandboxed module contexts and needed the
+  same `"./educationMotion"` case added to their `require` stubs (the same thing `"./stackLayout"` already needed
+  there) — without it those two files failed outright at module-load time before any of their own tests could run.
+- **`portfolio.json`, `fixtures/portfolio.fixture.json`** — replaced the old `qualification` strings with the new
+  2-tuple shape. Real data: Foundation = Bharati Vidyapeeth (DU) College of Engineering, Pune (B.Tech, Information
+  Technology, 2020→2024, metaPrimary "Degree"/"Bachelor of Technology", metaSecondary "Period"/"2020 → 2024");
+  Depth = HFT Stuttgart (M.Sc., Software Technology, 2025→2027, metaPrimary "Focus"/"Architecture · Systems ·
+  Verification", metaSecondary "Status"/"Present") — the same facts the prior qualification strings already stated,
+  now structured. The fixture's two chapters use its own separate synthetic institutions/fields (consistent with
+  its established "Alex Morgan" identity), not a copy of the real content.
+
+### Preserved
+
+- The two-column composition, the Decision Lens principle selector directly above (fully independent state —
+  confirmed by browser verification that scrolling Education never changes the selected principle and selecting a
+  principle never changes Education's scroll-driven state), the `about-education` wrapper's existing thin top rule
+  and small eyebrow label, and every other section's layout/motion were untouched — `git diff --stat` for this round
+  is scoped to the files listed above.
+- No scroll-jacking: native scroll remains fully in control throughout; the crossfade only ever samples current
+  scroll position, never captures or redirects wheel/touch input.
+
+### Regression Testing
+
+- `pnpm exec tsc --noEmit`: passed, no errors.
+- `node --experimental-strip-types --test tests/*.test.mjs`: 39 of 39 passed across all three test files, including
+  the new `educationChapterMotion` bounds test.
+- `PORTFOLIO_DATA_MODE=fixture node scripts/sync-github.ts && vite build`: succeeded; the regenerated, gitignored
+  `src/app/generated/githubPortfolio.json` snapshot now carries the new education shape, confirmed by inspection.
+- **Browser verification, Playwright-driven Chromium against the dev server (fixture data), simulated input only,
+  not a physical device:**
+  - Sampled chapter opacity near scroll-entry (`[0.999, 0.201]` — Foundation high, Depth at its floor), at the
+    scroll midpoint (`[0.621, 0.579]` — both roughly equal, the transition zone), near scroll-exit (`[0.223,
+    0.977]` — Depth high, Foundation at its floor), and after scrolling back to the entry position (`[0.959,
+    0.241]` — reproducing the entry state, confirming reversibility) by reading `getComputedStyle(...).opacity`
+    directly at each step.
+  - Confirmed the progression indicator dot's translateY grows from ≈0px near scroll-entry to ≈153px (of a 160px
+    track) near scroll-exit, tracking the same progress driving the chapter crossfade.
+  - Confirmed the Decision Lens selector's active tab ("Systems") was unchanged after scrolling fully through
+    Education, and the grid's column widths stayed constant across the whole scroll range (no layout jump).
+  - Reduced motion: both chapters' opacity read `1` regardless of scroll position, and `.education-sticky` computed
+    to `position:relative` (unpinned), confirming the static, equally-emphasized fallback.
+  - 390 px mobile: `.education-grid` computed to `display:block` (stacked), `.education-indicator` to
+    `display:none`, and `document.documentElement.scrollWidth` did not exceed the viewport (no horizontal
+    overflow).
+  - Confirmed every rendered institution/degree/meta value came from the fixture's data (`Fixture State
+    University`, `Fixture Institute of Technology`, `Bachelor of Science`, `Distributed Systems`, `2016`, `2021`
+    all present in the rendered HTML), not hardcoded component text.
+  - Screenshot-reviewed the Foundation-emphasized, transition-zone, and Depth-emphasized states against the
+    fixture's content at 1440px: Foundation column legibly bold/dark with Depth visibly muted near scroll-entry,
+    both columns at comparable weight at the midpoint, and the emphasis fully reversed (Depth bold, Foundation
+    muted) near scroll-exit, with the indicator dot visibly at the corresponding position each time.
+  - Zero console errors across every pass.
+- **Not performed:** physical trackpad/mouse/touch input, cross-browser/device certification, a measured
+  frame-rate/performance recording, the real authenticated GitHub sync/production build, and a live-site check.
+
+### Notes
+
+- Education's crossfade deliberately does not rest at full opacity (`1`) at the scene's middle keyframe, unlike
+  every other structural layer's opacity curve on this site. That generic invariant protects against content being
+  stranded dim after a one-time reveal; Education's two chapters are a genuine, continuous A/B emphasis crossfade
+  where one is legitimately more prominent than the other at every point along the range, which is the entire
+  premise of the feature. `EducationProgression` is exempted from that generic check the same way `Stack` already
+  is, with an equally strict, dedicated replacement test — not a weakening of the policy, a recognition that this
+  component's invariant is genuinely different.
+- The pin shell's fixed `190svh` height (rather than a data-length-scaled height like Experience's
+  `entries.length * 100svh`) reflects that Education is structurally always exactly two chapters, per the
+  `readonly [EducationChapter, EducationChapter]` tuple — there is no "N chapters" case to scale for.
+- Temporarily added `playwright` as a devDependency for this round's browser verification; reverted
+  (`git checkout -- package.json pnpm-lock.yaml && pnpm install --frozen-lockfile`) before committing, same as
+  every prior round this session that used it.

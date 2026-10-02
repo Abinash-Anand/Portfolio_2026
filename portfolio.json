@@ -345,10 +345,26 @@
   ],
   "education": [
     {
-      "qualification": "M.Sc. · Software Technology, HFT Stuttgart · 2025—2027 (expected)"
+      "id": "foundation",
+      "chapterLabel": "Foundation",
+      "yearStart": "2020",
+      "yearEnd": "2024",
+      "institution": "Bharati Vidyapeeth (DU) College of Engineering, Pune",
+      "degreeShort": "B.Tech",
+      "field": "Information Technology",
+      "metaPrimary": { "label": "Degree", "value": "Bachelor of Technology" },
+      "metaSecondary": { "label": "Period", "value": "2020 → 2024" }
     },
     {
-      "qualification": "B.Tech. · Information Technology, Bharati Vidyapeeth (DU) College of Engineering, Pune · 2020—2024"
+      "id": "depth",
+      "chapterLabel": "Depth",
+      "yearStart": "2025",
+      "yearEnd": "2027",
+      "institution": "HFT Stuttgart",
+      "degreeShort": "M.Sc.",
+      "field": "Software Technology",
+      "metaPrimary": { "label": "Focus", "value": "Architecture · Systems · Verification" },
+      "metaSecondary": { "label": "Status", "value": "Present" }
     }
   ],
   "about": {

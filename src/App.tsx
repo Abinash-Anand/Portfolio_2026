@@ -2,8 +2,9 @@ import { Fragment, useEffect, useRef, useState, type CSSProperties, type ReactNo
 import { createPortal } from "react-dom";
 import { useScrollSceneEngine } from "./useParallaxEngine";
 import { layoutStackTiles, stackTileMotion } from "./stackLayout";
+import { educationChapterMotion, educationIndicatorHeight, educationMarkerTravel } from "./educationMotion";
 import { portfolioStore, type PortfolioProjectView } from "./app/application/portfolioProjects";
-import type { Portfolio, TechnicalVisualData, Capability, Experience as ExperienceEntry, EngineeringPrinciple } from "./app/domain/portfolioData";
+import type { Portfolio, TechnicalVisualData, Capability, Experience as ExperienceEntry, EngineeringPrinciple, EducationChapter } from "./app/domain/portfolioData";
 import type { CaseStudy, CaseStudySection as CaseStudySectionData, CaseStudyVisual } from "./app/domain/caseStudy";
 import type { PortfolioStore } from "./app/application/PortfolioStore";
 import { noAnalytics, type AnalyticsPort } from "./app/application/AnalyticsPort";
@@ -642,6 +643,41 @@ function PrincipleContent({ principle }: { principle: EngineeringPrinciple }) {
   );
 }
 
+function EducationProgression({ chapters }: { chapters: readonly [EducationChapter, EducationChapter] }) {
+  return (
+    <div className="education-track" data-scroll-scene>
+      <div className="education-sticky">
+        <div className="education-grid">
+          {chapters.map((chapter, index) => {
+            const chapterIndex = index as 0 | 1;
+            const motion = educationChapterMotion(chapterIndex);
+            return (
+              <div key={chapter.id} className="education-chapter scroll-layer" data-scroll-layer data-y={motion.y} data-opacity={motion.opacity}>
+                <p className="education-chapter-index">0{index + 1} / {chapter.chapterLabel}</p>
+                <div className="education-year">
+                  <span>{chapter.yearStart}</span>
+                  <span className="education-year-rule" aria-hidden="true" />
+                  <span>{chapter.yearEnd.slice(-2)}</span>
+                </div>
+                <h3 className="education-institution">{chapter.institution}</h3>
+                <p className="education-subline">{chapter.degreeShort} · {chapter.field}</p>
+                <ul className="education-meta">
+                  <li><span className="education-meta-label">{chapter.metaPrimary.label}</span><span className="education-meta-value">{chapter.metaPrimary.value}</span></li>
+                  <li><span className="education-meta-label">{chapter.metaSecondary.label}</span><span className="education-meta-value">{chapter.metaSecondary.value}</span></li>
+                </ul>
+              </div>
+            );
+          })}
+          <div className="education-indicator" style={{ "--indicator-height": `${educationIndicatorHeight}px` } as CSSProperties} aria-hidden="true">
+            <span className="education-indicator-track" />
+            <span className="education-indicator-dot scroll-layer" data-scroll-layer data-y={educationMarkerTravel} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function About({ portfolio }: PortfolioProps) {
   const principles = portfolio.engineeringPrinciples;
   const [activeIndex, setActiveIndex] = useState(1);
@@ -655,7 +691,7 @@ function About({ portfolio }: PortfolioProps) {
       </div>
       <div className="about-education">
         <p className="about-education-label">{portfolio.labels.educationLabel}</p>
-        <div className="about-education-list">{portfolio.education.map((item) => <span key={item.qualification}>{item.qualification}</span>)}</div>
+        <EducationProgression chapters={portfolio.education} />
       </div>
     </section>
   );

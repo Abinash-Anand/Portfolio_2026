@@ -243,16 +243,68 @@ explicit instruction not to duplicate Experience's scroll-stepping here.
   94px)` every other section's `h2` uses) — the large engineering statement, not the section question, is the
   dominant visual element here, per the spec's explicit hierarchy. This is a selector scoped to one section's own
   heading instance; `SectionHeader`'s shared CSS and every other section's title size are untouched.
-- **Education, demoted not removed**: the former static description/location/exploration/interests content is no
-  longer rendered by `About` (the decision-lens statements now carry that voice), but `education` still renders, as
-  a restrained, quiet continuation below the evidence row (`about-education`, a single thin top rule and small
-  label) — per the user's explicit "do not remove education permanently" instruction. `about.description`,
-  `location`, `exploration`, `interestsLabel` and `interests` remain in the schema and the data files unchanged
-  (and are still validated); they are simply no longer consumed by any component, the same "stop rendering, don't
-  delete" treatment already used elsewhere in this codebase for superseded fields.
+- **Education, demoted not removed, then re-elevated into its own progression**: the former static description/
+  location/exploration/interests content is no longer rendered by `About` (the decision-lens statements now carry
+  that voice). `education` itself first became a restrained, quiet continuation below the evidence row, then (same
+  day, explicit user-authorized follow-up) that quiet list was replaced by the scroll-driven two-chapter progression
+  described in "About: Education progression" below — still below the evidence row, inside the same
+  `about-education` wrapper and thin top rule/small label, just with materially richer content and its own
+  interaction. `about.description`, `location`, `exploration`, `interestsLabel` and `interests` remain in the
+  schema and the data files unchanged (and are still validated); they are simply no longer consumed by any
+  component, the same "stop rendering, don't delete" treatment already used elsewhere in this codebase for
+  superseded fields.
 - **Data-driven, no portfolio-specific branching**: `engineeringPrinciples` is a plain, fixed 4-tuple on the
   document (same pattern as `storySteps`/`decisionLabels`); the component has no `if principle.id === "systems"`
   branch anywhere — it renders whichever principle is active identically, by shape.
+
+### About: Education progression
+
+`EducationProgression` replaced the former quiet `education` qualification list with a scroll-driven, two-chapter
+(Foundation, Depth) crossfade — deliberately a *different* interaction language from both the scroll-stepped
+Experience timeline above it in the page and the click/keyboard-driven Decision Lens selector directly above it in
+this same section, while still reusing the same engine, easing and restraint conventions as both.
+
+- **Fixed 2-tuple, same pattern as `engineeringPrinciples`**: `education: readonly [EducationChapter,
+  EducationChapter]` is a structural tuple whose position *is* the role (index 0 = Foundation, index 1 = Depth) —
+  not a free-form list. Each chapter carries `institution`/`degreeShort`/`field`/`yearStart`/`yearEnd` and two
+  generic `metaPrimary`/`metaSecondary` label/value rows, so the component renders whichever two facts a chapter's
+  own data supplies (Foundation's are Degree/Period, Depth's are Focus/Status in the current content) without any
+  chapter-specific branching — the same "data-driven, no portfolio-specific branching" discipline as
+  `engineeringPrinciples` immediately above.
+- **Reuses the existing pin shell, not a new one**: `.education-track` (a fixed `190svh`, since this is always
+  exactly two chapters, not a per-entry-count track like Experience's) with a `position:sticky` `.education-sticky`
+  inner panel is the same generic "tall track + sticky inner panel" shell Hero, Contact and Experience already
+  established — reused, not duplicated, per `AGENTS.md`'s "prefer extending existing utilities... over parallel
+  implementations."
+- **Continuous crossfade, not discrete stepping**: unlike Experience's `IntersectionObserver`-driven discrete active
+  index, each chapter is a `data-scroll-layer` directly reading the shared engine's existing phase/smoothstep/
+  damping sampling — no observer, no React state tracking "which chapter is active," nothing bespoke. Foundation's
+  `data-opacity` keyframe and Depth's are exact mirrors of each other (`educationChapterMotion()`,
+  `src/educationMotion.ts`, a pure function of only the chapter's fixed tuple position), so the two chapters are
+  always exactly complementary: whatever emphasis one loses, the other gains, continuously and reversibly with
+  scroll position — scrolling back up is simply sampling the same curve at an earlier progress value, not a
+  separate "reverse" code path.
+- **Deliberately not the sitewide reveal-opacity invariant**: this codebase's own enforced motion-policy tests
+  require a structural layer's `data-opacity` to rest at `1` at the scene's middle keyframe (protecting against
+  content being stranded dim after a one-time reveal). Education's crossfade intentionally violates that specific
+  invariant — at the midpoint, each chapter rests at a shared `0.6`, a genuine "transition zone," not a mistake —
+  so `EducationProgression` is exempted from that generic check the same way `Stack` already is, with a dedicated
+  test (`tests/stack-bricks.test.mjs`) asserting the *actual* intended invariants directly against
+  `educationChapterMotion()`'s output instead: a readable `0.2` floor, mirrored curves, small bounded travel, and no
+  scale/rotate.
+- **Progression indicator**: a single additional `data-scroll-layer` (`.education-indicator-dot`) translates along a
+  fixed-height track from the Foundation end to the Depth end, driven by the same shared scroll progress as the two
+  chapters (`educationMarkerTravel`, `src/educationMotion.ts`) — not a separate interactive control, purely a
+  passive visual echo of the same underlying progress value.
+- **Reduced motion**: the pin shell un-pins (`position:relative`, matching Hero/Contact/Experience's own reduced-
+  motion override) and both chapters settle at the sitewide `.scroll-layer{opacity:1!important}` rule shared by
+  every scene layer — both chapters render at full, equal emphasis rather than one being arbitrarily chosen as
+  "active" with no scroll to justify it, a readable static fallback rather than a second bespoke state.
+- **Responsive**: the two-column `.education-grid` becomes a single stacked column at ≤800 px (a thin rule between
+  chapters replaces the vertical divider) and the progression indicator — meaningful only against a side-by-side
+  layout — is hidden; the same crossfade keeps running underneath, further dampened by the engine's own existing
+  viewport-width motion-strength attenuation, consistent with "do not force the desktop two-column geometry onto
+  mobile" without a second implementation.
 
 ### Engineering Stack: assembly motion and category emphasis
 

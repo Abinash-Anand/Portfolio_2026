@@ -35,7 +35,7 @@ Project details have a separate five-chapter indicator: an overlay-rooted Inters
 ### Section reveal
 
 - **Trigger / elements:** engine IntersectionObserver at threshold `0.12` observes `.reveal`, adds `.is-visible` once, then unobserves it. These include section headers, project rows, stack groups, service rows, and About copy.
-- **Properties:** header/About `--reveal-opacity` and `--reveal-y` transition from invisible/26 px to visible/zero. Row/group reveals animate opacity. As of this change, structural content layers (hero title/summary/meta, section headers, project index/copy/meta, about, service index/title, contact meta/headline/actions/socials) again carry a 3-point `data-opacity` keyframe (entry/middle/exit), composed multiplicatively with `--reveal-opacity` so the one-time reveal still gates first appearance, never reverses, and the layer always rests at full opacity (middle keyframe `1`) — only the entry/exit edges dip, bounded to a readable floor (≥0.2, enforced by `tests/stack-bricks.test.mjs`) so scroll-position depth never reads as content disappearing. Decorative/ambient layers (hero grid and art, scroll cue, project annotation, contact grid) and the detail overlay's internals keep their wider-range scene opacity, unchanged. Project and service rows, stack tiles and the contact content still use the same once-only enter reveal at the row/button level (`.is-visible` is added once and never removed); the restored opacity is a second, independent layer composed on top of it, not a replacement. Experience no longer participates in this shared reveal system at all — see "Experience: scroll-stepped sticky timeline" below for its own, separate discrete-step transition system. Stack tiles stagger by their position in a row (45 ms per column, capped) for this once-only reveal. As of this change stack tiles additionally carry their own per-tile scroll-driven assembly motion on a separate inner element — see "Stack: assembly motion and category emphasis" below — but their final resting position is the same flat, geometric brick-wall layout as before; nothing about the layout itself moved.
+- **Properties:** header/About `--reveal-opacity` and `--reveal-y` transition from invisible/26 px to visible/zero. Row/group reveals animate opacity. As of this change, structural content layers (hero title/summary/meta, section headers, project index/copy/meta, about, service index/title, contact meta/headline/actions/socials) again carry a 3-point `data-opacity` keyframe (entry/middle/exit), composed multiplicatively with `--reveal-opacity` so the one-time reveal still gates first appearance, never reverses, and the layer always rests at full opacity (middle keyframe `1`) — only the entry/exit edges dip, bounded to a readable floor (≥0.2, enforced by `tests/stack-bricks.test.mjs`) so scroll-position depth never reads as content disappearing. Decorative/ambient layers (hero grid and art, scroll cue, project annotation, contact grid) and the detail overlay's internals keep their wider-range scene opacity, unchanged. Project and service rows, stack tiles and the contact content still use the same once-only enter reveal at the row/button level (`.is-visible` is added once and never removed); the restored opacity is a second, independent layer composed on top of it, not a replacement. Experience no longer participates in this shared reveal system at all — see "Experience: scroll-stepped sticky timeline" below for its own, separate discrete-step transition system. Education's two chapters likewise do not use `.reveal`: their emphasis is a continuous, reversible scroll-position crossfade (see "About: Education progression" below), not a one-time enter animation. Stack tiles stagger by their position in a row (45 ms per column, capped) for this once-only reveal. As of this change stack tiles additionally carry their own per-tile scroll-driven assembly motion on a separate inner element — see "Stack: assembly motion and category emphasis" below — but their final resting position is the same flat, geometric brick-wall layout as before; nothing about the layout itself moved.
 - **Timing/easing:** header/About 800 ms primary ease; heading delay 100 ms, note delay 180 ms; project/stack/service opacity 700 ms primary ease.
 - **Responsive:** reveal mechanism remains; reflow does not introduce a second observer system.
 - **Reduced motion:** CSS forces reveal content visible, removes offsets/transforms, and minimizes transition durations. Observer behavior remains, but content does not depend on its entrance animation to be visible under this preference.
@@ -147,6 +147,37 @@ duplicate Experience's scroll-stepping language here, selection only ever change
   `principle-content` is a descendant of `principle-layout.reveal`, unlike Experience's panel which deliberately
   sits outside any `.reveal` ancestor and needed its own explicit override). `aria-selected`/focus state remain
   fully functional; only the animated transition is removed.
+
+### About: Education progression (2026-10-02; replaces the former quiet qualification list)
+
+A continuous, reversible scroll-driven crossfade between two fixed chapters (Foundation, Depth) — a third
+interaction language in this same section, after Decision Lens's click/keyboard selection and distinct from
+Experience's discrete scroll-stepping, while still built entirely from the shared engine's existing primitives.
+
+- **Trigger / elements:** native document scroll through the pinned `.education-track`/`.education-sticky` shell
+  (same generic tall-track-plus-sticky-inner-panel pattern as Hero/Contact/Experience). No click or keyboard
+  activation changes which chapter is emphasized — this is a passive, read-as-you-scroll narrative, not a control.
+- **Properties:** each `.education-chapter` is a `data-scroll-layer` with its own `data-opacity`/`data-y` keyframes
+  from `educationChapterMotion()` (`src/educationMotion.ts`) — Foundation's curve and Depth's are exact mirrors of
+  each other, so Foundation starts fully emphasized and recedes to a `0.2` floor by scroll-exit while Depth does the
+  reverse, meeting at a shared `0.6` "transition zone" at the midpoint. A small `.education-indicator-dot` layer
+  translates along a fixed-height track (`educationMarkerTravel`) from the Foundation end to the Depth end, driven
+  by the same scroll progress — a passive echo of the crossfade, not a second signal.
+  Travel is a subtle ≤10 px per chapter (well inside the sitewide 60 px structural ceiling); no layer scales or
+  rotates.
+- **Timing/easing:** continuously sampled through the shared engine's existing phase/smoothstep/damping pipeline —
+  the same `cubic-bezier(0.16, 1, 0.3, 1)` as every other scene, no bespoke transition timing.
+- **Reversibility:** scrolling up samples the identical curve at an earlier progress value — there is no separate
+  "reverse" state or one-shot animation to undo; the crossfade is simply a continuous function of current scroll
+  position at every instant.
+- **Responsive:** at ≤800 px `.education-grid` becomes a single stacked column (a thin horizontal rule replaces the
+  vertical divider between chapters) and `.education-indicator` is hidden (meaningful only against a side-by-side
+  layout); the crossfade itself keeps running, further dampened by the engine's existing viewport-width motion-
+  strength attenuation (as every scene already is on narrow viewports).
+- **Reduced motion:** `.education-track`/`.education-sticky` un-pin (`position:relative`, matching Hero/Contact/
+  Experience's own reduced-motion override), and both chapters settle at the sitewide
+  `.scroll-layer{opacity:1!important}` rule — both render at full, equal emphasis as a readable static fallback,
+  rather than arbitrarily picking one chapter "active" with no scroll position to justify it.
 
 ### Stack: assembly motion and category emphasis (2026-10-02; extends the former hover-only tile)
 

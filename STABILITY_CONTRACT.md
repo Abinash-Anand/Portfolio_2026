@@ -32,7 +32,16 @@ Existing interactions MUST continue working unless the user explicitly requests 
   evidence together, never one without the other; `ArrowUp`/`ArrowDown` move keyboard focus between the four
   principle tabs without changing the selection, matching an accessible manual-activation tablist; scrolling the
   page never changes which principle is selected, unlike Experience's deliberately different, scroll-driven
-  interaction language. Education remains present as a quiet continuation.
+  interaction language.
+- **Education progression (2026-10-02, explicit user-authorized redesign of the former quiet qualification list):**
+  the two education chapters (Foundation, Depth) crossfade emphasis as the user scrolls through the pinned
+  `education-track`, Foundation emphasized at scroll-entry and Depth emphasized at scroll-exit, reversible with
+  scroll direction at every point (scrolling back up always restores the prior emphasis, never a one-shot advance);
+  the progression indicator dot's position always matches the same scroll progress driving the crossfade; the
+  two-column composition and the pinned shell's release at the section's start/end must not change. Reduced motion
+  un-pins the shell and shows both chapters at full, equal emphasis; this is a readable, static fallback, not a loss
+  of content. The Decision Lens principle selector immediately above remains fully independent of this scroll
+  coupling.
 - **Modals:** preserve the shared portal-based overlay pattern, independent detail scrolling, body scroll lock while open, and restoration of normal document scrolling on close.
 - **Close behavior:** Close and Escape dismiss the active detail. Existing focus-management attempts and restoration of previous focus MUST NOT be removed or weakened.
 - **Keyboard behavior:** preserve native link/button activation, visible focus, architecture-node focus interaction, and Escape handling. Stack reference disclosure on visible focus remains available where the baseline displays it.

@@ -52,8 +52,17 @@ function tuple4<Value>(rule: Check<Value>): Check<[Value, Value, Value, Value]> 
     return items as [Value, Value, Value, Value];
   };
 }
+function tuple2<Value>(rule: Check<Value>): Check<[Value, Value]> {
+  return (value, path) => {
+    const items = array(rule)(value, path);
+    if (items.length !== 2) fail(path, "must contain 2 items");
+    return items as [Value, Value];
+  };
+}
 const engineeringPrincipleEvidence = object({label: text, descriptor: text});
 const engineeringPrinciple = object({id: text, label: text, statement: text, explanation: text, evidence: tuple4(engineeringPrincipleEvidence)});
+const educationMetaRow = object({label: text, value: text});
+const educationChapter = object({id: text, chapterLabel: text, yearStart: text, yearEnd: text, institution: text, degreeShort: text, field: text, metaPrimary: educationMetaRow, metaSecondary: educationMetaRow});
 const implementation = object({lines: array(text), summary: text});
 const metadata = (value: unknown, path: string) => validatePortfolioMetadata(value, path);
 const document: Check<PortfolioDocument> = object({
@@ -66,7 +75,7 @@ const document: Check<PortfolioDocument> = object({
   projectDetail: object({storySteps: tuple(5), decisionLabels: tuple(4), sectionLabels: tuple(4), implementation, architecture: object({activeLabel: text, descriptionSuffix: text}), caseStudyLabels: optional(object({overview: text, context: text, role: text, category: text, decisions: text, rationale: text, alternatives: text, chosen: text, implementationDetail: text, technicalSurface: text, learnings: text, metrics: text, links: text, undocumentedResult: text, questions: tuple(5)}))}),
   experience: array(object({id: text, company: text, role: text, period: text, tech: text, description: text, story: optional(object({paragraphs: array(text)})), highlights: optional(array(text))})),
   technologies: array(object({label: text, items: array(object({name: text, usedIn: text}))})),
-  education: array(object({qualification: text})),
+  education: tuple2(educationChapter),
   about: object({description: text, location: text, exploration: text, interestsLabel: text, interests: array(text)}),
   engineeringPrinciples: tuple4(engineeringPrinciple),
   services: array(object({id: text, title: text, description: text, story: optional(object({paragraphs: array(text)}))})),
@@ -87,6 +96,7 @@ export function validatePortfolioDocument(value: unknown, source = "portfolio.js
   }
   unique(data.projects.map(project => project.slug), "projects");
   unique(data.experience.map(item => item.id), "experience");
+  unique(data.education.map(item => item.id), "education");
   unique(data.services.map(item => item.id), "services");
   unique(data.technologies.map(group => group.label), "technologies");
   unique(data.navigation.links.map(link => link.section), "navigation.links");

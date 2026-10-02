@@ -181,11 +181,42 @@ Decision Lens principle selector" and `MOTION_SYSTEM.md`'s matching entry for th
 - [ ] A visible `:focus-visible` outline appears on the focused tab.
 - [ ] The evidence row always shows exactly 4 items for the active principle, with vertical rules between them and
       no card/box styling around any item.
-- [ ] Education still renders, as a quiet continuation below the evidence row (not the dominant content of the
-      section) — confirm it was not accidentally removed.
 - [ ] No horizontal overflow at any width; no overlap between the selector column and the content column.
 - [ ] At ≤800 px: the selector becomes a horizontal, wrapping tap row above a full-width panel; the active
       principle remains visually obvious (not just by color).
+
+## About / Education progression
+
+Education (2026-10-02) is a scroll-driven two-chapter (Foundation, Depth) crossfade below the Decision Lens
+evidence row — see `ARCHITECTURE.md`'s "About: Education progression" and `MOTION_SYSTEM.md`'s matching entry for
+the full mechanism.
+
+- [ ] On first reaching the section (minimal scroll into it), Foundation is clearly the emphasized chapter (high
+      contrast year/institution/meta) and Depth is clearly muted, not the reverse.
+- [ ] Scrolling deeper into the section gradually shifts emphasis from Foundation to Depth — a genuine crossfade
+      with a visible transition zone where both read as roughly equal weight, not an instant swap at one scroll
+      position.
+- [ ] Scrolling back up reverses the same crossfade back to Foundation-emphasized — stepped scrolling, fast
+      scrolling and alternating direction repeatedly must never leave the state stuck, reversed incorrectly, or
+      desynced from actual scroll position.
+- [ ] The progression indicator dot's position along its track always matches the same progress driving the
+      chapter crossfade (near the Foundation end early, near the Depth end late).
+- [ ] The two-column composition (Foundation left, Depth right, divider/indicator centered) never collapses into a
+      carousel, tabs, an accordion, or a vertical timeline on desktop, and the pinned shell releases cleanly at the
+      section's start/end with no layout jump into/out of the Decision Lens block above or the Services section
+      below.
+- [ ] Interacting with the Decision Lens principle selector directly above (clicking a different principle tab)
+      never changes Education's scroll-driven state, and scrolling through Education never changes which principle
+      tab is selected — the two must stay fully independent.
+- [ ] All institution/degree/field/meta content is exactly what `portfolio.json`'s `education` tuple supplies; no
+      degree-specific text is hardcoded in the component.
+- [ ] No horizontal overflow at any width.
+- [ ] At ≤800 px: the two columns stack vertically (Foundation above Depth) with a thin rule between them, the
+      progression indicator is hidden, and the content stays naturally readable without the desktop two-column
+      geometry being forced onto it.
+- [ ] Reduced motion: the pinned shell releases immediately (no extended scroll-locked track), both chapters render
+      at full, equal emphasis with no animated crossfade, and the content remains fully readable and keyboard-
+      reachable.
 - [ ] Reduced motion: tab/content transitions become instant, but selection, keyboard interaction, and the final
       correct layout all remain fully functional; content is never caught mid-transition at reduced opacity.
 

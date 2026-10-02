@@ -30,6 +30,18 @@ export type Capability = {
   readonly description: string;
   readonly story?: { readonly paragraphs: readonly string[] };
 };
+export type EducationMetaRow = { readonly label: string; readonly value: string };
+export type EducationChapter = {
+  readonly id: string;
+  readonly chapterLabel: string;
+  readonly yearStart: string;
+  readonly yearEnd: string;
+  readonly institution: string;
+  readonly degreeShort: string;
+  readonly field: string;
+  readonly metaPrimary: EducationMetaRow;
+  readonly metaSecondary: EducationMetaRow;
+};
 export type EngineeringPrincipleEvidence = { readonly label: string; readonly descriptor: string };
 export type EngineeringPrinciple = {
   readonly id: string;
@@ -67,7 +79,7 @@ export type PortfolioDocument = {
   };
   readonly experience: readonly Experience[];
   readonly technologies: readonly { readonly label: string; readonly items: readonly { readonly name: string; readonly usedIn: string }[] }[];
-  readonly education: readonly { readonly qualification: string }[];
+  readonly education: readonly [EducationChapter, EducationChapter];
   readonly about: { readonly description: string; readonly location: string; readonly exploration: string; readonly interestsLabel: string; readonly interests: readonly string[] };
   readonly engineeringPrinciples: readonly [EngineeringPrinciple, EngineeringPrinciple, EngineeringPrinciple, EngineeringPrinciple];
   readonly services: readonly Capability[];

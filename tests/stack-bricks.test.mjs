@@ -11,11 +11,13 @@ import { createPortfolioRepository } from "../src/app/application/portfolioRepos
 import { PortfolioStore } from "../src/app/application/PortfolioStore.ts";
 import { noAnalytics } from "../src/app/application/AnalyticsPort.ts";
 import * as stackLayout from "../src/stackLayout.ts";
+import * as educationMotion from "../src/educationMotion.ts";
 
 // Engineering Stack brick wall: the layout is a pure function of the normalized technologies data, and the unchanged
 // component renders whatever that data contains. Motion-policy checks guard the reveal model against regressions.
 
 const { layoutStackTiles, stackGrids, stackTileMotion } = stackLayout;
+const { educationChapterMotion, educationIndicatorHeight, educationMarkerTravel } = educationMotion;
 const root = resolve(import.meta.dirname, "..");
 const read = path => readFileSync(resolve(root, path), "utf8");
 const fixture = JSON.parse(read("fixtures/portfolio.fixture.json"));
@@ -31,6 +33,7 @@ runInNewContext(compiled, {
   require: name => {
     if (name === "./useParallaxEngine") return {useScrollSceneEngine: () => {}};
     if (name === "./stackLayout") return stackLayout;
+    if (name === "./educationMotion") return educationMotion;
     if (name === "./app/application/portfolioProjects") return {portfolioStore: storeFor(fixture)};
     if (name === "./app/application/AnalyticsPort") return {noAnalytics};
     if (name === "react-dom") return {createPortal: () => null};
@@ -189,7 +192,11 @@ test("content layers may carry a subtle scroll-mapped opacity that settles at fu
     // literal. The same floor/resting-opacity invariants this test enforces are instead asserted directly against
     // `stackTileMotion()`'s output in "stack tile assembly motion stays within the structural travel/opacity
     // bounds" below, across the real tile set.
-    const inDetail = insideOverlayDetail || (ts.isFunctionDeclaration(node) && ["ProjectDetail", "ArchitectureDiagram", "Stack"].includes(node.name?.text));
+    // `EducationProgression` is also exempted: unlike every other reveal-style layer, its two chapters are a
+    // genuine crossfade where one is legitimately more emphasized than the other at every point of the scroll
+    // range -- resting at full opacity at the scene's midpoint isn't the invariant that protects it. The equivalent
+    // floor/shape invariants are instead asserted directly against `educationChapterMotion()`'s output below.
+    const inDetail = insideOverlayDetail || (ts.isFunctionDeclaration(node) && ["ProjectDetail", "ArchitectureDiagram", "Stack", "EducationProgression"].includes(node.name?.text));
     if (!inDetail && (ts.isJsxSelfClosingElement(node) || ts.isJsxOpeningElement(node))) {
       const attributes = Object.fromEntries(node.attributes.properties.filter(ts.isJsxAttribute).map(attribute => [attribute.name.text, attribute.initializer && ts.isStringLiteral(attribute.initializer) ? attribute.initializer.text : "(expression)"]));
       if ("data-opacity" in attributes && !decorative.test(attributes.className ?? "")) structural.push([`${node.tagName.getText()}.${attributes.className}`, attributes["data-opacity"]]);
@@ -213,8 +220,9 @@ test("structural parallax travel is small, and no content layer scales or rotate
   const travel = [];
   (function inspect(node, inDetail) {
     // See the matching note in the opacity test above: `Stack`'s per-tile keyframes are computed, not literal, and
-    // are instead bounds-checked directly against `stackTileMotion()` below.
-    const nowInDetail = inDetail || (ts.isFunctionDeclaration(node) && ["ProjectDetail", "ArchitectureDiagram", "Stack"].includes(node.name?.text));
+    // are instead bounds-checked directly against `stackTileMotion()` below. `EducationProgression` is exempted for
+    // the same reason as the opacity test above and is bounds-checked against `educationChapterMotion()` below.
+    const nowInDetail = inDetail || (ts.isFunctionDeclaration(node) && ["ProjectDetail", "ArchitectureDiagram", "Stack", "EducationProgression"].includes(node.name?.text));
     if (!nowInDetail && (ts.isJsxSelfClosingElement(node) || ts.isJsxOpeningElement(node))) {
       const attributes = Object.fromEntries(node.attributes.properties.filter(ts.isJsxAttribute).map(attribute => [attribute.name.text, attribute.initializer && ts.isStringLiteral(attribute.initializer) ? attribute.initializer.text : null]));
       if ("data-scroll-layer" in attributes && !decorative.test(attributes.className ?? "")) {
@@ -254,6 +262,39 @@ test("stack tile assembly motion stays within the structural travel/opacity boun
     }
   }
   assert.ok(!("scale" in stackTileMotion(real[0])) && !("rotate" in stackTileMotion(real[0])), "stack tile motion must never include scale or rotate");
+});
+
+test("education chapter crossfade motion stays bounded, mirrors across the two chapters, and never settles both chapters equally dim", () => {
+  // `EducationProgression` is exempted from the two generic structural-layer tests above for the reason noted there
+  // -- this test enforces the equivalent invariants directly against the pure `educationChapterMotion()` function.
+  const floor = 0.2;
+  const foundation = educationChapterMotion(0);
+  const depth = educationChapterMotion(1);
+  for (const [role, motion] of [["foundation", foundation], ["depth", depth]]) {
+    assert.ok(!("scale" in motion) && !("rotate" in motion), `${role}: education chapter motion must never include scale or rotate`);
+    const opacityFrames = motion.opacity.split(",").map(Number);
+    assert.equal(opacityFrames.length, 3, `${role} opacity: must be a 3-point entry,middle,exit keyframe`);
+    assert.ok(opacityFrames.every(Number.isFinite), `${role} opacity: values must be numeric`);
+    assert.ok(opacityFrames.every(frame => frame >= floor), `${role} opacity dips to ${Math.min(...opacityFrames)}, below the ${floor} readable floor`);
+    assert.ok(opacityFrames.some(frame => frame >= 0.9), `${role}: must reach near-full opacity somewhere in its range, so it is never permanently dim`);
+    const yFrames = motion.y.split(",").map(Number);
+    assert.equal(yFrames.length, 3, `${role} y: must be a 3-point entry,middle,exit keyframe`);
+    assert.ok(yFrames.every(frame => Math.abs(frame) <= 20), `${role} y travels ${Math.max(...yFrames.map(Math.abs))}px, above the small ceiling this subtle layer should use`);
+  }
+  // The two chapters must be true mirrors of each other -- one emphasized exactly where the other recedes -- not
+  // independently authored curves that could drift out of sync with each other.
+  const foundationOpacity = foundation.opacity.split(",").map(Number);
+  const depthOpacityReversed = depth.opacity.split(",").map(Number).reverse();
+  assert.deepEqual(foundationOpacity, depthOpacityReversed, "the depth chapter's opacity curve must be the exact mirror of the foundation chapter's");
+  assert.equal(foundationOpacity[0], 1, "foundation must start fully emphasized (progress 0 = foundation active)");
+  assert.equal(depth.opacity.split(",").map(Number)[2], 1, "depth must end fully emphasized (progress 1 = depth active)");
+
+  const markerFrames = educationMarkerTravel.split(",").map(Number);
+  assert.equal(markerFrames.length, 3, "education marker travel must be a 3-point entry,middle,exit keyframe");
+  assert.equal(markerFrames[0], 0, "the progression marker starts at the foundation end of its track");
+  assert.equal(markerFrames[2], educationIndicatorHeight, "the progression marker ends at the depth end of its track");
+  assert.equal(markerFrames[1], educationIndicatorHeight / 2, "the progression marker passes the track's midpoint exactly halfway through the scroll range");
+  assert.ok(educationIndicatorHeight > 0 && educationIndicatorHeight <= 220, "the progression indicator should stay a subtle, editorial-scale element, not a tall UI widget");
 });
 
 test("reveals are enter-triggered once; reduced motion and the capability hold state are covered by the stylesheet", () => {
