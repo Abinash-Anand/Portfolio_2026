@@ -35,7 +35,7 @@ Project details have a separate five-chapter indicator: an overlay-rooted Inters
 ### Section reveal
 
 - **Trigger / elements:** engine IntersectionObserver at threshold `0.12` observes `.reveal`, adds `.is-visible` once, then unobserves it. These include section headers, project rows, stack groups, service rows, and About copy.
-- **Properties:** header/About `--reveal-opacity` and `--reveal-y` transition from invisible/26 px to visible/zero. Row/group reveals animate opacity. As of this change, structural content layers (hero title/summary/meta, section headers, project index/copy/meta, experience cells, about, service index/title, contact meta/headline/actions/socials) again carry a 3-point `data-opacity` keyframe (entry/middle/exit), composed multiplicatively with `--reveal-opacity` so the one-time reveal still gates first appearance, never reverses, and the layer always rests at full opacity (middle keyframe `1`) — only the entry/exit edges dip, bounded to a readable floor (≥0.2, enforced by `tests/stack-bricks.test.mjs`) so scroll-position depth never reads as content disappearing. Decorative/ambient layers (hero grid and art, scroll cue, project annotation, contact grid) and the detail overlay's internals keep their wider-range scene opacity, unchanged. Project, experience and service rows, stack tiles and the contact content still use the same once-only enter reveal at the row/button level (`.is-visible` is added once and never removed); the restored opacity is a second, independent layer composed on top of it, not a replacement. Stack tiles stagger by their position in a row (45 ms per column, capped); stack tiles themselves were deliberately left without scroll parallax (see Notes in the relevant changelog entry) since the brick wall is an intentionally flat, geometric layout.
+- **Properties:** header/About `--reveal-opacity` and `--reveal-y` transition from invisible/26 px to visible/zero. Row/group reveals animate opacity. As of this change, structural content layers (hero title/summary/meta, section headers, project index/copy/meta, about, service index/title, contact meta/headline/actions/socials) again carry a 3-point `data-opacity` keyframe (entry/middle/exit), composed multiplicatively with `--reveal-opacity` so the one-time reveal still gates first appearance, never reverses, and the layer always rests at full opacity (middle keyframe `1`) — only the entry/exit edges dip, bounded to a readable floor (≥0.2, enforced by `tests/stack-bricks.test.mjs`) so scroll-position depth never reads as content disappearing. Decorative/ambient layers (hero grid and art, scroll cue, project annotation, contact grid) and the detail overlay's internals keep their wider-range scene opacity, unchanged. Project and service rows, stack tiles and the contact content still use the same once-only enter reveal at the row/button level (`.is-visible` is added once and never removed); the restored opacity is a second, independent layer composed on top of it, not a replacement. Experience no longer participates in this shared reveal system at all — see "Experience: scroll-stepped sticky timeline" below for its own, separate discrete-step transition system. Stack tiles stagger by their position in a row (45 ms per column, capped); stack tiles themselves were deliberately left without scroll parallax (see Notes in the relevant changelog entry) since the brick wall is an intentionally flat, geometric layout.
 - **Timing/easing:** header/About 800 ms primary ease; heading delay 100 ms, note delay 180 ms; project/stack/service opacity 700 ms primary ease.
 - **Responsive:** reveal mechanism remains; reflow does not introduce a second observer system.
 - **Reduced motion:** CSS forces reveal content visible, removes offsets/transforms, and minimizes transition durations. Observer behavior remains, but content does not depend on its entrance animation to be visible under this preference.
@@ -75,13 +75,51 @@ The `.is-visible` state does not reset on leaving/re-entering. A separate scene'
 - **Responsive:** rows shorten/reflow at ≤800 px; no separate touch animation is installed. Tap opens the existing capability detail without requiring hover.
 - **Reduced motion:** transitions become near-instant, and the arrow's scene-layer transform is suppressed. The non-scene background can still change between its hover states.
 
-### Experience hover
+### Experience: scroll-stepped sticky timeline (2026-10-02; replaces the former row-list hover)
 
-- **Trigger / elements:** `.experience-row:hover`, its internal scroll layers, and arrow.
-- **Properties:** lighter background, inherited `--hover-x: 12px` on scroll-layer content; arrow appears and moves `(3px, -3px)`.
-- **Timing/easing:** background transition 350 ms default ease; arrow transform/opacity 200 ms default ease. The inherited hover variable has no dedicated interpolation declaration, so do not describe its offset as a separate eased animation. Padding has a transition declaration but the hover rule does not change padding.
-- **Responsive:** row reflows at ≤800 px and its arrow is hidden; detail opening remains.
-- **Reduced motion:** scene-layer content translation is disabled; arrow transition is near-instant. A non-scene arrow offset can remain on desktop hover.
+The three-row `.experience-row` list and its hover state no longer exist. Experience is now a discrete, scroll-driven
+sequence: a sticky two-column panel (year selector left, active entry right) pinned while the user scrolls through a
+tall track, advancing to the next/previous entry at each step. This is deliberately **not** part of the continuous
+`useScrollSceneEngine` system — no `data-scroll-scene`/`data-scroll-layer` is used anywhere in this section — to
+guarantee the discrete, "snap to a state" interaction never competes with or is diluted by continuous scroll-linked
+parallax. See `ARCHITECTURE.md`'s "Experience: scroll-stepped sticky timeline" section for the full structural
+reasoning (why this composes Hero's sticky-track pattern with `ProjectDetail`'s `IntersectionObserver` chapter-step
+pattern instead of inventing a third scroll mechanism).
+
+- **Trigger / elements:** native document scroll through `.experience-track` (height `entries.length × 100svh`);
+  `.experience-sticky` (`position:sticky;top:0;height:100svh`) is the pinned panel. One invisible, non-interactive
+  marker per entry (`[data-experience-step]`) is watched by an `IntersectionObserver` (`rootMargin:"-50% 0px -50%"`,
+  `threshold:0`, root = viewport) that sets `activeIndex` when a marker's box crosses the exact vertical center.
+- **Properties:** `.experience-years` translates via `transform:translateY(calc((1 - var(--active-index)) * var(--year-row)))`
+  — a plain CSS custom property set from React state (the same `style={{"--x":...}}` idiom `.stack-tile` already
+  uses), not a scroll-layer. Each year's font-size/opacity/scale/color is driven by its own `data-distance` attribute
+  (`0` = active: 44px, full color, scale 1; `±1`: smaller, 0.4 opacity, scale .88). `.experience-panel` plays a single
+  enter transition (`opacity 0→1`, `translateY(28px)→0`) each time the active entry's `id` changes, via an
+  `is-entered` class toggled through one `requestAnimationFrame` tick (not an exit+enter crossfade — the old entry's
+  content is replaced, not separately animated out, a deliberate simplification over a dual-mount approach).
+- **Timing/easing:** `transition:transform 550ms var(--ease)` on the year rail; `transition:opacity 550ms var(--ease),transform 550ms var(--ease)` on the panel. Same `--ease` (`cubic-bezier(0.16, 1, 0.3, 1)`) as everywhere else in the system — no new easing curve.
+- **Click/keyboard parity:** a year button's `onClick` cannot set `activeIndex` directly without the still-active
+  `IntersectionObserver` immediately reverting it back on its next check, since the scroll position would not have
+  moved (found and fixed during this change's own verification — see `CHANGELOG.md`). It instead calls
+  `scrollIntoView({block:"center"})` on the corresponding step marker — native programmatic scrolling, the same
+  category of mechanism Navigation's hash links already use, not a custom scroll implementation — so the observer's
+  next check agrees with the click. Keyboard `Tab` reaches each year button and the "Read full story" link in normal
+  document order; `Enter`/`Space` activates them exactly as any native `<button>` would, no custom key handling.
+- **Full-story hand-off:** the "Read full story" button in the active panel opens the same, unchanged `DetailOverlay`
+  + `.simple-detail` (+ optional `.simple-detail-story`) record this entry already had before this change — the
+  deep-reading experience is preserved, just re-triggered from new UI instead of the old row's whole-row click.
+- **Responsive (≤800 px):** the sticky pin and scroll-stepping are both dropped — `.experience-steps{display:none}`
+  removes the markers from layout entirely (so the observer structurally cannot fire; a `display:none` element never
+  intersects), and `.experience-track{height:auto}` / `.experience-sticky{position:relative}` return the section to
+  normal flow. The identical component, the identical `activeIndex` state, and the identical click handler now serve
+  a flat, horizontal tap-to-switch year row above a full-width panel — a CSS-only mode switch on one implementation,
+  not a second one.
+- **Reduced motion:** mirrors the established `.hero,.contact{height:auto}.hero-sticky,.contact-sticky{position:relative}`
+  pattern exactly: `.experience-track{height:auto!important}.experience-sticky{position:relative}`, plus
+  `.experience-panel{opacity:1!important;transform:none!important}` so an entry can never rest hidden regardless of
+  transition timing. The year selector's own transform/opacity are left alone under reduced motion (they are
+  functional state indicators, not decorative motion), and the sitewide `*{transition-duration:.01ms!important}`
+  rule already makes every state change in this section land instantly rather than animate.
 
 ### Stack hover
 
@@ -178,7 +216,7 @@ Representative configured desktop values (before damping, additional reveal/hove
 | Project art | y `[±44]`, `[±52]`, `[±48]`, `[±58]` px by row, with middle zero; x `[22, 0, -18]`; scale `[1.1, 1.04, 1.1]` |
 | Project backdrop / foreground | y amplitude `0.35 ×` art travel, opposite direction / `1.35 ×` art travel |
 | Contact grid / headline | y `[-80, 0, 90]` px (decorative, unchanged) / `[24, 0, -20]` px (structural; was `[145, 0, -105]` with scale and opacity) |
-| Other structural layers | section headings, kicker and note, project index/copy/meta, experience cells, About and service labels: at most 14 px y; service arrow: up to 8 px x; hero label 20 px y; contact meta/actions/links: up to 26 px y. None scale, rotate or fade with scroll |
+| Other structural layers | section headings, kicker and note, project index/copy/meta, About and service labels: at most 14 px y; service arrow: up to 8 px x; hero label 20 px y; contact meta/actions/links: up to 26 px y. None scale, rotate or fade with scroll. Experience is excluded: it uses its own discrete, non-scene transition system, not this scroll-linked travel table. |
 | Detail art | y `[90, 0, -90]` px; scale `[1.08, 1, 1.06]` |
 
 **Maximum movement:** there is no global runtime travel cap. The largest absolute configured structural scroll y value is 60 px (hero summary) and x is 8 px; the largest decorative values are hero art (y 115 px, x 42 px) and the scroll cue (y 110 px). Before 2026-10-02 the largest structural values were 190 px (hero summary) and 34 px. Current configured rotation reaches 1.4 degrees and scale keyframes span `.94`–`1.1`; hover can additionally multiply project art by `1.04`. These describe this markup, not combined screen-space bounds or a new mandated limit.

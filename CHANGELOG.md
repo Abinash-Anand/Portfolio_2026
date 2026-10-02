@@ -1099,3 +1099,138 @@ hold the extra content without breaking the existing display-text typography.
   this round — it's a different, always-visible main-page layout system with a larger blast radius than an
   opt-in detail overlay, not the system the user's example was about. Flagged to the user as a possible separate
   follow-up rather than bundled into this change.
+
+## 2026-10-02 — Experience: scroll-stepped sticky timeline (replaces the row list)
+
+### Context
+
+The user supplied a detailed specification replacing the Experience section's three-row list with a scroll-driven
+sticky composition: a vertical year selector (left) paired with the currently active entry's content (right),
+advancing forward/backward through the data as the user scrolls, pinned while the section is traversed and releasing
+cleanly afterward. The spec was explicit that this must reuse native scrolling (no custom wheel handling, no
+third-party scroll library) and the site's existing motion system rather than introduce a new one, must stay fully
+data-driven (no portfolio-specific branching), and must transform — not merely shrink — into a tap-driven layout on
+mobile. This is a main-page layout/interaction change, not an overlay, so it was treated as a protected-system change
+per `AGENTS.md`/`CHANGE_PROTOCOL.md`: the affected system, necessity, regression risks, and test plan were stated to
+the user before implementation began.
+
+### Changed
+
+- **`src/App.tsx`** — removed the `.experience-row`/`.experience-list` row-list markup entirely and replaced it with:
+  - `Experience`: owns `activeIndex` state and a `trackRef`. A `useEffect` installs one `IntersectionObserver`
+    (`rootMargin:"-50% 0px -50%"`, `threshold:0`, root = main viewport) over one marker `<div>` per entry
+    (`[data-experience-step]`), setting `activeIndex` to whichever marker's box is crossing the exact vertical
+    center. This is the same technique `ProjectDetail`'s existing chapter-progress observer already uses, applied to
+    the main page instead of a nested overlay scroller, not a new mechanism.
+  - The pin itself reuses Hero's own "tall track + `position:sticky` inner panel" structure: `.experience-track`
+    gets an explicit `height: entries.length * 100svh` (Hero's `height:135svh` generalized to a data-driven count),
+    with `.experience-sticky` as a normal `position:sticky;top:0;height:100svh` child.
+  - `experienceStartYear(period)`: a generic `/\d{4}/.exec(period)?.[0]` helper derives each entry's selector label
+    from its existing `period` string — no `if (company === ...)` branching, no new year field.
+  - `ExperiencePanel`: renders the active entry's period/company/role/tech/description/highlights and a "Read full
+    story" button. Plays one enter transition (`is-entered` class, toggled via a single `requestAnimationFrame`
+    tick) each time the active entry's `id` changes; the first render is never animated in, so there is no
+    first-paint flash.
+  - A year button's `onClick` calls `jumpTo(index)`, which calls that index's step marker's own
+    `scrollIntoView({block:"center"})` (native programmatic scrolling, the same category of mechanism Navigation's
+    hash links already use) rather than setting `activeIndex` directly — see Fixed, below, for why.
+  - The existing `DetailOverlay` + `.simple-detail` (+ `.simple-detail-story`, from the previous same-day entry) is
+    unchanged and untouched; it is now opened from `ExperiencePanel`'s "Read full story" button instead of from a
+    row click, but renders the identical record.
+- **`src/index.css`** — removed the now-dead `.experience-list`/`.experience-row` rules (including their entries in
+  the shared `.reveal` selector lists) and added the new section's styling: `.experience-track`/`.experience-steps`/
+  `.experience-sticky`/`.experience-grid`/`.experience-selector` (desktop: 30/70 column split, thin rule divider,
+  no cards/shadows/radii anywhere in this block); `.experience-years-window`/`.experience-years`/`.experience-year`
+  (the sliding year rail: fixed hairlines mark the active slot, years translate behind them via
+  `transform:translateY(calc((1 - var(--active-index)) * var(--year-row)))`, a React-state-driven custom property in
+  the same `style={{"--x":...}}` idiom `.stack-tile` already uses — not a `data-scroll-layer`); `.experience-panel`
+  and its children (lede-then-body typography matching the rest of the site's scale, a thin-ruled highlights row,
+  the "Read full story" link). Added a `≤800px` override (`.experience-steps{display:none}`,
+  `.experience-track{height:auto}`, `.experience-sticky{position:relative}`, selector flattened to a horizontal tap
+  row) and a `prefers-reduced-motion` override mirroring the existing `.hero,.contact{height:auto}
+  .hero-sticky,.contact-sticky{position:relative}` convention exactly, plus `.experience-panel{opacity:1!important;
+  transform:none!important}` so an entry can never rest hidden.
+- **`src/app/domain/portfolioData.ts`, `src/app/application/portfolioContract.ts`** — added an optional
+  `highlights?: readonly string[]` to `Experience` (modeled directly on `metadata.highlights`'s existing shape on
+  Projects) and three new required `labels` strings (`experienceTimelineAria`, `experienceScrollHint`,
+  `experienceExpand`) for the selector's accessible group label, its "scroll to change year" hint, and the
+  "Read full story" button text — all data-driven chrome, none hardcoded in `App.tsx`.
+- **`portfolio.json`** — added real `highlights` to all three experience entries, restructured from facts already
+  present in each entry's existing `description`/`story` prose (e.g. HFT Stuttgart: "200+ records processed", "10+
+  buildings covered", "100% test suite passing" — all already stated in that entry's prose, not new claims), and the
+  three new label values. **`fixtures/portfolio.fixture.json`** — added the same three required label values only
+  (its own synthetic "Alex Morgan" experience entries are untouched).
+- **`tests/stack-bricks.test.mjs`** — updated the reveal-system assertion that previously checked for
+  `.experience-row.reveal` in the stylesheet: Experience no longer participates in the shared one-time `.reveal`
+  system at all (it has its own discrete-step transition system instead), so the assertion now checks for
+  `.experience-panel.is-entered` in its place, with a comment explaining why.
+
+### Fixed
+
+- **Click-to-jump bug, found during this change's own browser verification (not shipped, caught before being
+  considered done):** a year button's `onClick` initially called `setActiveIndex(index)` directly. Since clicking a
+  button does not change scroll position, the still-active `IntersectionObserver` would immediately see its
+  previous marker still centered on its next callback and revert `activeIndex` right back — the click and the
+  observer were fighting over the same state, with the observer always winning. Root-caused precisely (scroll
+  position and React state had diverged) and fixed by making the click scroll to the corresponding marker instead
+  of setting state directly, so the observer's next check agrees with the click. Verified both a fresh-page click
+  sequence and keyboard activation land on the correct entry after this fix.
+
+### Preserved
+
+- `DetailOverlay`'s full lifecycle (portal, body-scroll lock, Escape, focus save/restore) and the "Read full story"
+  deep-reading experience (including `story.paragraphs`, added the same day) — unchanged, only re-triggered from new
+  UI. No `data-scroll-scene`/`data-scroll-layer` was added anywhere in the new Experience markup, so the shared
+  continuous scroll-scene engine (`useScrollSceneEngine`) gained zero new responsibility and cannot compete with the
+  new discrete-step system for the same transform — confirmed by design, not merely by absence of visible bugs.
+  Projects, Stack, Services, Contact, Navigation, global typography/color tokens, the cursor system, and document
+  scroll progress were not touched; `git diff --stat` confirms the change is scoped to Experience's own code paths
+  plus the one shared `.reveal` selector list edit.
+
+### Regression Testing
+
+- `pnpm exec tsc --noEmit`: passed, no errors (checked after the component rewrite, again after the click-jump fix).
+- `node --experimental-strip-types --test tests/*.test.mjs`: 36 of 36 passed (one assertion updated as described
+  above to match the intentional removal of `.experience-row` from the shared reveal system; no other test needed
+  changes).
+- `PORTFOLIO_DATA_MODE=fixture node scripts/sync-github.ts && vite build`: succeeded.
+- **Browser verification, Playwright-driven Chromium against the dev server**, using the same temporary-fixture-swap
+  methodology as the two preceding same-day entries (the dev fixture's `experience`/`labels`/`sections.experience`
+  were swapped for the real, edited `portfolio.json` content, backed up first, restored after — confirmed via
+  `git diff` showing only the three new required label values remained changed in the fixture).
+  **Simulated input only, not physical devices, not the live site:**
+  - Fine-grained scroll-down (120px wheel steps, state captured after each) showed exactly the three expected
+    discrete states in order: `2026/HFT Stuttgart → 2024/Letstream → 2023/Elluminati Ventures`. Scrolling back up the
+    same way showed the exact reverse sequence. No intermediate state was skipped or repeated.
+  - Sticky release: after scrolling to the document's end, `.experience-sticky`'s `getBoundingClientRect().top` was
+    far from `0` (confirmed off-screen/unpinned), and the page reached its true scroll-height bottom via native
+    scrolling (re-verified with a longer wait after an initial 400ms-timeout false negative turned out to be a test
+    harness timing artifact from the site's own global `scroll-behavior:smooth`, not an app bug).
+  - Click-to-jump: clicking each of the three year buttons from a fresh page load correctly jumped to that entry
+    (post-fix; pre-fix this reverted to the first entry, see Fixed above) — including visual confirmation via
+    screenshot that the selector rail, fixed hairlines, and panel content all updated together.
+  - The "Read full story" button opened the existing detail overlay with the correct employer's `story.paragraphs`
+    (3 paragraphs for the tested entry) and closed correctly on Escape.
+  - Highlights rendered (3 items) for the entry tested.
+  - 390px mobile: no horizontal overflow; `.experience-sticky` computed `position: relative` (sticky disabled);
+    tapping the second year switched the panel to the correct entry (Letstream); screenshot-reviewed and confirmed
+    the horizontal year row with the active year bold/underlined, matching the spec's mobile intent.
+  - Keyboard: a real `Tab`-sequence landed on the first year button with a non-`none` `:focus-visible` outline.
+  - Reduced motion: `.experience-track` height collapsed to its natural (non-`Nx100vh`) auto height, `.experience-
+    sticky` computed `position: relative`, and `.experience-panel` opacity stayed `1` both at rest and immediately
+    after switching the active entry via a year click — confirming an entry can never be caught mid-transition at
+    reduced opacity.
+  - Zero console errors across every pass (desktop scroll sequence, click-jump, keyboard, mobile, reduced motion).
+- **Not performed:** physical trackpad/mouse/touch input, cross-browser/device certification, a measured frame-rate
+  or performance recording, the real authenticated GitHub sync/production build, and a live-site check.
+
+### Notes
+
+- `highlights` is new, optional, and additive to the `Experience` type; an entry that omits it renders identically
+  minus that one row (no empty block). All three real entries currently supply it.
+- The former `.experience-row` hover/reveal system (background lighten, horizontal content offset, arrow reveal) no
+  longer exists — the whole interaction model changed from "a list of independently-revealing hoverable rows" to
+  "one continuous pinned instrument," per the user's explicit spec. `STABILITY_CONTRACT.md`'s Experience clause was
+  updated to describe the new contract (what must now be preserved going forward) rather than the old one;
+  `STABLE_BASELINE.md` was deliberately left untouched, since it is an explicitly frozen historical snapshot of a
+  specific past commit, not a living description of current behavior.

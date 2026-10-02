@@ -55,7 +55,7 @@ const document: Check<PortfolioDocument> = object({
   sections: object({projects: heading, experience: heading, stack: heading, about: heading, services: heading}),
   projects: array(object({slug: text, metadata, repositoryUrl: nullable(url), liveUrl: nullable(url)})),
   projectDetail: object({storySteps: tuple(5), decisionLabels: tuple(4), sectionLabels: tuple(4), implementation, architecture: object({activeLabel: text, descriptionSuffix: text}), caseStudyLabels: optional(object({overview: text, context: text, role: text, category: text, decisions: text, rationale: text, alternatives: text, chosen: text, implementationDetail: text, technicalSurface: text, learnings: text, metrics: text, links: text, undocumentedResult: text, questions: tuple(5)}))}),
-  experience: array(object({id: text, company: text, role: text, period: text, tech: text, description: text, story: optional(object({paragraphs: array(text)}))})),
+  experience: array(object({id: text, company: text, role: text, period: text, tech: text, description: text, story: optional(object({paragraphs: array(text)})), highlights: optional(array(text))})),
   technologies: array(object({label: text, items: array(object({name: text, usedIn: text}))})),
   education: array(object({qualification: text})),
   about: object({description: text, location: text, exploration: text, interestsLabel: text, interests: array(text)}),
@@ -63,7 +63,7 @@ const document: Check<PortfolioDocument> = object({
   contact: object({email: (value, path) => { const address = text(value, path); if (!/^[^\s@<>?&#]+@[^\s@<>?&#]+\.[^\s@<>?&#]+$/.test(address)) fail(path, "must be an email address"); return address; }, calendly: optional(url), booking: optional(object({label: text, detail: text, accessibleLabel: text})), availability: text, location: text, headingLines: array(text), cursor: text, socials: array(object({label: text, href: url}))}),
   resume: nullable(object({label: text, href: resumeUrl})),
   footer: object({statement: text, backToTop: text}),
-  labels: object({overlay: object({close: text, closeAria: text}), projectOverlay: text, experienceOverlay: text, serviceOverlay: text, projectCta: text, projectCursor: text, projectVisualPrefix: text, experienceCursor: text, serviceCursor: text, caseProgressAria: text, usedIn: text, experienceTechnologies: text, capability: text, discussProject: text}),
+  labels: object({overlay: object({close: text, closeAria: text}), projectOverlay: text, experienceOverlay: text, serviceOverlay: text, projectCta: text, projectCursor: text, projectVisualPrefix: text, experienceCursor: text, serviceCursor: text, caseProgressAria: text, usedIn: text, experienceTechnologies: text, capability: text, discussProject: text, experienceTimelineAria: text, experienceScrollHint: text, experienceExpand: text}),
 });
 export function validatePortfolioDocument(value: unknown, source = "portfolio.json"): PortfolioDocument {
   const data = document(value, source);

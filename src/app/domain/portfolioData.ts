@@ -22,6 +22,7 @@ export type Experience = {
   readonly tech: string;
   readonly description: string;
   readonly story?: { readonly paragraphs: readonly string[] };
+  readonly highlights?: readonly string[];
 };
 export type Capability = {
   readonly id: string;
@@ -75,6 +76,7 @@ export type PortfolioDocument = {
     readonly projectCta: string; readonly projectCursor: string; readonly projectVisualPrefix: string; readonly experienceCursor: string; readonly serviceCursor: string;
     readonly caseProgressAria: string; readonly usedIn: string; readonly experienceTechnologies: string;
     readonly capability: string; readonly discussProject: string;
+    readonly experienceTimelineAria: string; readonly experienceScrollHint: string; readonly experienceExpand: string;
   };
 };
 export type Portfolio = Omit<PortfolioDocument, "projects"> & { readonly projects: readonly PortfolioProject[] };

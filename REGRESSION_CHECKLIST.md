@@ -108,15 +108,42 @@ Each chapter answers one question (shown as a small `caseStudyLabels.questions[n
 
 ## Experience
 
-- [ ] Aperture Systems, Fieldwork Labs, and Independent rows render in order with correct roles, technologies, and periods.
-- [ ] Hover feedback remains intact, including background, content offset, and desktop arrow.
-- [ ] Each row opens its own detail by pointer/touch or keyboard activation.
-- [ ] Each detail shows the correct selected employer information and existing shared descriptive copy.
-- [ ] When an entry supplies the optional `story.paragraphs`, they render as readable body text (17px desktop/16px
-      mobile) below a thin rule beneath the lede `description`, never at the lede's giant display size; an entry
-      without `story` renders identically to before (no empty block, no stray rule).
-- [ ] Close/Escape and return to the page work for every experience detail.
-- [ ] Narrow-screen rows stack correctly and intentionally hide the arrow.
+Experience (2026-10-02) is a scroll-stepped sticky timeline, not a row list — see `ARCHITECTURE.md`'s "Experience:
+scroll-stepped sticky timeline" and `MOTION_SYSTEM.md`'s matching entry for the full mechanism.
+
+- [ ] On entering the section (desktop, ≥801 px), the latest/first entry (by data order) is active by default: its
+      year is large/dark/centered in the selector window, and its period/company/role/tech/description render in
+      the right-hand panel.
+- [ ] Scrolling down through the section advances the active entry forward through the data in order; scrolling back
+      up reverses it. Each entry's year becomes centered/large/dark and its content replaces the previous entry's.
+      Verify with slow, fast, and reversed-direction scrolling (stepped wheel input, alternating directions,
+      repeated crossings of each step boundary) — not just one pass in one direction.
+- [ ] The active year sits large/dark/centered between two fixed thin rules; the previous/next years are visible
+      above/below it, smaller and lower-opacity; years not adjacent to active are clipped by the selector window,
+      not rendered oversized or overlapping.
+- [ ] Clicking any year in the selector jumps directly to that entry (no scroll required) and the jump does not get
+      reverted by the next scroll-triggered check (a regression caught and fixed during this feature's own
+      verification: a click that only sets state without moving scroll position gets immediately overridden back by
+      the still-active `IntersectionObserver`).
+- [ ] The sticky panel is pinned (does not move with scroll) while stepping through all entries, and releases
+      cleanly into normal document flow once the section's full scroll range is exhausted — no visual jump, jitter,
+      or stuck/trapped scrolling when entering or leaving the section.
+- [ ] The "Read full story" control in the active panel opens the same detail overlay (and, when present, the same
+      `story.paragraphs` body copy) this entry has always had; Close/Escape and focus restoration work exactly as
+      for Projects/Services. This is the one interaction carried over unchanged from the previous row-based design.
+- [ ] When an entry supplies the optional `highlights`, they render as a short evidence row (not a card) beneath the
+      description; an entry without `highlights` or without `story` renders identically minus that block (no empty
+      block, no stray rule).
+- [ ] No horizontal overflow at any width; no overlap between the selector column and the content column.
+- [ ] At ≤800 px: the sticky pin and scroll-stepping are both disabled (confirm `.experience-sticky` computes to
+      `position: relative`, not `sticky`); the year selector becomes a horizontal row above a full-width content
+      panel; tapping a year switches the panel's content; the active year is visually distinguished (not just by a
+      color most users won't notice — check for a visible weight/underline difference too).
+- [ ] Keyboard: `Tab` reaches each year button and the "Read full story" link in document order; `Enter`/`Space`
+      activates them; a visible `:focus-visible` outline appears on the year buttons.
+- [ ] Reduced motion: the sticky pin is removed (`.experience-track` height becomes auto, `.experience-sticky`
+      becomes `position: relative`) exactly like Hero/Contact already do; the active entry's content is always at
+      `opacity: 1` (never caught mid-transition at a lower opacity) whether reached by scroll or by clicking a year.
 
 ## Stack
 
@@ -199,8 +226,8 @@ On touch/coarse-pointer devices and narrow layouts:
 - [ ] Document progress tracks top/middle/bottom positions and updates after relevant layout changes.
 - [ ] Reveals occur once and retain `.is-visible` after leaving/re-entering; content is not stranded by a reset reveal state. Preserve separate scene-driven opacity changes rather than expecting every layer to remain opaque throughout scroll.
 - [ ] Hero grid/art, contact grid, and project backdrop retain their CSS-owned normal-motion opacity; do not expect all written scene-opacity keyframes to be visually applied.
-- [ ] Structural content (hero title/summary/meta, section headers, project/experience/service rows, about, contact) settles to full opacity as each section centers and recedes — never to invisible, never below a readable floor — as it scrolls past; this is restored depth, not a regression, and must compose with (not replace) the one-time enter reveal: a layer already revealed must never re-run its entrance transition or go fully transparent.
-- [ ] Hovering a project/experience/service row while this scroll-linked opacity is mid-transition does not interfere with the existing hover/cursor feedback.
+- [ ] Structural content (hero title/summary/meta, section headers, project/service rows, about, contact) settles to full opacity as each section centers and recedes — never to invisible, never below a readable floor — as it scrolls past; this is restored depth, not a regression, and must compose with (not replace) the one-time enter reveal: a layer already revealed must never re-run its entrance transition or go fully transparent. Experience is intentionally excluded from this scroll-linked opacity system entirely — see its own section above.
+- [ ] Hovering a project/service row while this scroll-linked opacity is mid-transition does not interfere with the existing hover/cursor feedback.
 - [ ] Parallax remains perceptibly layered without jitter, oscillation, unintended snapping, or positional corrections.
 - [ ] No visible feedback loop or hover/scroll transform overwrite occurs.
 - [ ] No scroll trapping/hijacking occurs; intentional modal body lock always releases after close.

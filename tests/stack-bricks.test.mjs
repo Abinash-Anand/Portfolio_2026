@@ -220,7 +220,11 @@ test("reveals are enter-triggered once; reduced motion and the capability hold s
   const engine = read("src/useParallaxEngine.ts");
   assert.match(engine, /reveals\.unobserve\(entry\.target\)/);
   assert.ok(!/classList\.remove\(["']is-visible["']\)/.test(engine + appSource), "a reveal must never be reversed");
-  for (const selector of [".stack-tile.reveal", ".experience-row.reveal", ".reveal .contact-actions"]) assert.ok(css.includes(selector), selector);
+  // Experience no longer participates in the shared enter-once `.reveal` system: it's a discrete, scroll-stepped
+  // sequence (IntersectionObserver-driven active index, same technique as ProjectDetail's chapter progress) with
+  // its own transition classes, not a one-time fade-in.
+  for (const selector of [".stack-tile.reveal", ".reveal .contact-actions"]) assert.ok(css.includes(selector), selector);
+  assert.ok(css.includes(".experience-panel.is-entered"), "experience panel uses its own enter transition, not .reveal");
   assert.match(css, /\.service-row\.is-selected::before/);
   assert.match(css, /cubic-bezier\(0\.16, 1, 0\.3, 1\)/);
   const reduced = css.slice(css.indexOf("@media (prefers-reduced-motion: reduce)"));

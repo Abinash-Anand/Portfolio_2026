@@ -25,7 +25,7 @@ Existing interactions MUST continue working unless the user explicitly requests 
 
 - **Navigation:** native hash navigation, hero scroll cue, Back to top, active-link indication, and scrolled-header treatment.
 - **Projects:** row activation opens the correct project; existing hover/pointer composition, detail content, architecture activation, and scroll-tracked chapters remain functional.
-- **Experience:** row activation opens the correct employer detail; existing hover feedback remains intact.
+- **Experience (2026-10-02, explicit user-authorized redesign of the former row list):** scrolling through the section advances/reverses the active entry in data order; clicking a year jumps directly to it without being reverted by the next scroll-triggered check; the sticky pin releases cleanly at the section's start/end; the "Read full story" control still opens the correct employer's full detail overlay (the one interaction carried over unchanged from the row-list design). At ≤800 px the sticky pin and scroll-stepping are disabled in favor of a flat, tap-to-switch layout, same component and state.
 - **Services:** row activation opens the correct capability; hover treatment and detail email action remain intact.
 - **Modals:** preserve the shared portal-based overlay pattern, independent detail scrolling, body scroll lock while open, and restoration of normal document scrolling on close.
 - **Close behavior:** Close and Escape dismiss the active detail. Existing focus-management attempts and restoration of previous focus MUST NOT be removed or weakened.

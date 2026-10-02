@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { useScrollSceneEngine } from "./useParallaxEngine";
 import { layoutStackTiles } from "./stackLayout";
 import { portfolioStore, type PortfolioProjectView } from "./app/application/portfolioProjects";
-import type { Portfolio, TechnicalVisualData, Capability } from "./app/domain/portfolioData";
+import type { Portfolio, TechnicalVisualData, Capability, Experience as ExperienceEntry } from "./app/domain/portfolioData";
 import type { CaseStudy, CaseStudySection as CaseStudySectionData, CaseStudyVisual } from "./app/domain/caseStudy";
 import type { PortfolioStore } from "./app/application/PortfolioStore";
 import { noAnalytics, type AnalyticsPort } from "./app/application/AnalyticsPort";
@@ -451,21 +451,95 @@ function Projects({ portfolio, analytics = noAnalytics }: PortfolioProps) {
   );
 }
 
+function experienceStartYear(period: string): string {
+  return /\d{4}/.exec(period)?.[0] ?? period;
+}
+
+function ExperiencePanel({ entry, onOpenStory, labels }: { entry: ExperienceEntry; onOpenStory: () => void; labels: Portfolio["labels"] }) {
+  const isFirstRender = useRef(true);
+  const [entered, setEntered] = useState(true);
+  useEffect(() => {
+    if (isFirstRender.current) { isFirstRender.current = false; return; }
+    setEntered(false);
+    const frame = requestAnimationFrame(() => setEntered(true));
+    return () => cancelAnimationFrame(frame);
+  }, [entry.id]);
+  return (
+    <div className={`experience-panel${entered ? " is-entered" : ""}`}>
+      <span className="experience-panel-period">{entry.period}</span>
+      <h3 className="experience-panel-company">{entry.company}</h3>
+      <p className="experience-panel-role">{entry.role}</p>
+      <p className="experience-panel-tech">{entry.tech}</p>
+      <p className="experience-panel-description">{entry.description}</p>
+      {entry.highlights && entry.highlights.length > 0 && (
+        <ul className="experience-panel-highlights">{entry.highlights.map((highlight) => <li key={highlight}>{highlight}</li>)}</ul>
+      )}
+      <button type="button" className="experience-panel-expand" onClick={onOpenStory} data-cursor={labels.experienceCursor}>{labels.experienceExpand}<b>↗</b></button>
+    </div>
+  );
+}
+
 function Experience({ portfolio }: PortfolioProps) {
+  const entries = portfolio.experience;
+  const total = entries.length;
+  const [activeIndex, setActiveIndex] = useState(0);
   const [selected, setSelected] = useState<(typeof portfolio.experience)[number] | null>(null);
+  const trackRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const track = trackRef.current;
+    if (!track) return;
+    const steps = [...track.querySelectorAll<HTMLElement>("[data-experience-step]")];
+    const observer = new IntersectionObserver(
+      (observed) => observed.forEach((entry) => {
+        if (entry.isIntersecting) setActiveIndex(Number((entry.target as HTMLElement).dataset.experienceStep));
+      }),
+      { rootMargin: "-50% 0px -50%", threshold: 0 },
+    );
+    steps.forEach((step) => observer.observe(step));
+    return () => observer.disconnect();
+  }, [total]);
+  const active = entries[activeIndex];
+  const jumpTo = (index: number) => {
+    const step = trackRef.current?.querySelector<HTMLElement>(`[data-experience-step="${index}"]`);
+    if (step && step.offsetParent !== null) {
+      const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+      step.scrollIntoView({ block: "center", behavior: reduced ? "auto" : "smooth" });
+    } else {
+      setActiveIndex(index);
+    }
+  };
   return (
     <section className="experience page-section" id="experience" data-scroll-scene>
       <SectionHeader {...portfolio.sections.experience} />
-      <div className="experience-list reveal-content">
-        {portfolio.experience.map((item, index) => (
-          <button key={item.id} className="experience-row reveal" data-scroll-scene onClick={() => setSelected(item)} data-cursor={portfolio.labels.experienceCursor}>
-            <span className="scroll-layer" data-scroll-layer data-x="-4,0,2" data-opacity="0.55,1,0.6">0{index + 1}</span>
-            <strong className="scroll-layer" data-scroll-layer data-x="-6,0,3" data-opacity="0.4,1,0.5" data-phase="-0.01">{item.company}</strong>
-            <span className="scroll-layer" data-scroll-layer data-y="5,0,-3" data-opacity="0.5,1,0.55" data-phase="-0.02">{item.role}</span>
-            <span className="scroll-layer" data-scroll-layer data-y="4,0,-3" data-opacity="0.5,1,0.55" data-phase="-0.025">{item.tech}</span>
-            <span className="scroll-layer" data-scroll-layer data-x="4,0,-3" data-opacity="0.55,1,0.6" data-phase="-0.03">{item.period}</span><b>↗</b>
-          </button>
-        ))}
+      <div className="experience-track" ref={trackRef} style={{ height: `${total * 100}svh` }}>
+        <div className="experience-steps" aria-hidden="true">
+          {entries.map((item, index) => <div key={item.id} data-experience-step={index} style={{ height: `${100 / total}%` }} />)}
+        </div>
+        <div className="experience-sticky">
+          <div className="experience-grid">
+            <div className="experience-selector" role="group" aria-label={portfolio.labels.experienceTimelineAria}>
+              <div className="experience-years-window">
+                <div className="experience-years" style={{ "--active-index": activeIndex } as CSSProperties}>
+                  {entries.map((item, index) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      className="experience-year"
+                      data-distance={index - activeIndex}
+                      aria-current={index === activeIndex}
+                      onClick={() => jumpTo(index)}
+                    >
+                      {experienceStartYear(item.period)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <span className="experience-selector-hint">{portfolio.labels.experienceScrollHint}</span>
+              <span className="experience-selector-state">0{activeIndex + 1} / 0{total}</span>
+            </div>
+            <ExperiencePanel entry={active} onOpenStory={() => setSelected(active)} labels={portfolio.labels} />
+          </div>
+        </div>
       </div>
       <DetailOverlay open={!!selected} onClose={() => setSelected(null)} label={portfolio.labels.experienceOverlay} labels={portfolio.labels.overlay}>
         {selected && <article className="simple-detail"><span>{selected.period}</span><h2>{selected.company}</h2><h3>{selected.role}</h3><p>{selected.description}</p>{selected.story && <div className="simple-detail-story">{selected.story.paragraphs.map((paragraph, index) => <p key={index}>{paragraph}</p>)}</div>}<div><small>{portfolio.labels.experienceTechnologies}</small>{selected.tech}</div></article>}

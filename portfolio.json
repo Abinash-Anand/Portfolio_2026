@@ -139,7 +139,12 @@
           "I designed a hierarchical resolution pipeline that normalizes facility data through building → floor → room, resolving each level independently and flagging ambiguous matches instead of guessing. Automatic detection catches missing records before they reach production, and an automated test suite — 100% passing — runs against every change.",
           "The tool processed 200+ records across 10+ buildings in its first live run with zero errors, and ran independent post-import verification to prove that, not just claim it. It's now how the team actually imports facility data, not a one-off script someone ran once."
         ]
-      }
+      },
+      "highlights": [
+        "200+ records processed",
+        "10+ buildings covered",
+        "100% test suite passing"
+      ]
     },
     {
       "id": "letstream",
@@ -154,7 +159,12 @@
           "I rebuilt it as a reactive Angular application, replacing broad data fetches with custom lazy-loading and GraphQL fragment optimization — cutting initial load time by 40% and improving real-time sync speed by 25%. Alongside the rebuild, I led two developers through the Vue-to-Angular migration myself, pairing on patterns and reviews until the team was fluent, which cut code-review cycle time by 15%.",
           "I worked directly with backend engineers on end-to-end testing before every release, because a logistics dashboard that's wrong under load is worse than one that's just slow."
         ]
-      }
+      },
+      "highlights": [
+        "25% faster real-time sync",
+        "40% faster initial load",
+        "15% faster code-review cycle"
+      ]
     },
     {
       "id": "elluminati-ventures",
@@ -169,7 +179,12 @@
           "Real-time tracking ran over WebSockets, so a rider's location updates continuously instead of on a polling delay. I integrated Stripe for payments and built multi-channel notifications — browser push plus in-app — so riders and drivers stay informed without refreshing anything.",
           "On the admin side, I built a dashboard with ride history, filtering, export and live trip visualization on Google Maps, and added PWA support so the whole platform worked reliably as an installable app, not just a browser tab left open."
         ]
-      }
+      },
+      "highlights": [
+        "Full ride-lifecycle REST API",
+        "Real-time WebSocket tracking",
+        "Stripe payments integrated"
+      ]
     }
   ],
   "technologies": [
@@ -423,6 +438,9 @@
     "usedIn": "Used in",
     "experienceTechnologies": "Core technologies",
     "capability": "Selected capability",
-    "discussProject": "Discuss a project"
+    "discussProject": "Discuss a project",
+    "experienceTimelineAria": "Career timeline, by year",
+    "experienceScrollHint": "Scroll to change year",
+    "experienceExpand": "Read full story"
   }
 }

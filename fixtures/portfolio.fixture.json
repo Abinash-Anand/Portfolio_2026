@@ -688,6 +688,9 @@
     "usedIn": "Used in",
     "experienceTechnologies": "Core technologies",
     "capability": "Selected capability",
-    "discussProject": "Discuss a project"
+    "discussProject": "Discuss a project",
+    "experienceTimelineAria": "Career timeline, by year",
+    "experienceScrollHint": "Scroll to change year",
+    "experienceExpand": "Read full story"
   }
 }
