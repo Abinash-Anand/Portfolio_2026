@@ -1,0 +1,605 @@
+{
+  "schemaVersion": 2,
+  "fixture": false,
+  "person": {
+    "name": "Abinash Anand",
+    "role": "Full-Stack Software Engineer",
+    "location": "Stuttgart / Germany",
+    "statement": "Owning and shipping scalable, reliable web products end to end.",
+    "summary": "M.Sc. Software Technology student and full-stack software engineer building web products across frontend, backend, data, testing, and deployment."
+  },
+  "navigation": {
+    "label": "Primary navigation",
+    "initialSection": "work",
+    "links": [
+      {
+        "section": "work",
+        "label": "Work"
+      },
+      {
+        "section": "about",
+        "label": "About"
+      },
+      {
+        "section": "experience",
+        "label": "Experience"
+      }
+    ],
+    "contact": {
+      "section": "contact",
+      "label": "Contact",
+      "cursor": "TALK"
+    }
+  },
+  "hero": {
+    "visual": {
+      "kind": "nodes",
+      "label": "ENGINEERING / 04"
+    },
+    "scrollCue": {
+      "label": "Scroll to explore",
+      "section": "work"
+    }
+  },
+  "sections": {
+    "projects": {
+      "index": "01",
+      "eyebrow": "Selected projects",
+      "title": "Systems I’ve built and shipped.",
+      "note": "Projects that show how I approach products, systems, and engineering decisions."
+    },
+    "experience": {
+      "index": "02",
+      "eyebrow": "Experience",
+      "title": "What I’ve owned and shipped."
+    },
+    "stack": {
+      "index": "03",
+      "eyebrow": "Engineering stack",
+      "title": "Tools I use to solve the problem.",
+      "note": "Hover or focus to see where each technology has been used."
+    },
+    "about": {
+      "index": "04",
+      "eyebrow": "About / Engineering",
+      "title": "How I think about building software."
+    },
+    "services": {
+      "index": "05",
+      "eyebrow": "Capabilities",
+      "title": "What I can own end to end."
+    }
+  },
+  "projects": [],
+  "projectDetail": {
+    "storySteps": [
+      "Overview",
+      "Problem",
+      "Architecture",
+      "Implementation",
+      "Result"
+    ],
+    "decisionLabels": [
+      "Problem",
+      "Constraint",
+      "Decision",
+      "Result"
+    ],
+    "sectionLabels": [
+      "01 / Context",
+      "02 / System architecture",
+      "03 / Implementation",
+      "04 / Result"
+    ],
+    "implementation": {
+      "lines": [
+        "see repository → implementation details"
+      ],
+      "summary": "Implementation details live in the project repository."
+    },
+    "architecture": {
+      "activeLabel": "Active node",
+      "descriptionSuffix": " is part of the project’s primary request and data path."
+    },
+    "caseStudyLabels": {
+      "overview": "Overview",
+      "context": "Context",
+      "role": "Role",
+      "category": "Category",
+      "decisions": "Technical decisions",
+      "rationale": "Why",
+      "alternatives": "Alternative",
+      "chosen": "Chosen approach",
+      "implementationDetail": "Implementation notes",
+      "technicalSurface": "Technical surface",
+      "learnings": "What I learned",
+      "metrics": "Metrics",
+      "links": "Related links",
+      "undocumentedResult": "No verified outcome has been documented yet.",
+      "questions": [
+        "What is this?",
+        "Why did I build it?",
+        "How does it work?",
+        "What did I own?",
+        "What changed?"
+      ]
+    }
+  },
+  "experience": [
+    {
+      "id": "hft-stuttgart",
+      "company": "HFT Stuttgart",
+      "role": "Student Assistant, Facility Data Systems",
+      "period": "Jun—Aug 2026",
+      "tech": "Python · SOAP/WSDL · pytest",
+      "description": "Owned and shipped a facility-data automation tool for HISinOne, from system design and service integration through production verification.",
+      "story": {
+        "paragraphs": [
+          "The facility team was entering building and room data into HISinOne by hand from spreadsheets and WebUntis. That made a simple data update slow and left too much room for missing or inconsistent records.",
+          "I built the automation end to end: a SOAP/WSDL client for WebUntis, an authenticated HISinOne API client, and a hierarchical resolution pipeline that works through building, floor, and room data independently. Ambiguous matches are flagged instead of guessed, and missing records are detected before they reach production.",
+          "The first live run processed 200+ records across 10+ buildings with zero errors. I also added a fully automated pytest suite and independent post-import checks so the result could be verified rather than simply assumed."
+        ]
+      },
+      "highlights": [
+        "200+ records processed",
+        "10+ buildings covered",
+        "100% test suite passing"
+      ]
+    },
+    {
+      "id": "letstream",
+      "company": "Letstream",
+      "role": "Software Development Engineer I",
+      "period": "Dec 2024—Apr 2025",
+      "tech": "Angular · RxJS · GraphQL",
+      "description": "Built and optimized a real-time logistics dashboard in Angular, while helping move the team from Vue to Angular.",
+      "story": {
+        "paragraphs": [
+          "I worked on a logistics tracking dashboard where real-time updates and load performance mattered during active tracking.",
+          "I rebuilt the frontend around Angular and RxJS streams, introduced custom lazy-loading, and optimized the GraphQL fragments used by the dashboard. The changes improved real-time synchronization by 25% and reduced initial load time by 40%.",
+          "I also reduced server overhead by 30% through debounce strategies and disciplined Angular lifecycle management. Alongside the implementation work, I led the migration of two developers from Vue to Angular, established coding standards, and introduced mentoring practices that reduced code-review cycle time by 15%.",
+          "I worked with backend engineers on end-to-end testing to verify that data moved correctly across the frontend and backend before release."
+        ]
+      },
+      "highlights": [
+        "25% faster real-time sync",
+        "40% faster initial load",
+        "30% less server overhead",
+        "15% faster code-review cycle"
+      ]
+    },
+    {
+      "id": "elluminati-ventures",
+      "company": "Elluminati",
+      "role": "Software Engineer, Full Stack Intern (MEAN)",
+      "period": "Oct 2023—Oct 2024",
+      "tech": "Angular · Node.js · Express · MongoDB",
+      "description": "Built Eber across the stack, from the Angular application and real-time tracking to the Node.js backend, APIs, payments, and notifications.",
+      "story": {
+        "paragraphs": [
+          "I worked on Eber, an on-demand ride-booking platform, and owned features across both the frontend and backend.",
+          "On the frontend, I built the Angular 18 application with Google Maps tracking, live ride updates over WebSockets, Stripe payments, and a responsive PWA-enabled interface.",
+          "On the backend, I built the Node.js/Express/MongoDB services for the ride lifecycle, including driver assignment, trip completion, dynamic pricing, automated invoice generation, and REST APIs used by the admin panel and planned mobile clients.",
+          "I also built multi-channel notifications using Twilio SMS, email, and browser push, plus an admin dashboard with ride history, filtering, CSV export, and live trip-path visualization."
+        ]
+      },
+      "highlights": [
+        "Full ride-lifecycle REST API",
+        "Real-time WebSocket tracking",
+        "Stripe payments integrated"
+      ]
+    }
+  ],
+  "technologies": [
+    {
+      "label": "Frontend",
+      "items": [
+        {
+          "name": "TypeScript",
+          "usedIn": "SynthGraph · Founder X · Eber"
+        },
+        {
+          "name": "React",
+          "usedIn": "ParkRabbit · Founder X"
+        },
+        {
+          "name": "Angular",
+          "usedIn": "Eber · Letstream"
+        },
+        {
+          "name": "Next.js",
+          "usedIn": "SynthGraph"
+        },
+        {
+          "name": "JavaScript",
+          "usedIn": "Eber · ParkRabbit"
+        },
+        {
+          "name": "RxJS",
+          "usedIn": "Eber · Letstream"
+        },
+        {
+          "name": "PrimeNG",
+          "usedIn": "Letstream"
+        }
+      ]
+    },
+    {
+      "label": "Backend",
+      "items": [
+        {
+          "name": "Node.js",
+          "usedIn": "Eber · SynthGraph"
+        },
+        {
+          "name": "NestJS",
+          "usedIn": "SynthGraph"
+        },
+        {
+          "name": "Express",
+          "usedIn": "Eber"
+        },
+        {
+          "name": "Python",
+          "usedIn": "SynthGraph · HFT Stuttgart"
+        },
+        {
+          "name": "FastAPI",
+          "usedIn": "Founder X"
+        },
+        {
+          "name": "Spring Boot",
+          "usedIn": "ParkRabbit"
+        },
+        {
+          "name": "Stripe",
+          "usedIn": "Eber"
+        },
+        {
+          "name": "LangGraph",
+          "usedIn": "Founder X"
+        },
+        {
+          "name": "SOAP/WSDL",
+          "usedIn": "HFT Stuttgart"
+        },
+        {
+          "name": "Twilio",
+          "usedIn": "Eber"
+        }
+      ]
+    },
+    {
+      "label": "Data",
+      "items": [
+        {
+          "name": "PostgreSQL",
+          "usedIn": "SynthGraph · ParkRabbit"
+        },
+        {
+          "name": "MongoDB",
+          "usedIn": "Eber · Founder X"
+        },
+        {
+          "name": "TypeORM",
+          "usedIn": "SynthGraph"
+        },
+        {
+          "name": "RabbitMQ",
+          "usedIn": "ParkRabbit"
+        },
+        {
+          "name": "WebSockets",
+          "usedIn": "ParkRabbit · Eber"
+        },
+        {
+          "name": "GraphQL",
+          "usedIn": "Letstream"
+        },
+        {
+          "name": "Redis",
+          "usedIn": "Eber"
+        },
+        {
+          "name": "Google Maps API",
+          "usedIn": "Letstream · Eber"
+        }
+      ]
+    },
+    {
+      "label": "Engineering",
+      "items": [
+        {
+          "name": "REST APIs",
+          "usedIn": "Eber · SynthGraph · ParkRabbit · Founder X"
+        },
+        {
+          "name": "Docker",
+          "usedIn": "SynthGraph · ParkRabbit"
+        },
+        {
+          "name": "Automated testing",
+          "usedIn": "SynthGraph · Founder X · HFT Stuttgart"
+        },
+        {
+          "name": "CI / CD",
+          "usedIn": "SynthGraph · Founder X · Eber"
+        },
+        {
+          "name": "Kubernetes",
+          "usedIn": "Eber"
+        },
+        {
+          "name": "Vitest",
+          "usedIn": "SynthGraph · Founder X"
+        },
+        {
+          "name": "Pytest",
+          "usedIn": "SynthGraph · Founder X · HFT Stuttgart"
+        },
+        {
+          "name": "Authentication systems",
+          "usedIn": "Eber · HFT Stuttgart"
+        }
+      ]
+    }
+  ],
+  "education": [
+    {
+      "id": "foundation",
+      "chapterLabel": "Foundation",
+      "yearStart": "2020",
+      "yearEnd": "2024",
+      "institution": "Bharati Vidyapeeth (DU) College of Engineering, Pune",
+      "degreeShort": "B.Tech",
+      "field": "Information Technology",
+      "metaPrimary": {
+        "label": "Degree",
+        "value": "Bachelor of Technology"
+      },
+      "metaSecondary": {
+        "label": "Period",
+        "value": "2020 → 2024"
+      }
+    },
+    {
+      "id": "depth",
+      "chapterLabel": "Depth",
+      "yearStart": "2025",
+      "yearEnd": "2027",
+      "institution": "HFT Stuttgart",
+      "degreeShort": "M.Sc.",
+      "field": "Software Technology",
+      "metaPrimary": {
+        "label": "Focus",
+        "value": "Architecture · Systems · Verification"
+      },
+      "metaSecondary": {
+        "label": "Status",
+        "value": "Present"
+      }
+    }
+  ],
+  "about": {
+    "description": "I build web products end to end, from the interface and API to the data, testing, deployment, and iteration behind them.",
+    "location": "Based in Stuttgart, Germany",
+    "exploration": "Currently deepening my work in software architecture, distributed systems, and agentic engineering workflows.",
+    "interestsLabel": "Areas I’m exploring",
+    "interests": [
+      "Software architecture",
+      "Distributed systems",
+      "Reliable web systems",
+      "Agentic engineering workflows"
+    ]
+  },
+  "engineeringPrinciples": [
+    {
+      "id": "features",
+      "label": "Features",
+      "statement": "Start with the problem, not the feature.",
+      "explanation": "I try to understand what actually needs to change before deciding what to build. At HFT, that meant automating accurate facility records rather than building another interface around a manual process.",
+      "evidence": [
+        {
+          "label": "Problem",
+          "descriptor": "Understand it first"
+        },
+        {
+          "label": "Scope",
+          "descriptor": "Build what is needed"
+        },
+        {
+          "label": "Ownership",
+          "descriptor": "From requirement to release"
+        },
+        {
+          "label": "Evidence",
+          "descriptor": "Verify the result"
+        }
+      ]
+    },
+    {
+      "id": "systems",
+      "label": "Systems",
+      "statement": "Build systems that stay understandable as they grow.",
+      "explanation": "I care about clear boundaries, responsibilities, and data flow because they make systems easier to change when the product gets bigger.",
+      "evidence": [
+        {
+          "label": "Clarity",
+          "descriptor": "Clear boundaries"
+        },
+        {
+          "label": "Depth",
+          "descriptor": "Systems thinking"
+        },
+        {
+          "label": "Ownership",
+          "descriptor": "End to end"
+        },
+        {
+          "label": "Growth",
+          "descriptor": "Designed to evolve"
+        }
+      ]
+    },
+    {
+      "id": "trade-offs",
+      "label": "Trade-offs",
+      "statement": "Every engineering decision moves complexity somewhere.",
+      "explanation": "I want the reason behind a technical choice to be understandable, including what it makes easier and what it makes harder later.",
+      "evidence": [
+        {
+          "label": "Constraints",
+          "descriptor": "Make them explicit"
+        },
+        {
+          "label": "Alternatives",
+          "descriptor": "Consider before choosing"
+        },
+        {
+          "label": "Performance",
+          "descriptor": "Measure the cost"
+        },
+        {
+          "label": "Horizon",
+          "descriptor": "Short term vs long term"
+        }
+      ]
+    },
+    {
+      "id": "reliability",
+      "label": "Reliability",
+      "statement": "If it matters, I want a way to verify it.",
+      "explanation": "Tests, validation, failure handling, and post-deployment checks are part of the work, not something added after the feature is finished.",
+      "evidence": [
+        {
+          "label": "Testing",
+          "descriptor": "Automated where useful"
+        },
+        {
+          "label": "Validation",
+          "descriptor": "Check independently"
+        },
+        {
+          "label": "Failure modes",
+          "descriptor": "Handle them explicitly"
+        },
+        {
+          "label": "Deployment",
+          "descriptor": "Verify after shipping"
+        }
+      ]
+    }
+  ],
+  "services": [
+    {
+      "id": "full-stack-development",
+      "title": "Full-stack Development",
+      "description": "Build the path from interface to API and database, with testing and deployment included.",
+      "story": {
+        "paragraphs": [
+          "I’m comfortable owning a feature across the stack rather than treating frontend and backend as separate worlds.",
+          "That means thinking about the data model, API contract, interface, tests, and deployment together so the pieces work as one product."
+        ]
+      }
+    },
+    {
+      "id": "frontend-engineering",
+      "title": "Frontend Engineering",
+      "description": "Build React and Angular interfaces that remain responsive under real data and real interaction.",
+      "story": {
+        "paragraphs": [
+          "Most frontend problems become interesting when the data is live, the network is slow, or the product has to change without breaking what already works.",
+          "My experience with Angular, RxJS, GraphQL, React, and performance work has taught me to treat the interface as part of the system, not just its presentation layer."
+        ]
+      }
+    },
+    {
+      "id": "backend-and-api-design",
+      "title": "Backend & API Design",
+      "description": "Design Node.js and NestJS services with clear contracts, data flow, and maintainable boundaries.",
+      "story": {
+        "paragraphs": [
+          "I think about an API as the boundary between parts of a system. The contract, data model, validation, error handling, and ownership rules all matter.",
+          "My backend work spans Node.js, NestJS, Express, PostgreSQL, MongoDB, REST, GraphQL, and service integrations."
+        ]
+      }
+    },
+    {
+      "id": "software-architecture",
+      "title": "Software Architecture",
+      "description": "Design software around clear boundaries, data flow, and the trade-offs that come with growth.",
+      "story": {
+        "paragraphs": [
+          "This is the area I’m developing most deliberately through my M.Sc. in Software Technology.",
+          "I’m interested in how systems stay understandable, testable, and reliable as they become more distributed, and I apply that thinking in projects such as SynthGraph and in my production work."
+        ]
+      }
+    },
+    {
+      "id": "ai-assisted-engineering",
+      "title": "AI-assisted Engineering",
+      "description": "Use agentic coding tools inside explicit architecture, testing, and review boundaries.",
+      "story": {
+        "paragraphs": [
+          "I use AI coding tools to move faster, but I don’t want the tool deciding what the system should become.",
+          "The useful part is combining agentic implementation with architecture documents, explicit constraints, tests, and review so speed does not quietly turn into design drift."
+        ]
+      }
+    }
+  ],
+  "contact": {
+    "email": "anandabinash25@gmail.com",
+    "calendly": "https://calendly.com/abinashanandab/15min",
+    "booking": {
+      "label": "BOOK A CONVERSATION",
+      "detail": "15 MIN · CALENDLY",
+      "accessibleLabel": "Book a 15-minute conversation (opens in a new tab)"
+    },
+    "availability": "Open to new opportunities",
+    "location": "Stuttgart · CET",
+    "headingLines": [
+      "Let’s build",
+      "something useful."
+    ],
+    "cursor": "LET’S TALK",
+    "socials": [
+      {
+        "label": "LinkedIn",
+        "href": "https://www.linkedin.com/in/abinash-anand-064598203/"
+      },
+      {
+        "label": "GitHub",
+        "href": "https://github.com/Abinash-Anand"
+      }
+    ]
+  },
+  "resume": null,
+  "footer": {
+    "statement": "Built with restraint. Shipped with intent.",
+    "backToTop": "Back to top ↑"
+  },
+  "labels": {
+    "overlay": {
+      "close": "Close",
+      "closeAria": "Close detail"
+    },
+    "projectOverlay": "Project case study",
+    "experienceOverlay": "Experience",
+    "serviceOverlay": "Capability",
+    "projectCta": "View case study",
+    "projectCursor": "OPEN ↗",
+    "projectVisualPrefix": "SYS / 0",
+    "experienceCursor": "VIEW",
+    "serviceCursor": "OPEN",
+    "caseProgressAria": "Case study progress",
+    "usedIn": "Used in",
+    "experienceTechnologies": "Core technologies",
+    "capability": "Selected capability",
+    "discussProject": "Discuss a project",
+    "experienceTimelineAria": "Career timeline, by year",
+    "experienceScrollHint": "Scroll to change year",
+    "experienceExpand": "Read full story",
+    "principleSelectorAria": "Engineering decision lenses",
+    "educationLabel": "Education"
+  }
+}
