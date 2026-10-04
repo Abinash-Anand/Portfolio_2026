@@ -17,6 +17,12 @@
 *.psd                filter=lfs diff=lfs merge=lfs -text
 *.ai                 filter=lfs diff=lfs merge=lfs -text
 *.sketch             filter=lfs diff=lfs merge=lfs -text
+# public/images is served directly by the deployment the same way public/fonts and favicon.ico already are:
+# keep as regular blobs rather than the general *.jpg/*.jpeg LFS rules above (*.svg was never LFS-tracked; listed
+# here explicitly so this directory's intent is self-evident without cross-referencing the rules above).
+public/images/*.jpg  -filter binary
+public/images/*.jpeg -filter binary
+public/images/*.svg  -filter binary
 
 # ---------------------------------------------------------------------------
 # Video

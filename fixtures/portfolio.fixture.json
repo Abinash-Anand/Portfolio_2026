@@ -6,7 +6,8 @@
     "role": "Software Engineer",
     "location": "Stuttgart / Germany",
     "statement": "Building software\nwith clarity,\ndepth & motion.",
-    "summary": "Building reliable software across interfaces, APIs, backend systems and AI-assisted engineering."
+    "summary": "Building reliable software across interfaces, APIs, backend systems and AI-assisted engineering.",
+    "portrait": "/images/fixture-portrait.svg"
   },
   "navigation": {
     "label": "Primary navigation",

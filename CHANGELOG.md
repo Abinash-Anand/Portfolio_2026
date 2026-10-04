@@ -1880,3 +1880,118 @@ narrow case requested — nothing else about native scrolling changed.
 - Temporarily added `playwright` as a devDependency for this round's browser verification; reverted
   (`git checkout -- package.json pnpm-lock.yaml && pnpm install --frozen-lockfile`) before committing, same as
   every prior round this session that used it.
+
+## 2026-10-04 — Hero: replace the node-visual composition with a portrait layout
+
+### Context
+
+The user supplied a pixel-annotated design handoff reference and the real portrait photograph to implement exactly:
+a two-zone Hero (headline/copy on the left, a portrait module with two geometric backing plates and a right-side
+metadata stack on the right), replacing the former single-column headline plus node-illustration composition.
+Explicit constraints: do not reinterpret the design, do not change the headline wording, preserve the existing
+scroll/parallax system and reduced-motion behavior, do not redesign navigation or touch any other section, keep all
+content data-driven, and the result must "immediately read as the same design" as the reference at the same
+viewport. Protected-system change under `AGENTS.md`/`CHANGE_PROTOCOL.md` — the system affected, why, regression
+risk and test plan were stated to the user before any edit.
+
+### Changed
+
+- **`src/app/domain/portfolioData.ts`, `src/app/application/portfolioContract.ts`** — added `person.portrait:
+  string` (required) and a new `imageUrl` contract validator (mirrors the existing `resumeUrl` pattern: a local
+  `/path/to/file.{jpg,jpeg,png,webp,avif,svg}` under `public/`, or an absolute HTTPS URL).
+- **`src/App.tsx`** — rewrote `Hero`: `.hero-copy` (eyebrow + headline + summary, the section's only normal-flow
+  child) replaces the old full-width headline; `.hero-portrait-zone` (portrait image + two backing plates, each its
+  own `data-scroll-layer`) and a restructured `.hero-meta` (now a location/connector-dot/name/rule/role vertical
+  stack, rather than the old full-width role/location split row) are absolutely positioned, reusing the exact
+  layering pattern the removed `.hero-art` already established. `person.role` is now read twice by design (eyebrow
+  and metadata) — matching the reference, not a duplication bug. Stopped rendering `portfolio.hero.visual` in Hero;
+  the field remains in the schema/data files, unused, same "stop rendering, don't delete" treatment already used
+  for `about.description` elsewhere in this codebase. `TechnicalVisual` itself is completely untouched and still
+  renders for `ProjectDetail` and each project row's own art layer.
+- **`src/index.css`** — replaced `.hero-art`/the old `.hero-meta` with `.hero-copy`/`.hero-eyebrow`/
+  `.hero-portrait-zone`/`.hero-portrait`/`.hero-portrait-plate*`/`.hero-portrait-image`/the new `.hero-meta*` rules.
+  `.hero-title` shrank from `clamp(57px,8.15vw,148px)` to `clamp(40px,5.3vw,82px)` (landing at ~75px at the
+  reference's 1440px calibration point) with letter-spacing loosened from `-.075em` to `-.02em`, matching the
+  reference's smaller, narrower-column headline role; `.hero-summary` widened from `max-width:430px` to `520px`.
+  Backing plates use a translucent `rgba(216,216,210,.45)` fill (derived from the existing `--line` token, not a
+  new color) over a `1px solid var(--line)` border. Added a ≤800 px override that un-pins `.hero-sticky`
+  (`position:relative;height:auto;overflow:visible`) and lets `.hero-portrait-zone`/`.hero-meta` fall into normal
+  document flow after the copy, since the new stacked mobile composition does not reliably fit the old fixed-height
+  clipped box.
+- **`src/app/domain/portfolioData.ts`'s `person.statement`** (`portfolio.json` only) — added explicit `\n` line
+  breaks ("Owning and shipping\nscalable, reliable web\nproducts end to end.") so the headline always wraps at the
+  reference's exact points regardless of minor width variation, rather than relying on fragile natural reflow. The
+  words themselves are unchanged — this reuses the `.split("\n")` rendering the fixture's own statement already
+  relied on, not a new mechanism.
+- **`portfolio.json`** — added `person.portrait: "/images/portrait.jpg"`.
+- **`fixtures/portfolio.fixture.json`** — added `person.portrait: "/images/fixture-portrait.svg"`, its own distinct,
+  clearly synthetic abstract placeholder (never a copy of the real photo), consistent with the fixture's separate
+  "Alex Morgan" identity established elsewhere in this codebase.
+- **`public/images/portrait.jpg`** (new) — the real, user-supplied portrait photograph, copied verbatim (800×800
+  JPEG, ~51KB, no retouching/recoloring/distortion applied).
+- **`public/images/fixture-portrait.svg`** (new) — a small hand-authored abstract monochrome placeholder (flat
+  shapes + "AM" monogram) for fixture/offline verification, deliberately non-photographic.
+- **`tests/content-architecture.test.mjs`** — `alternateDocument()`'s hand-constructed `person` object needed the
+  new required `portrait` field (`/images/portrait.alternate.svg`, matching the test's existing "every field gets
+  its own distinct marker string" convention); added `"portrait.alternate"` to the list of markers the "unchanged
+  React components render a structurally different portfolio" test already asserts appear in rendered output,
+  extending that existing per-field check to the new field rather than leaving it uncovered.
+
+### Preserved
+
+- The 135svh/100svh pin shell, `data-scene-origin="visible"`, and every other scene's configuration are byte-for-
+  byte unchanged — confirmed by `git diff` showing no edits outside Hero's own markup/CSS and the schema/data files
+  listed above.
+- Navigation, every other section, and the shared scroll-scene engine (no new scheduler, no new event listeners)
+  were not touched.
+- No new motion-policy exemption was needed: every new layer's keyframes satisfy the existing generic invariants
+  (opacity resting at 1, ≥0.2 floor, ≤60px travel, no scale/rotate) without requiring the function-level replacement
+  pattern Stack's and Education's genuinely different motion semantics needed.
+- Reduced-motion behavior required zero new code: every new layer carries the same `.scroll-layer` class the
+  sitewide `{transform:none!important;opacity:1!important}` rule already neutralizes.
+
+### Regression Testing
+
+- `pnpm exec tsc --noEmit`: passed, no errors.
+- `node --experimental-strip-types --test tests/*.test.mjs`: 40 of 40 passed (after extending `alternateDocument()`
+  and its assertion list for the new required field, per above).
+- `PORTFOLIO_DATA_MODE=fixture node scripts/sync-github.ts && vite build`: succeeded; confirmed both
+  `public/images/portrait.jpg` and `public/images/fixture-portrait.svg` are copied into `dist/images/` verbatim.
+- **Browser verification, Playwright-driven Chromium against the dev server, real portfolio.json content via a
+  temporary fixture swap (backed up first, restored after — confirmed via `git diff` showing only the intended
+  `portrait` field addition remained), simulated input only, not a physical device:**
+  - Screenshot-compared the resting composition against the supplied reference at 1440px: eyebrow position,
+    headline text/line-breaks/scale, supporting-copy position/width, portrait size/position/rounded corners/crop
+    fidelity, backing-plate positions and visibility, metadata stack content/order/alignment, and scroll-cue
+    position all read as the same design. Two issues were caught and fixed during this comparison (see Notes).
+  - Scrolled to `scrollY:350` and confirmed the portrait image's computed opacity dropped below 1 (0.51) with the
+    whole composition receding coherently, confirming parallax is live and no layout breaks mid-transition.
+  - Reduced motion (1440px): resting composition is visually identical to normal motion's resting state (no
+    transform/opacity animation), zero console errors.
+  - Tablet (1000px): proportional scale-down, no collisions between portrait and headline, zero console errors.
+  - Mobile (390px): confirmed via two screenshots (initial view and scrolled) that content stacks in the correct
+    order (eyebrow → headline → summary → portrait → metadata → scroll cue → Work section), nothing clipped or
+    overlapping, zero horizontal overflow, zero console errors.
+  - Zero console errors across every pass; zero horizontal overflow at any viewport tested.
+- **Not performed:** physical trackpad/mouse/touch input, cross-browser/device certification, a measured
+  frame-rate/performance recording, the real authenticated GitHub sync/production build, and a live-site check.
+
+### Notes
+
+- **Two issues were found and fixed during this round's own screenshot comparison against the reference, before
+  being considered done:**
+  1. The metadata stack's initial `top:-15%` offset did not fully clear the portrait's top edge — the bottom row
+     (role) rendered overlapping the photograph itself, illegible against it. Fixed by switching to
+     `bottom:calc(100% + 20px)`, which positions the whole block a fixed gap above the portrait regardless of the
+     metadata's own content height, rather than a percentage offset that happened to be too small for five stacked
+     lines.
+  2. The backing plates' initial fill (`rgba(244,244,240,.65)`, essentially the page's own `--paper` color at
+     partial opacity) was visually almost invisible against the page background, reading as "no backing plates" at
+     a glance even though the border was technically present. Fixed by using the `--line` token's RGB at `.45`
+     alpha instead, giving the plates the visible-but-restrained gray fill the reference actually shows.
+- The portrait image is a real, identifiable photograph of the portfolio's own owner (Abinash Anand), supplied by
+  the user for their own hero section — ordinary, expected use for a personal portfolio site, not a third-party or
+  impersonation concern.
+- Temporarily added `playwright` as a devDependency for this round's browser verification; reverted
+  (`git checkout -- package.json pnpm-lock.yaml && pnpm install --frozen-lockfile`) before committing, same as
+  every prior round this session that used it.

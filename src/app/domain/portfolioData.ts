@@ -53,7 +53,7 @@ export type EngineeringPrinciple = {
 export type PortfolioDocument = {
   readonly schemaVersion: 2;
   readonly fixture: boolean;
-  readonly person: { readonly name: string; readonly role: string; readonly location: string; readonly statement: string; readonly summary: string };
+  readonly person: { readonly name: string; readonly role: string; readonly location: string; readonly statement: string; readonly summary: string; readonly portrait: string };
   readonly navigation: {
     readonly label: string;
     readonly initialSection: SectionId;

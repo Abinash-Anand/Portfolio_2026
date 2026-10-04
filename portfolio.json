@@ -5,8 +5,9 @@
     "name": "Abinash Anand",
     "role": "Full-Stack Software Engineer",
     "location": "Stuttgart / Germany",
-    "statement": "Owning and shipping scalable, reliable web products end to end.",
-    "summary": "M.Sc. Software Technology student and full-stack software engineer building web products across frontend, backend, data, testing, and deployment."
+    "statement": "Owning and shipping\nscalable, reliable web\nproducts end to end.",
+    "summary": "M.Sc. Software Technology student and full-stack software engineer building web products across frontend, backend, data, testing, and deployment.",
+    "portrait": "/images/portrait.jpg"
   },
   "navigation": {
     "label": "Primary navigation",

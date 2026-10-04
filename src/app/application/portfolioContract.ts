@@ -43,6 +43,11 @@ const resumeUrl: Check<string> = (value, path) => {
   if (/^\/(?!\/)[A-Za-z0-9_./-]+\.pdf$/.test(href) && !href.split("/").includes("..")) return href;
   return url(href, path);
 };
+const imageUrl: Check<string> = (value, path) => {
+  const href = text(value, path);
+  if (/^\/(?!\/)[A-Za-z0-9_./-]+\.(jpg|jpeg|png|webp|avif|svg)$/i.test(href) && !href.split("/").includes("..")) return href;
+  return url(href, path);
+};
 const visual: Check<TechnicalVisualData> = validateTechnicalVisual;
 const heading = object({index: text, eyebrow: text, title: text, note: optional(text)});
 function tuple4<Value>(rule: Check<Value>): Check<[Value, Value, Value, Value]> {
@@ -67,7 +72,7 @@ const implementation = object({lines: array(text), summary: text});
 const metadata = (value: unknown, path: string) => validatePortfolioMetadata(value, path);
 const document: Check<PortfolioDocument> = object({
   schemaVersion: literal(2), fixture: bool,
-  person: object({name: text, role: text, location: text, statement: text, summary: text}),
+  person: object({name: text, role: text, location: text, statement: text, summary: text, portrait: imageUrl}),
   navigation: object({label: text, initialSection: section, links: array(object({section, label: text})), contact: object({section, label: text, cursor: text})}),
   hero: object({visual, scrollCue: object({label: text, section})}),
   sections: object({projects: heading, experience: heading, stack: heading, about: heading, services: heading}),

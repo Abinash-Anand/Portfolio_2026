@@ -20,7 +20,7 @@ This philosophy is a constraint on future work. The implementation details below
 - Fine-pointer effects require a fine pointer; engine pointer depth/magnetism additionally requires no reduced-motion preference. Narrow layouts and coarse pointers hide the custom cursor.
 - Reduced-motion CSS forces animation/transition durations to `.01ms`, disables smooth anchor scrolling, neutralizes scene transforms/blur, and exposes scene/reveal content. This does not remove every non-scene hover offset or the cursor itself.
 
-**Configured versus effective opacity:** the engine writes `--scene-opacity` for layers, but later normal-motion CSS rules fix the own opacity of `.hero-grid` at `.24`, `.hero-art` at `.75` (`.45` at ≤800 px), `.contact-grid` at `.22`, and `.project-visual-backdrop` at `.3`. Those elements still consume scene transforms; their own opacity does not follow the generic scene expression. Parent opacity/masks may further affect appearance. Reduced-motion `!important` rules force their layer opacity to one. Treat the markup keyframes as configuration, not proof that the cascade applies every configured property.
+**Configured versus effective opacity:** the engine writes `--scene-opacity` for layers, but later normal-motion CSS rules fix the own opacity of `.hero-grid` at `.24`, `.contact-grid` at `.22`, and `.project-visual-backdrop` at `.3`. Those elements still consume scene transforms; their own opacity does not follow the generic scene expression. Parent opacity/masks may further affect appearance. Reduced-motion `!important` rules force their layer opacity to one. Treat the markup keyframes as configuration, not proof that the cascade applies every configured property. (`.hero-art` no longer exists as of the 2026-10-04 portrait redesign — see "Hero: portrait parallax" below, whose layers all follow their configured `--scene-opacity` directly, with no later fixed-opacity override.)
 
 ### Extreme wheel input dampening (2026-10-04; user-authorized narrow exception to native wheel scrolling)
 
@@ -248,15 +248,35 @@ can cancel the other.
 
 Close buttons additionally use `.magnetic-anchor` as a stable pointer reference and `--mag-x/y` translation at 12% of pointer displacement, with a 350 ms primary-ease CSS transition. Reduced motion sets target offsets to zero. Contact email and the optional booking action have magnetic styling but do not match the current handler selector; they have no implemented magnetic tracking. Both contact actions reuse y `[95, 0, -145]` and opacity `[0.05, 1, 0.18]` scene keyframes with the existing CSS padding hover transition, responsive strength and reduced-motion overrides; the two-column/stacked wrapper owns layout only.
 
-### Hero orbit (current equivalent: layered node geometry)
+### Hero: portrait parallax (2026-10-04; replaces the former node-visual "Hero orbit")
 
-There is **no `.hero-orbit` component/selector, autonomous orbit loop, or orbit keyframe animation** in the inspected version. The existing circular node illustration is `.hero-art` containing `TechnicalVisual(kind="nodes")`.
+There is **no `.hero-orbit`/`.hero-art` component/selector or node illustration** as of this change. Hero's visual
+is now a portrait photograph with two geometric backing plates and a metadata stack, per an explicit, pixel-
+annotated design reference — see `ARCHITECTURE.md`'s "Hero: portrait composition" for the full structural rationale.
 
-- **Trigger / element:** hero scene scroll and fine-pointer position affect the art wrapper; individual nodes do not independently orbit.
-- **Properties:** y `[-70, 0, 115]` px, x `[42, 0, -36]` px, scale `[1.06, 1, .96]`, rotation `[-1.2, 0, 1.4]` degrees; `data-pointer="18"` adds viewport-relative pointer depth. Opacity keyframes `[.48, .78, .38]` are configured/written, but later CSS fixes the art's own opacity at `.75` (`.45` at ≤800 px) under normal motion.
-- **Timing/easing:** smoothstep keyframes and damping `.11`; no time-driven looping animation.
-- **Responsive:** art resizes/repositions at ≤800 px; engine strength attenuates travel. Hero track is 135svh desktop and 112svh narrow, with a 100svh sticky interior under normal motion.
-- **Reduced motion:** art transform/blur removed, opacity one, pointer depth disabled, and extended hero track/sticking removed.
+- **Trigger / elements:** hero scene scroll (and, for the portrait image specifically, fine-pointer position via
+  `data-pointer="8"`) independently affects three layers — `.hero-portrait-image`, `.hero-portrait-plate-top`, and
+  `.hero-portrait-plate-bottom` — plus the `.hero-eyebrow`/`.hero-title`/`.hero-summary` copy block and the
+  `.hero-meta` metadata stack, each its own `data-scroll-layer`.
+- **Properties:** every layer's travel/opacity stays within this codebase's ordinary structural bounds (≤60 px, no
+  scale or rotate, opacity resting at `1` with a readable floor) — unlike the old orbit, nothing here uses rotation
+  or scale, both because the generic motion-policy tests forbid them on structural layers and because rotating or
+  scaling a human photograph would read as distortion, not restraint. The two backing plates use slightly different
+  `data-y`/`data-phase` values than the portrait image itself, so they visibly separate from it as the section
+  scrolls — the "subtle independent movement of backing plates" the design brief asked for — rather than the three
+  elements moving as one rigid block.
+- **Timing/easing:** smoothstep keyframes through the same shared engine as every other scene, `data-damping="0.13"`
+  on the portrait image; no time-driven looping animation, no new scheduler.
+- **Responsive:** the portrait/metadata zones are absolutely positioned at desktop/tablet widths (reusing the same
+  "text flows normally, art floats independently" layering the old `.hero-art` established) and switch to normal
+  document flow at ≤800 px, stacking below the copy. Hero's pin shell itself un-pins at ≤800 px
+  (`.hero-sticky{position:relative;height:auto;overflow:visible}`) because the new stacked mobile composition does
+  not reliably fit a single clipped viewport height — the same accommodation Experience's and Education's own
+  mobile overrides already make, not a new pattern.
+- **Reduced motion:** every layer's transform is neutralized and opacity forced to `1` by the same sitewide
+  `.scroll-layer{transform:none!important;opacity:1!important}` rule every other scene layer already uses; no
+  Hero-specific reduced-motion code was added. Pointer depth on the portrait image is disabled the same way fine-
+  pointer-gated effects already are elsewhere.
 
 ### Modal transitions
 

@@ -40,7 +40,7 @@ const render = document => renderToStaticMarkup(React.createElement(App, {store:
 
 function alternateDocument() {
   const document = clone();
-  document.person = {name: "person.alternate", role: "role.alternate", location: "location.alternate", statement: "hero.alternate\nhero.second-line", summary: "summary.alternate"};
+  document.person = {name: "person.alternate", role: "role.alternate", location: "location.alternate", statement: "hero.alternate\nhero.second-line", summary: "summary.alternate", portrait: "/images/portrait.alternate.svg"};
   document.projects = ["project-beta", "project-alpha"].map((slug, index) => ({slug, metadata: {schemaVersion: 1, title: `${slug}.title`, summary: `${slug}.summary`, year: "year.alternate", role: "role.alternate", category: "category.alternate", stack: ["technology.alternate"], order: index, visual: {kind: "nodes", label: `${slug}.visual`}, narrative: {problem: `${slug}.problem`, constraints: `${slug}.constraints`, decision: `${slug}.decision`, result: `${slug}.result`, architecture: [`${slug}.node`]}}, repositoryUrl: null, liveUrl: null}));
   document.experience = [{id: "experience-alternate", company: "company.alternate", role: "role.alternate", period: "period.alternate", tech: "technology.alternate", description: "experience.alternate"}];
   document.technologies = [{label: "stack.alternate", items: [{name: "technology.alternate", usedIn: "project-beta.title"}]}];
@@ -65,7 +65,7 @@ test("canonical JSON supplies every fixture narrative, visual and sparse case st
 
 test("the unchanged React components render a structurally different portfolio", () => {
   const html = render(alternateDocument());
-  for (const text of ["person.alternate", "hero.alternate", "hero.second-line", "project-beta.title", "project-alpha.title", "company.alternate", "stack.alternate", "technology.alternate", "service.alternate", "contact@fixture.invalid", "contact.alternate", "social.alternate"]) assert.ok(html.includes(text), text);
+  for (const text of ["person.alternate", "hero.alternate", "hero.second-line", "portrait.alternate", "project-beta.title", "project-alpha.title", "company.alternate", "stack.alternate", "technology.alternate", "service.alternate", "contact@fixture.invalid", "contact.alternate", "social.alternate"]) assert.ok(html.includes(text), text);
   assert.ok(html.indexOf("project-beta.title") < html.indexOf("project-alpha.title"));
   assert.equal((html.match(/class="project-row reveal"/g) ?? []).length, 2);
   assert.ok(!html.includes(fixture.person.name));

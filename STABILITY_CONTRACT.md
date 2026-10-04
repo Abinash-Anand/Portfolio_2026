@@ -24,6 +24,18 @@ An unrelated feature MUST NOT introduce new typography, colors, density, card-he
 Existing interactions MUST continue working unless the user explicitly requests their change:
 
 - **Navigation:** native hash navigation, hero scroll cue, Back to top, active-link indication, and scrolled-header treatment.
+- **Hero (2026-10-04, explicit user-authorized redesign of the former node-visual composition):** the 135svh/100svh
+  pin shell, `data-scene-origin="visible"` scene range, and the shared scroll-scene engine composition are
+  unchanged; only Hero's own internal content changed. `person.role` now renders twice by design (as the eyebrow
+  above the headline and again at the base of the right-side metadata stack) — this is not a duplication bug. The
+  portrait, its two backing plates, and the metadata block each carry their own independent, bounded (≤60px travel,
+  no scale/rotate) scroll-driven parallax, composed through the same engine as every other layer; none of them may
+  be promoted to a competing transform system. `hero.visual`/`TechnicalVisual`'s "nodes" rendering remains fully
+  intact and unchanged for Projects, which still consume it directly — only Hero stopped rendering it. At ≤800 px
+  Hero un-pins (`position:relative;height:auto`, matching Experience's and Education's own established mobile
+  un-pin pattern) because the new stacked mobile composition (headline → copy → portrait → metadata) does not fit a
+  single clipped viewport-height box without becoming cramped; this is a deliberate adaptation, not a regression of
+  the pin shell itself, which is unaffected at desktop and tablet widths.
 - **Projects:** row activation opens the correct project; existing hover/pointer composition, detail content, architecture activation, and scroll-tracked chapters remain functional.
 - **Experience (2026-10-02, explicit user-authorized redesign of the former row list):** scrolling through the section advances/reverses the active entry in data order; clicking a year jumps directly to it without being reverted by the next scroll-triggered check; the sticky pin releases cleanly at the section's start/end; the "Read full story" control still opens the correct employer's full detail overlay (the one interaction carried over unchanged from the row-list design). At ≤800 px the sticky pin and scroll-stepping are disabled in favor of a flat, tap-to-switch layout, same component and state.
 - **Services:** row activation opens the correct capability; hover treatment and detail email action remain intact.

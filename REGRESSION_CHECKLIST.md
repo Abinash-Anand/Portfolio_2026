@@ -29,14 +29,32 @@ Check a box only after verification. Record failures, known baseline limitations
 
 ## Hero
 
-- [ ] Headline renders all existing lines without clipping or unexpected wrapping.
+Hero (2026-10-04) is a two-zone portrait composition, not the former node-visual layout — see `ARCHITECTURE.md`'s
+"Hero: portrait composition" and `MOTION_SYSTEM.md`'s matching entry for the full mechanism.
+
+- [ ] Headline renders all three lines with the exact line breaks ("OWNING AND SHIPPING" / "SCALABLE, RELIABLE WEB"
+      / "PRODUCTS END TO END." for the real content) without clipping or unexpected wrapping at any desktop width.
 - [ ] Inter actually renders at weights 400/500/600 after font loading, including when Google Fonts hosts are blocked; no external font dependency or missing local font request remains.
-- [ ] Role, location, summary, technical node art, and generous spacing retain their hierarchy.
+- [ ] Eyebrow (role), headline, summary, portrait, backing plates, and metadata stack all render and retain their
+      hierarchy — the portrait never competes with or overlaps the headline.
+- [ ] The portrait photograph renders uncropped-looking and undistorted (natural aspect ratio preserved via
+      `object-fit:cover`, no stretching); its two backing plates are visible (subtle gray fill, visible border),
+      offset top-left and bottom-left of the portrait, never the dominant visual element.
+- [ ] The right-side metadata stack (location, connector + dot, name, rule, role) is fully legible and never
+      overlaps the portrait photograph itself.
 - [ ] Desktop hero track/sticky interior and the projects' emergence preserve the baseline composition.
-- [ ] Grid, headline, supporting text, and technical art retain distinct scroll responses; no unintended corrections or jitter appear.
-- [ ] Fine-pointer art response works under normal motion; there is no independent orbit animation to verify.
+- [ ] Copy block, portrait image, and the two backing plates retain distinct, independent scroll responses (the
+      plates visibly separate from the portrait as the section scrolls); no unintended corrections or jitter appear.
+- [ ] Fine-pointer parallax on the portrait image works under normal motion.
 - [ ] Scroll cue remains visible/usable as appropriate to scene progress and navigates to Work.
-- [ ] Narrow-screen and reduced-motion hero layouts match their documented fallbacks.
+- [ ] At ≤800 px: content stacks naturally in reading order (eyebrow → headline → summary → portrait → metadata →
+      scroll cue), the portrait and backing plates scale down without becoming illegibly small, and the section is
+      no longer pinned/clipped (it flows to its natural height) — confirm no content is cut off at any mobile
+      viewport height.
+- [ ] Reduced motion: the resting composition is visually identical to normal motion's resting state; no transform
+      or opacity animation plays, and the section is unpinned exactly as at ≤800 px.
+- [ ] `hero.visual`/`TechnicalVisual`'s node rendering is confirmed unaffected elsewhere (Projects' own art layers
+      and `ProjectDetail`'s art still render correctly) even though Hero no longer displays it.
 
 ## Projects
 

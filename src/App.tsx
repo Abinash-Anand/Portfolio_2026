@@ -110,16 +110,26 @@ function Hero({ portfolio }: PortfolioProps) {
     <section className="hero" id="top" data-scroll-scene data-scene-origin="visible">
       <div className="hero-sticky">
         <div className="hero-grid scroll-layer" data-scroll-layer data-y="-45,0,85" data-scale="1.025,1,0.99" data-opacity="0.85,1,0.78" aria-hidden="true" />
-        <div className="hero-meta scroll-layer" data-scroll-layer data-y="0,0,-20" data-opacity="1,1,0.4">
-          <span>{portfolio.person.role}</span>
-          <span>{portfolio.person.location}</span>
+        <div className="hero-copy">
+          <p className="hero-eyebrow scroll-layer" data-scroll-layer data-y="0,0,-14" data-opacity="1,1,0.4">{portfolio.person.role}</p>
+          <h1 className="hero-title scroll-layer type-parallax" data-scroll-layer data-y="0,0,-40" data-opacity="1,1,0.3" data-damping="0.13" data-phase="-0.015">
+            {portfolio.person.statement.split("\n").map((line) => <span key={line}>{line}</span>)}
+          </h1>
+          <p className="hero-summary scroll-layer" data-scroll-layer data-y="0,0,-60" data-opacity="1,1,0.25" data-damping="0.18" data-phase="-0.03">{portfolio.person.summary}</p>
         </div>
-        <h1 className="hero-title scroll-layer type-parallax" data-scroll-layer data-y="0,0,-40" data-opacity="1,1,0.3" data-damping="0.13" data-phase="-0.015">
-          {portfolio.person.statement.split("\n").map((line) => <span key={line}>{line}</span>)}
-        </h1>
-        <p className="hero-summary scroll-layer" data-scroll-layer data-y="0,0,-60" data-opacity="1,1,0.25" data-damping="0.18" data-phase="-0.03">{portfolio.person.summary}</p>
-        <div className="hero-art scroll-layer" data-scroll-layer data-y="-70,0,115" data-x="42,0,-36" data-scale="1.06,1,0.96" data-rotate="-1.2,0,1.4" data-opacity="0.48,0.78,0.38" data-pointer="18" data-damping="0.11" aria-hidden="true">
-          <TechnicalVisual visual={portfolio.hero.visual} large />
+        <div className="hero-portrait-zone">
+          <div className="hero-portrait">
+            <span className="hero-portrait-plate hero-portrait-plate-top scroll-layer" data-scroll-layer data-y="-12,0,18" data-opacity="1,1,0.55" aria-hidden="true" />
+            <span className="hero-portrait-plate hero-portrait-plate-bottom scroll-layer" data-scroll-layer data-y="14,0,-10" data-opacity="1,1,0.55" data-phase="0.02" aria-hidden="true" />
+            <img className="hero-portrait-image scroll-layer" data-scroll-layer data-y="-18,0,24" data-opacity="1,1,0.5" data-pointer="8" data-damping="0.13" src={portfolio.person.portrait} alt={portfolio.person.name} />
+          </div>
+          <div className="hero-meta scroll-layer" data-scroll-layer data-y="0,0,-20" data-opacity="1,1,0.4">
+            <span className="hero-meta-location">{portfolio.person.location}</span>
+            <span className="hero-meta-connector" aria-hidden="true" />
+            <span className="hero-meta-name">{portfolio.person.name}</span>
+            <span className="hero-meta-rule" aria-hidden="true" />
+            <span className="hero-meta-role">{portfolio.person.role}</span>
+          </div>
         </div>
         <a className="scroll-cue scroll-layer" data-scroll-layer data-y="-10,0,-110" data-opacity="1,1,0" data-phase="0.03" href={`#${portfolio.hero.scrollCue.section}`}><span>{portfolio.hero.scrollCue.label}</span><span>↓</span></a>
       </div>

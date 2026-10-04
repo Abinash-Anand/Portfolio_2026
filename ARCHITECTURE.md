@@ -74,7 +74,7 @@ The former component-local content object has been removed. `App` obtains the im
 | Stack | Ordered typed label/items groups with name/usedIn records | `layoutStackTiles` flattens the groups in order into one brick-wall field; each tile shows a running number, the skill and its category, and its hover/focus “Used in” disclosure. Adding, removing, reordering or recategorizing a skill, or growing the list to any length, is a data-only change. Authoring note: tile width follows the skill name, not the “Used in” text, so keep `usedIn` to about 25 characters (two project names) for short skill names; a longer value wraps to three lines in a two-column tile at laptop widths and crowds the name. Order inside a category can also matter for seam stagger; `tests/stack-bricks.test.mjs` pins the real data. |
 | Services | Typed ID/title/description records | Row selection passes the record to the existing capability detail and shared email action. |
 
-`portfolio.person` supplies shared identity and hero copy; statement is split on newlines. Wordmark/footer use the same name, footer uses the same role, and contact/service actions share one email. About, education, availability, navigation/footer/accessibility/detail copy and technical-art labels come from the contract.
+`portfolio.person` supplies shared identity and hero copy; statement is split on newlines. Wordmark/footer use the same name, footer uses the same role, and contact/service actions share one email. `person.portrait` (2026-10-04) is a validated image path or HTTPS URL consumed only by Hero's portrait module; `role` is read twice by Hero itself (the eyebrow above the headline, and again in the right-side metadata stack), which is intentional, not a duplicate-field bug. About, education, availability, navigation/footer/accessibility/detail copy and technical-art labels come from the contract.
 
 `TechnicalVisual` branches on a data descriptor’s nodes/pipeline/radar/retrieval kind and supplies its labels to the unchanged DOM/CSS geometry. These are not screenshots or live integrations. Stack remains stored but not displayed in project rows. Existing generic implementation fragments and experience prose remain explicit fixture content, not inferred engineering facts.
 
@@ -197,6 +197,50 @@ Projects, Experience, and Services each hold a nullable selected record. Selecti
 `ProjectDetail` owns active-chapter state; five observed story sections update the informational indicator. `ArchitectureDiagram` independently owns active-node state; each `CaseStudyDiagram` instance (rendered per graph-shaped `CaseStudyVisual` in the Architecture chapter) independently owns its own active-node state the same way, so multiple diagrams on one project never share highlight state. Conditional unmounting removes these components/observers when selection clears. Selected detail content disappears immediately on close while the overlay container runs its exit transition.
 
 Navigation uses native hash links plus CSS `scroll-behavior`, not a programmatic scrolling service. Engine, navigation, cursor, chapter, and overlay effects have cleanup paths; actual lifecycle behavior must still be checked in-browser after changes.
+
+### Hero: portrait composition
+
+`Hero` replaced its former single-column headline-plus-node-visual composition with a two-zone editorial layout
+(headline/copy column on the left, a portrait module and metadata stack on the right), per an explicit, pixel-
+annotated design reference. The pin shell (`.hero{height:135svh}` / `.hero-sticky{height:100svh}`,
+`data-scene-origin="visible"`) and the shared scroll-scene engine are completely unchanged; only Hero's own internal
+markup and CSS changed.
+
+- **Two zones, one reusing the existing absolute-layering pattern**: `.hero-copy` (eyebrow/headline/summary) is the
+  section's only normal-flow child, so `.hero-sticky`'s existing `align-content:center` continues to vertically
+  center it without a grid-column split. `.hero-portrait-zone` (portrait + two backing plates) and `.hero-meta`
+  (the right-side metadata stack) are `position:absolute`, anchored to the same `3.2vw` edge padding the section
+  already used for its old `.hero-art` — reusing that established "text flows normally, art floats independently
+  over it" layering, not inventing a new one.
+- **`person.role` renders twice by design**: once as the eyebrow directly above the headline, and again as the last
+  line of the metadata stack beside the portrait — matching the reference exactly. This is intentional repetition
+  within one component, not a data duplication bug.
+- **Deterministic image handling, no new asset pipeline**: `person.portrait` is a single validated path/URL
+  (`src/app/application/portfolioContract.ts`'s `imageUrl`, mirroring the existing `resumeUrl` pattern — either a
+  local `/path/to/file.{jpg,jpeg,png,webp,avif,svg}` under `public/`, or an absolute HTTPS URL), rendered through a
+  plain `<img>` with `object-fit:cover` so the supplied photograph's natural crop is preserved rather than
+  distorted. The real portrait lives at `public/images/portrait.jpg`; the fixture uses its own distinct, clearly
+  synthetic placeholder (`public/images/fixture-portrait.svg`, an abstract monochrome mark, never a copy of the real
+  photo), consistent with the fixture's own separate "Alex Morgan" identity elsewhere in this codebase.
+- **Motion stays within the existing structural bounds**: the portrait image and its two backing plates are each
+  their own `data-scroll-layer` (independent `data-y`/`data-opacity`, so the plates visibly separate from the
+  portrait as the section scrolls — "subtle independent movement," per the request — rather than moving as one
+  rigid unit), composed through the same engine every other layer uses. All of them satisfy the generic
+  motion-policy invariants this codebase already enforces (opacity resting at 1, ≥0.2 floor, ≤60px travel, no
+  scale/rotate) without needing a function-level exemption the way Stack's and Education's genuinely different
+  motion semantics did — Hero's parallax is an ordinary reveal-style recede, nothing new.
+- **Mobile un-pins, matching Experience's and Education's own precedent**: at ≤800 px `.hero-sticky` switches to
+  `position:relative;height:auto;overflow:visible` (previously it stayed pinned, since the old orbit-behind-text
+  mobile treatment fit a fixed-height box). The new stacked mobile composition — eyebrow → headline → summary →
+  portrait → metadata, in that DOM order, which also drives the desktop zones' independent positioning for free —
+  does not reliably fit one clipped viewport height, so Hero un-pins exactly as Experience's and Education's own
+  mobile overrides already do when their content doesn't fit a single screen, rather than clipping or shrinking
+  content until it became illegible.
+- **`hero.visual`/`TechnicalVisual` kept, not deleted**: Hero's own rendering of the old node-visual descriptor was
+  removed, but the `hero.visual` field remains in the schema and both data files, still validated — the same
+  "stop rendering, don't delete" treatment already used for `about.description` and the other fields superseded by
+  About's own redesign. `TechnicalVisual` itself and its "nodes" rendering are untouched and still fully exercised
+  by `ProjectDetail` and each project row's own art layer, which were never part of this change.
 
 ### Experience: scroll-stepped sticky timeline
 
@@ -554,6 +598,7 @@ Respect DNT/GPC before initialization, at every track call and at beforeSend. Mi
 | --- | --- | --- |
 | Owner name / role | Root portfolio.json person | Shared by hero/wordmark/footer; no duplicated identity literals |
 | Tagline / hero / About | Root person, hero, about, sections | Plain text through validated store |
+| Hero portrait image | `person.portrait` (root `portfolio.json` / `fixtures/portfolio.fixture.json`) | Validated image path/URL; real asset at `public/images/portrait.jpg`, fixture uses its own distinct synthetic placeholder |
 | Email / availability / social links | Root contact | Shared by contact and capability email actions |
 | GitHub owner / portfolio source | scripts/github-source.json | Build-only owner/repository configuration, not a project list |
 | Project selection / repository evidence / README | GitHub profile pins / pinned repositories | GraphQL repository nodes, source order, mapped optional raw README |
