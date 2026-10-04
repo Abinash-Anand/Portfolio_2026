@@ -15,10 +15,10 @@ export function educationChapterMotion(index: 0 | 1): EducationChapterMotion {
   const leading = index === 0;
   return {
     opacity: leading ? `${peak},${resting},${floor}` : `${floor},${resting},${peak}`,
-    y: leading ? "0,-3,-10" : "10,3,0",
+    y: leading ? "0,-6,-18" : "18,6,0",
   };
 }
 
 /** The progression indicator's travel distance (px): shared with the CSS custom property that sizes its track, so the two never drift apart. */
-export const educationIndicatorHeight = 160;
+export const educationIndicatorHeight = 200;
 export const educationMarkerTravel = `0,${educationIndicatorHeight / 2},${educationIndicatorHeight}`;

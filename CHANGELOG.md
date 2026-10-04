@@ -1995,3 +1995,95 @@ risk and test plan were stated to the user before any edit.
 - Temporarily added `playwright` as a devDependency for this round's browser verification; reverted
   (`git checkout -- package.json pnpm-lock.yaml && pnpm install --frozen-lockfile`) before committing, same as
   every prior round this session that used it.
+
+## 2026-10-04 — Differential scroll choreography and parallax depth refinement
+
+### Changed
+
+- **User request:** "refine the quality of movement" sitewide so scrolling feels gradual/layered rather than flat,
+  by introducing *differential* parallax depth between layer roles (decorative/background slowest, main content
+  near-scroll-speed, large typography and portraits distinct from both) instead of uniformly increasing every
+  existing value. Explicitly not a redesign; no visual-language, section-structure, or interaction-mechanism change.
+- **`useParallaxEngine.ts` is unchanged.** This is entirely a tuning pass over existing engine inputs
+  (`data-damping`, `data-phase`, and travel within each layer's existing keyframe shape) plus two small CSS-only
+  additions — no new property, scheduler, loop, or animation library.
+- **Hero** (`src/App.tsx`): `hero-grid` and the portrait's backing plates slowed (`data-damping` 0.08–0.1, decorative,
+  travel unchanged); `hero-title`/`hero-summary` given distinct damping (0.15 / 0.22) and `hero-title`'s travel
+  widened `-40→-48px`; the portrait image's own travel widened `[-18,0,24]→[-30,0,38]` (still ≤60px) for "stronger
+  independent movement"; `hero-meta`/`hero-eyebrow`/`scroll-cue` each given their own damping/phase.
+- **`SectionHeader`** (used by every section), **`ProjectRow`**, and **Contact** (`src/App.tsx`): kicker/label-role
+  layers slowed (damping ~0.12), headings given an intermediate damping (~0.16), body-copy-role layers given a
+  snappier damping (~0.17–0.22); several structural travel values widened modestly (e.g. project-copy 12→16px,
+  contact heading 24→28px), all still inside the existing ≤60px structural ceiling. Decorative layers (project
+  backdrop/overlay, contact grid) slowed via damping only (travel unchanged).
+- **Stack** (`src/stackLayout.ts`): the 8-direction `motionProfiles` palette widened (e.g. `±42→±56`, `±36→±48`),
+  still ≤60px per axis, no scale/rotate — more perceptible per-tile assembly variety.
+- **Education** (`src/educationMotion.ts`): chapter y-travel widened `±10→±18` (still ≤20px, the layer's own small
+  ceiling) and given `data-damping="0.11"` for a more gradual crossfade; `educationIndicatorHeight` widened
+  `160→200px` (still ≤220px) for more perceptible indicator travel; the dot given `data-damping="0.16"`.
+- **Experience** (`src/index.css`): the year-rail transform transition lengthened `550ms→700ms` and the panel's own
+  entrance `550ms→650ms` for a more "continuous mechanical" feel. New: the panel's own children (period/company/
+  role/tech/description/highlights/expand) each carry an independent `translateY(16px)` released at staggered
+  delays (0–140ms) under `.is-entered`, giving "content transitions with slight vertical/parallax separation"
+  without touching the discrete `activeIndex`/`IntersectionObserver` mechanism, the year selector's own transform,
+  or turning the section into a carousel.
+- **About / Decision Lens** (`src/index.css`): panel entrance lengthened `500ms→550ms`. New: `.principle-statement`/
+  `.principle-explanation`/`.principle-evidence` each carry an independent `translateY(16px)` released at staggered
+  delays (0/60/130ms) under `.is-entered`, giving the selector/headline/copy/evidence row "slightly different
+  movement rates" the request asked for. Selection remains click/keyboard-only — no scroll-linkage was added.
+
+### Preserved
+
+- Every enforced motion-policy invariant (`tests/stack-bricks.test.mjs`, unmodified, all 40 tests still pass):
+  structural `data-x`/`data-y` ≤60px, no scale/rotate on structural layers, 3-point opacity keyframes resting at 1
+  with a ≥0.2 floor; Education's ≤20px y ceiling, mirrored curves, ≥220px indicator cap. No value in this change
+  exceeds a pre-existing cap — all widening used existing headroom.
+- Experience's discrete `activeIndex`/`IntersectionObserver` stepping, click/keyboard year-jump behavior, and
+  "Read full story" hand-off; About's click/keyboard-only (non-scroll) principle selection; Stack's hover/focus
+  category emphasis on a separate element from the scroll-driven assembly motion; reduced-motion neutralization
+  (including the two new reduced-motion overrides added for Experience's newly-staggered panel children, since
+  that panel sits outside any `.reveal` ancestor — About's new children needed none, being descendants of
+  `.principle-layout.reveal`); the wheel-dampening listener; native scrolling on every input type; the existing
+  `useScrollSceneEngine` scheduler (read → calculate → write, cached geometry, one RAF loop).
+
+### Regression Testing
+
+- `pnpm exec tsc --noEmit`: passed, zero errors.
+- `pnpm test`: all 40 tests passed, including the motion-policy invariant tests (structural travel/opacity bounds,
+  Stack tile motion bounds, Education crossfade mirroring/bounds) against the new values.
+- `pnpm exec vite build` (the build-system step itself; `pnpm build`'s GitHub-sync prestep fails in this sandbox for
+  the pre-existing, documented reason that `PORTFOLIO_GH_TOKEN` is unset — unrelated to this change, confirmed by
+  running `vite build` directly): succeeded, no warnings.
+- **Browser verification, Playwright-driven Chromium against the fixture-mode dev server, simulated input only —
+  not physical trackpad/mouse:**
+  - Scripted scroll through the full page in 25 steps: zero console/page errors at every step; every `.scroll-layer`
+    (91 found) reported a finite, non-NaN computed opacity.
+  - Sampled `--scene-y`/`--scene-opacity` directly on five Hero layers at three scroll depths: all values finite,
+    converging smoothly toward their configured targets (e.g. hero-grid settles at `y:85px`, hero-title at
+    `y:-48px`, hero-portrait at `y:38px`, confirming the widened/re-damped values are live and distinct from each
+    other, not just structurally valid).
+  - Experience: clicked every year button in turn — each click updated the correct company in the panel with no
+    revert (the `IntersectionObserver` click/jump race this section is known to be sensitive to did not reappear).
+  - About: clicked every principle tab in turn — each click updated `.principle-statement`'s text and re-added
+    `.is-entered`, confirming the staggered children re-trigger correctly on every selection change.
+  - Stack: hovering a tile set `data-emphasis="category"` on siblings and reported a finite, non-NaN per-tile
+    `opacity` value on the assembly layer.
+  - Reduced motion (emulated `prefers-reduced-motion: reduce`, mid-scroll): zero non-neutral `.scroll-layer`
+    transforms among all 91 found; `.experience-panel-company`'s own new per-child transform computed to `none`,
+    confirming the added reduced-motion override works.
+  - Mobile (390×844): zero horizontal overflow; `.experience-steps` computed `display:none` (flat mode intact).
+- **Not performed:** physical trackpad/mouse/touch input, cross-browser/device certification, a measured
+  frame-rate/performance recording. Per the user's own instruction to "watch the site at normal scrolling speed,
+  not only in automated tests," this round's verification remains simulated-input/headless only — physical-device
+  observation of the new depth is a disclosed gap, not claimed as done.
+
+### Notes
+
+- This is a pure parameter-tuning and small-CSS-addition pass over existing systems; no new files, dependencies,
+  or architectural concepts were introduced. `MOTION_SYSTEM.md` was updated in place (new "Differential parallax
+  depth" subsection, updated travel table, updated Experience/About timing) to describe the actual resulting
+  values; `ARCHITECTURE.md`'s structural descriptions of Experience/About/Education/Stack remain accurate as
+  written (mechanism unchanged) and were not altered.
+- No `playwright` devDependency was added this round — verification used the copy already present at
+  `/opt/node-tools/node_modules/playwright` in this environment, invoked directly from a scratch script; `git
+  status` confirms `package.json`/`pnpm-lock.yaml` are untouched.

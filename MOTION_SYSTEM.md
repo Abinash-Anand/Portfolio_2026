@@ -79,6 +79,42 @@ The `.is-visible` state does not reset on leaving/re-entering. A separate scene'
 - **Responsive:** width strength attenuates keyframe deviations and opacity/blur responses. Desktop hero/contact have sticky interiors; project rows stick within tracks. At ≤800 px project sticking is removed; shorter hero/contact sticky tracks remain under normal motion.
 - **Reduced motion:** engine uses neutral scene targets and disables pointer motion; CSS removes layer transforms/blur and sets opacity to one. Extended sticky hero/contact tracks, project sticking, and the hero/project overlap are removed.
 
+### Differential parallax depth (2026-10-04, this change; user-requested refinement, no new engine)
+
+Per-layer `data-damping` now follows an explicit role convention on top of the pre-existing per-layer keyframe/phase
+system, so the gap between layers reads as depth rather than every layer moving by the same relative amount. This
+only tunes existing `useScrollSceneEngine` inputs (`data-damping`, `data-phase`, and travel within each layer's
+already-established keyframe shape) — no new property, scheduler, or engine change.
+
+- **Decorative/background layers** (`.hero-grid`, `.contact-grid`, `.project-visual-backdrop`, `.project-overlay`,
+  `.scroll-cue`, the hero portrait's backing plates): lowered to `data-damping="0.08"`–`"0.1"` (from the previous
+  default `0.18` or unset). Lower damping means the rendered value converges toward its target more slowly each
+  frame — visually, the layer lags behind the scroll position, reading as "very slow" / detached background motion.
+  Travel amounts on these decorative layers are unchanged; only their settle speed changed.
+- **Main structural content** (section note/body copy, hero summary, project copy, contact actions/social links):
+  raised to `data-damping="0.19"`–`"0.22"`, snappier convergence that tracks close to the native scroll position —
+  the "near-scroll-speed" register the request asked for. Their travel also increased modestly within the existing
+  enforced ≤60px structural ceiling (e.g. project-copy 12→16px, contact-action 14→16px) for more perceptible,
+  still-restrained depth.
+- **Large typography** (`h1`/`h2` `.type-parallax` elements — hero title, every `SectionHeader` heading, contact
+  heading): kept at an intermediate `data-damping` (`0.15`–`0.16`) distinct from both the surrounding body copy and
+  the slower decorative layers, per "large typography should move slightly differently from surrounding content."
+- **Portraits/visual objects** (hero portrait image): travel widened from `[-18,0,24]` to `[-30,0,38]` (still inside
+  the ≤60px structural cap) for the "stronger independent movement" the request asked for; damping (`0.14`) kept
+  snappier than the backing plates so the portrait visibly separates from them, not just from the grid.
+- **Metadata** (`.hero-meta`, `.contact-meta`): its own distinct `data-damping` (`0.19`) and small phase offset,
+  different from both the copy above it and the portrait/grid beside it.
+- **Stack tile assembly** (`stackTileMotion` in `src/stackLayout.ts`) and **Education's chapter crossfade /
+  indicator dot** (`educationChapterMotion`/`educationMarkerTravel` in `src/educationMotion.ts`): travel widened
+  within their own existing ceilings (stack tiles still ≤60px per axis; Education chapters still ≤20px y, indicator
+  track still ≤220px) for more perceptible depth; Education's chapter layers additionally gained `data-damping`
+  (`0.11` chapters, `0.16` dot) for a more gradual crossfade. No shape, invariant, or mirrored-curve requirement
+  changed — `tests/stack-bricks.test.mjs` passes unmodified against the new values.
+
+None of this raises the enforced structural ≤60px travel ceiling, adds scale/rotate to a structural layer, or
+changes the opacity floor/resting invariants — it only uses more of the existing headroom and widens the *relative*
+spread between layers' damping, which those tests do not (and should not) constrain.
+
 ### Project hover
 
 - **Trigger / elements:** `.project-row:hover` affects row background, title, description, CTA, and metadata; row selection remains a separate click action.
@@ -126,7 +162,16 @@ pattern instead of inventing a third scroll mechanism).
   enter transition (`opacity 0→1`, `translateY(28px)→0`) each time the active entry's `id` changes, via an
   `is-entered` class toggled through one `requestAnimationFrame` tick (not an exit+enter crossfade — the old entry's
   content is replaced, not separately animated out, a deliberate simplification over a dual-mount approach).
-- **Timing/easing:** `transition:transform 550ms var(--ease)` on the year rail; `transition:opacity 550ms var(--ease),transform 550ms var(--ease)` on the panel. Same `--ease` (`cubic-bezier(0.16, 1, 0.3, 1)`) as everywhere else in the system — no new easing curve.
+- **Timing/easing:** `transition:transform 700ms var(--ease)` on the year rail; `transition:opacity 650ms var(--ease),transform 650ms var(--ease)` on the panel container (lengthened from 550ms on 2026-10-04 for a more "continuous mechanical progression" feel, per user request — same `--ease`, no new curve). Same `--ease` (`cubic-bezier(0.16, 1, 0.3, 1)`) as everywhere else in the system — no new easing curve.
+- **Internal stagger (2026-10-04, this change):** the panel's own children (period/company/role/tech/description/
+  highlights/expand link) each carry their own `transform:translateY(16px)` and `transition:transform 600ms
+  var(--ease)`, released at increasing `transition-delay` (0ms through 140ms) when `.experience-panel.is-entered`
+  is set — composed on top of, not replacing, the panel container's own opacity/transform entrance. This gives the
+  "content transitions with slight vertical/parallax separation" the request asked for without touching the
+  discrete `activeIndex`/`IntersectionObserver` mechanism, the year-selector's own transform, or turning the
+  section into a crossfade/carousel. Reduced motion explicitly forces these children's `transform:none!important`
+  (added alongside the pre-existing `.experience-panel{opacity:1!important;transform:none!important}` override,
+  since this panel sits outside any `.reveal` ancestor and needs its own explicit reduced-motion rule).
 - **Click/keyboard parity:** a year button's `onClick` cannot set `activeIndex` directly without the still-active
   `IntersectionObserver` immediately reverting it back on its next check, since the scroll position would not have
   moved (found and fixed during this change's own verification — see `CHANGELOG.md`). It instead calls
@@ -162,8 +207,15 @@ duplicate Experience's scroll-stepping language here, selection only ever change
   (`.principle-tab[aria-selected="true"] .principle-tab-label`) versus muted/smaller inactive tabs; the panel plays
   the same `opacity 0→1`/`translateY(24px)→0` enter transition `ExperiencePanel` already uses, via an `is-entered`
   class toggled through one `requestAnimationFrame` tick, skipped on first mount.
-- **Timing/easing:** tab label color/font-size 400 ms `var(--ease)`; panel enter 500 ms `var(--ease)`. Same
-  `cubic-bezier(0.16, 1, 0.3, 1)` as the rest of the system.
+- **Timing/easing:** tab label color/font-size 400 ms `var(--ease)`; panel enter 550 ms `var(--ease)` (was 500ms).
+  Same `cubic-bezier(0.16, 1, 0.3, 1)` as the rest of the system.
+- **Internal stagger (2026-10-04, this change):** `.principle-statement`, `.principle-explanation`, and
+  `.principle-evidence` each carry their own `transform:translateY(16px)`/`transition:transform 600ms var(--ease)`,
+  released at 0ms/60ms/130ms delays when `.principle-content.is-entered` is set — the "selector, headline,
+  supporting copy, and evidence row should have slightly different movement rates" the request asked for, layered
+  on top of the panel's own unchanged opacity/transform entrance. No reduced-motion override was needed: unlike
+  Experience's panel, `.principle-content` is a descendant of `.principle-layout.reveal`, so the existing
+  `.reveal *{opacity:1!important;transform:none!important}` rule already catches these new child transforms too.
 - **Section entrance:** the whole layout (`principle-layout`) still uses the existing shared one-time `.reveal`
   entrance (the same `--reveal-opacity`/`--reveal-y` mechanism every other section's header/copy uses) as it enters
   the viewport — this is the only scroll-linked behavior in the section, and it never changes which principle is
@@ -346,15 +398,16 @@ Representative configured desktop values (before damping, additional reveal/hove
 
 | Layer | Existing travel / scale |
 | --- | --- |
-| Hero grid | y `[-45, 0, 85]` px; scale `[1.025, 1, .99]` |
-| Hero headline / summary | y `[0, 0, -40]` / `[0, 0, -60]` px (structural; reduced on 2026-10-02 from `[24, 0, -150]` / `[38, 0, -190]`) |
-| Project art | y `[±44]`, `[±52]`, `[±48]`, `[±58]` px by row, with middle zero; x `[22, 0, -18]`; scale `[1.1, 1.04, 1.1]` |
-| Project backdrop / foreground | y amplitude `0.35 ×` art travel, opposite direction / `1.35 ×` art travel |
-| Contact grid / headline | y `[-80, 0, 90]` px (decorative, unchanged) / `[24, 0, -20]` px (structural; was `[145, 0, -105]` with scale and opacity) |
-| Other structural layers | section headings, kicker and note, project index/copy/meta, About and service labels: at most 14 px y; service arrow: up to 8 px x; hero label 20 px y; contact meta/actions/links: up to 26 px y. None scale, rotate or fade with scroll. Experience is excluded: it uses its own discrete, non-scene transition system, not this scroll-linked travel table. |
+| Hero grid | y `[-45, 0, 85]` px; scale `[1.025, 1, .99]`; `data-damping="0.08"` (2026-10-04: slowed, travel unchanged) |
+| Hero headline / summary | y `[0, 0, -48]` / `[0, 0, -60]` px (structural; headline widened from -40 to -48 on 2026-10-04; both reduced on 2026-10-02 from `[24, 0, -150]` / `[38, 0, -190]`) |
+| Hero portrait / plates / meta | portrait y `[-30, 0, 38]` px (2026-10-04: widened from `[-18, 0, 24]` for "stronger independent movement"), `data-damping="0.14"`; plates y `[-16,0,22]`/`[18,0,-14]` at `data-damping="0.09"`/`"0.1"` (slower, so they visibly lag the portrait); meta y `[0,0,-24]` at `data-damping="0.19"` |
+| Project art | y `[±44]`, `[±52]`, `[±48]`, `[±58]` px by row, with middle zero; x `[22, 0, -18]`; scale `[1.1, 1.04, 1.1]`; `data-damping="0.16"` (2026-10-04) |
+| Project backdrop / foreground | y amplitude `0.35 ×` art travel, opposite direction / `1.35 ×` art travel; `data-damping="0.09"`/`"0.1"` (2026-10-04, slower/decorative) |
+| Contact grid / headline | y `[-80, 0, 90]` px (decorative, `data-damping="0.08"` as of 2026-10-04) / `[28, 0, -24]` px (structural, widened from `[24,0,-20]` on 2026-10-04; was `[145, 0, -105]` with scale and opacity before 2026-10-02) |
+| Other structural layers | section headings, kicker and note, project index/copy/meta, About and service labels: at most 18 px y as of 2026-10-04 (was 14px); service arrow: up to 8 px x; hero label 24 px y; contact meta/actions/links: up to 28 px y. Each role now also carries its own `data-damping` (≈0.12 for labels/kicker, ≈0.16 for headings, ≈0.19–0.22 for body copy) — see "Differential parallax depth" above. None scale, rotate or fade with scroll. Experience is excluded: it uses its own discrete, non-scene transition system, not this scroll-linked travel table. |
 | Detail art | y `[90, 0, -90]` px; scale `[1.08, 1, 1.06]` |
 
-**Maximum movement:** there is no global runtime travel cap. The largest absolute configured structural scroll y value is 60 px (hero summary) and x is 8 px; the largest decorative values are hero art (y 115 px, x 42 px) and the scroll cue (y 110 px). Before 2026-10-02 the largest structural values were 190 px (hero summary) and 34 px. Current configured rotation reaches 1.4 degrees and scale keyframes span `.94`–`1.1`; hover can additionally multiply project art by `1.04`. These describe this markup, not combined screen-space bounds or a new mandated limit.
+**Maximum movement:** there is no global runtime travel cap. The largest absolute configured structural scroll y value is 60 px (hero summary) and x is 8 px; the largest decorative values are hero art (y 115 px, x 42 px) and the scroll cue (y 110 px). Before 2026-10-02 the largest structural values were 190 px (hero summary) and 34 px. Current configured rotation reaches 1.4 degrees and scale keyframes span `.94`–`1.1`; hover can additionally multiply project art by `1.04`. These describe this markup, not combined screen-space bounds or a new mandated limit. The 2026-10-04 differential-depth refinement widened several structural values toward this existing 60px ceiling (never past it) and introduced a `data-damping` role convention (`0.08`–`0.22`) across almost every layer in this table; see "Differential parallax depth" above for the full convention.
 
 Within a project row, normalized pointer offsets are approximately ±5 px x and ±4 px y at row edges. Hero pointer amplitude 18 yields approximately ±9 px per viewport axis at full strength. Magnetic displacement is proportional, without a global clamp. Do not describe these as universal hard limits.
 

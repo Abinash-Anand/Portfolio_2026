@@ -115,14 +115,14 @@ export type StackTileMotion = { readonly x: string; readonly y: string; readonly
 // to the site's existing structural-layer conventions: <=60px travel per axis, opacity resting at 1 with a >=0.2
 // floor, no scale/rotate (reserved for decorative-only layers elsewhere in the stylesheet).
 const motionProfiles: readonly { readonly x: number; readonly y: number }[] = [
-  { x: -42, y: 0 },
-  { x: 44, y: 0 },
-  { x: 0, y: -36 },
-  { x: 0, y: 40 },
-  { x: -26, y: -20 },
-  { x: 28, y: 18 },
-  { x: -18, y: 24 },
-  { x: 20, y: -16 },
+  { x: -56, y: 0 },
+  { x: 58, y: 0 },
+  { x: 0, y: -48 },
+  { x: 0, y: 52 },
+  { x: -34, y: -26 },
+  { x: 36, y: 24 },
+  { x: -24, y: 32 },
+  { x: 26, y: -22 },
 ];
 
 export function stackTileMotion(tile: StackTile): StackTileMotion {

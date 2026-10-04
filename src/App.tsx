@@ -85,9 +85,9 @@ function Navigation({ portfolio, analytics = noAnalytics }: PortfolioProps) {
 function SectionHeader({ index, eyebrow, title, note }: { index: string; eyebrow: string; title: string; note?: string }) {
   return (
     <header className="section-header reveal" data-scroll-scene>
-      <div className="section-kicker reveal-label scroll-layer" data-scroll-layer data-y="8,0,-6" data-opacity="0.4,1,0.45"><span>{index}</span><span>{eyebrow}</span></div>
-      <h2 className="reveal-heading scroll-layer type-parallax" data-scroll-layer data-y="14,0,-10" data-opacity="0.3,1,0.4" data-damping="0.15" data-phase="-0.015">{title}</h2>
-      {note && <p className="section-note reveal-meta scroll-layer" data-scroll-layer data-y="10,0,-12" data-opacity="0.35,1,0.4" data-phase="-0.025">{note}</p>}
+      <div className="section-kicker reveal-label scroll-layer" data-scroll-layer data-y="10,0,-8" data-opacity="0.4,1,0.45" data-damping="0.12" data-phase="-0.005"><span>{index}</span><span>{eyebrow}</span></div>
+      <h2 className="reveal-heading scroll-layer type-parallax" data-scroll-layer data-y="18,0,-14" data-opacity="0.3,1,0.4" data-damping="0.16" data-phase="-0.015">{title}</h2>
+      {note && <p className="section-note reveal-meta scroll-layer" data-scroll-layer data-y="12,0,-16" data-opacity="0.35,1,0.4" data-damping="0.21" data-phase="-0.025">{note}</p>}
     </header>
   );
 }
@@ -109,21 +109,21 @@ function Hero({ portfolio }: PortfolioProps) {
   return (
     <section className="hero" id="top" data-scroll-scene data-scene-origin="visible">
       <div className="hero-sticky">
-        <div className="hero-grid scroll-layer" data-scroll-layer data-y="-45,0,85" data-scale="1.025,1,0.99" data-opacity="0.85,1,0.78" aria-hidden="true" />
+        <div className="hero-grid scroll-layer" data-scroll-layer data-y="-45,0,85" data-scale="1.025,1,0.99" data-opacity="0.85,1,0.78" data-damping="0.08" aria-hidden="true" />
         <div className="hero-copy">
-          <p className="hero-eyebrow scroll-layer" data-scroll-layer data-y="0,0,-14" data-opacity="1,1,0.4">{portfolio.person.role}</p>
-          <h1 className="hero-title scroll-layer type-parallax" data-scroll-layer data-y="0,0,-40" data-opacity="1,1,0.3" data-damping="0.13" data-phase="-0.015">
+          <p className="hero-eyebrow scroll-layer" data-scroll-layer data-y="0,0,-18" data-opacity="1,1,0.4" data-damping="0.12" data-phase="-0.005">{portfolio.person.role}</p>
+          <h1 className="hero-title scroll-layer type-parallax" data-scroll-layer data-y="0,0,-48" data-opacity="1,1,0.3" data-damping="0.15" data-phase="-0.015">
             {portfolio.person.statement.split("\n").map((line) => <span key={line}>{line}</span>)}
           </h1>
-          <p className="hero-summary scroll-layer" data-scroll-layer data-y="0,0,-60" data-opacity="1,1,0.25" data-damping="0.18" data-phase="-0.03">{portfolio.person.summary}</p>
+          <p className="hero-summary scroll-layer" data-scroll-layer data-y="0,0,-60" data-opacity="1,1,0.25" data-damping="0.22" data-phase="-0.03">{portfolio.person.summary}</p>
         </div>
         <div className="hero-portrait-zone">
           <div className="hero-portrait">
-            <span className="hero-portrait-plate hero-portrait-plate-top scroll-layer" data-scroll-layer data-y="-12,0,18" data-opacity="1,1,0.55" aria-hidden="true" />
-            <span className="hero-portrait-plate hero-portrait-plate-bottom scroll-layer" data-scroll-layer data-y="14,0,-10" data-opacity="1,1,0.55" data-phase="0.02" aria-hidden="true" />
-            <img className="hero-portrait-image scroll-layer" data-scroll-layer data-y="-18,0,24" data-opacity="1,1,0.5" data-pointer="8" data-damping="0.13" src={portfolio.person.portrait} alt={portfolio.person.name} />
+            <span className="hero-portrait-plate hero-portrait-plate-top scroll-layer" data-scroll-layer data-y="-16,0,22" data-opacity="1,1,0.55" data-damping="0.09" aria-hidden="true" />
+            <span className="hero-portrait-plate hero-portrait-plate-bottom scroll-layer" data-scroll-layer data-y="18,0,-14" data-opacity="1,1,0.55" data-damping="0.1" data-phase="0.02" aria-hidden="true" />
+            <img className="hero-portrait-image scroll-layer" data-scroll-layer data-y="-30,0,38" data-opacity="1,1,0.5" data-pointer="8" data-damping="0.14" src={portfolio.person.portrait} alt={portfolio.person.name} />
           </div>
-          <div className="hero-meta scroll-layer" data-scroll-layer data-y="0,0,-20" data-opacity="1,1,0.4">
+          <div className="hero-meta scroll-layer" data-scroll-layer data-y="0,0,-24" data-opacity="1,1,0.4" data-damping="0.19" data-phase="0.015">
             <span className="hero-meta-location">{portfolio.person.location}</span>
             <span className="hero-meta-connector" aria-hidden="true" />
             <span className="hero-meta-name">{portfolio.person.name}</span>
@@ -131,7 +131,7 @@ function Hero({ portfolio }: PortfolioProps) {
             <span className="hero-meta-role">{portfolio.person.role}</span>
           </div>
         </div>
-        <a className="scroll-cue scroll-layer" data-scroll-layer data-y="-10,0,-110" data-opacity="1,1,0" data-phase="0.03" href={`#${portfolio.hero.scrollCue.section}`}><span>{portfolio.hero.scrollCue.label}</span><span>↓</span></a>
+        <a className="scroll-cue scroll-layer" data-scroll-layer data-y="-10,0,-110" data-opacity="1,1,0" data-damping="0.1" data-phase="0.03" href={`#${portfolio.hero.scrollCue.section}`}><span>{portfolio.hero.scrollCue.label}</span><span>↓</span></a>
       </div>
     </section>
   );
@@ -435,13 +435,13 @@ function ProjectRow({ project, index, onOpen, labels }: { project: Project; inde
   const visualTravel = [44, 52, 48, 58][index % 4];
   return (
     <button className="project-row reveal" onClick={onOpen} data-cursor={labels.projectCursor}>
-      <span className="project-index scroll-layer" data-scroll-layer data-y="6,0,-8" data-opacity="0.35,1,0.45">0{index + 1}</span>
-      <span className="project-copy scroll-layer" data-scroll-layer data-y="12,0,-10" data-opacity="0.3,1,0.4" data-phase="-0.015"><span className="project-title">{project.metadata.title}</span><span className="project-description">{project.metadata.description}</span><span className="project-cta">{`${labels.projectCta} `}<b>↗</b></span></span>
-      <span className="project-meta scroll-layer" data-scroll-layer data-y="8,0,-10" data-opacity="0.3,1,0.35" data-phase="-0.03"><span>{project.metadata.category}</span><span>{project.metadata.year}</span></span>
+      <span className="project-index scroll-layer" data-scroll-layer data-y="8,0,-10" data-opacity="0.35,1,0.45" data-damping="0.13">0{index + 1}</span>
+      <span className="project-copy scroll-layer" data-scroll-layer data-y="16,0,-14" data-opacity="0.3,1,0.4" data-damping="0.21" data-phase="-0.015"><span className="project-title">{project.metadata.title}</span><span className="project-description">{project.metadata.description}</span><span className="project-cta">{`${labels.projectCta} `}<b>↗</b></span></span>
+      <span className="project-meta scroll-layer" data-scroll-layer data-y="10,0,-12" data-opacity="0.3,1,0.35" data-damping="0.17" data-phase="-0.03"><span>{project.metadata.category}</span><span>{project.metadata.year}</span></span>
       <span className="project-visual">
-        <span className="project-visual-backdrop scroll-layer" data-scroll-layer data-y={`${-visualTravel * 0.35},0,${visualTravel * 0.35}`} data-scale="1.08,1.04,1.08" aria-hidden="true" />
-        <span className="project-art-layer scroll-layer" data-scroll-layer data-y={`${visualTravel},0,${-visualTravel}`} data-x="22,0,-18" data-scale="1.1,1.04,1.1" data-rotate="-1,0,1"><TechnicalVisual visual={project.visual} /></span>
-        <span className="project-overlay scroll-layer" data-scroll-layer data-y={`${visualTravel * 1.35},0,${-visualTravel * 1.35}`} data-x="-18,0,24" data-opacity="0.15,0.55,0.12" aria-hidden="true"><i /><b>{labels.projectVisualPrefix}{index + 1}</b></span>
+        <span className="project-visual-backdrop scroll-layer" data-scroll-layer data-y={`${-visualTravel * 0.35},0,${visualTravel * 0.35}`} data-scale="1.08,1.04,1.08" data-damping="0.09" aria-hidden="true" />
+        <span className="project-art-layer scroll-layer" data-scroll-layer data-y={`${visualTravel},0,${-visualTravel}`} data-x="22,0,-18" data-scale="1.1,1.04,1.1" data-rotate="-1,0,1" data-damping="0.16"><TechnicalVisual visual={project.visual} /></span>
+        <span className="project-overlay scroll-layer" data-scroll-layer data-y={`${visualTravel * 1.35},0,${-visualTravel * 1.35}`} data-x="-18,0,24" data-opacity="0.15,0.55,0.12" data-damping="0.1" aria-hidden="true"><i /><b>{labels.projectVisualPrefix}{index + 1}</b></span>
       </span>
     </button>
   );
@@ -578,7 +578,7 @@ function Stack({ portfolio }: PortfolioProps) {
                 onMouseLeave={() => setActive(null)}
                 onBlur={() => setActive(null)}
               >
-                <span className="stack-tile-motion scroll-layer" data-scroll-layer data-x={motion.x} data-y={motion.y} data-opacity={motion.opacity}>
+                <span className="stack-tile-motion scroll-layer" data-scroll-layer data-x={motion.x} data-y={motion.y} data-opacity={motion.opacity} data-damping="0.13">
                   <small className="stack-tile-index">{String(tile.index + 1).padStart(2, "0")}</small>
                   <span className="stack-tile-name">{tile.name}</span>
                   <span className="stack-tile-foot"><small className="stack-tile-category">{tile.category}</small><small className="stack-tile-ref">{portfolio.labels.usedIn}<br /><b>{tile.usedIn}</b></small></span>
@@ -662,7 +662,7 @@ function EducationProgression({ chapters }: { chapters: readonly [EducationChapt
             const chapterIndex = index as 0 | 1;
             const motion = educationChapterMotion(chapterIndex);
             return (
-              <div key={chapter.id} className="education-chapter scroll-layer" data-scroll-layer data-y={motion.y} data-opacity={motion.opacity}>
+              <div key={chapter.id} className="education-chapter scroll-layer" data-scroll-layer data-y={motion.y} data-opacity={motion.opacity} data-damping="0.11">
                 <p className="education-chapter-index">0{index + 1} / {chapter.chapterLabel}</p>
                 <div className="education-year">
                   <span>{chapter.yearStart}</span>
@@ -680,7 +680,7 @@ function EducationProgression({ chapters }: { chapters: readonly [EducationChapt
           })}
           <div className="education-indicator" style={{ "--indicator-height": `${educationIndicatorHeight}px` } as CSSProperties} aria-hidden="true">
             <span className="education-indicator-track" />
-            <span className="education-indicator-dot scroll-layer" data-scroll-layer data-y={educationMarkerTravel} />
+            <span className="education-indicator-dot scroll-layer" data-scroll-layer data-y={educationMarkerTravel} data-damping="0.16" />
           </div>
         </div>
       </div>
@@ -726,14 +726,14 @@ function Contact({ portfolio, analytics = noAnalytics }: PortfolioProps) {
   return (
     <section className="contact" id="contact" data-scroll-scene>
       <div className="contact-sticky reveal">
-        <div className="contact-grid scroll-layer" data-scroll-layer data-y="-80,0,90" data-scale="1.04,1,0.98" data-opacity="0.45,0.9,0.5" aria-hidden="true" />
-        <div className="contact-meta reveal-label scroll-layer" data-scroll-layer data-y="10,0,-24" data-opacity="0.4,1,0.5"><span>{portfolio.contact.availability}</span><span>{portfolio.contact.location}</span></div>
-        <h2 className="reveal-heading scroll-layer type-parallax" data-scroll-layer data-y="24,0,-20" data-opacity="0.3,1,0.4" data-damping="0.14" data-phase="-0.02">{portfolio.contact.headingLines.map((line, index) => <Fragment key={index}>{line}{index < portfolio.contact.headingLines.length - 1 && <br />}</Fragment>)}</h2>
+        <div className="contact-grid scroll-layer" data-scroll-layer data-y="-80,0,90" data-scale="1.04,1,0.98" data-opacity="0.45,0.9,0.5" data-damping="0.08" aria-hidden="true" />
+        <div className="contact-meta reveal-label scroll-layer" data-scroll-layer data-y="12,0,-28" data-opacity="0.4,1,0.5" data-damping="0.19"><span>{portfolio.contact.availability}</span><span>{portfolio.contact.location}</span></div>
+        <h2 className="reveal-heading scroll-layer type-parallax" data-scroll-layer data-y="28,0,-24" data-opacity="0.3,1,0.4" data-damping="0.16" data-phase="-0.02">{portfolio.contact.headingLines.map((line, index) => <Fragment key={index}>{line}{index < portfolio.contact.headingLines.length - 1 && <br />}</Fragment>)}</h2>
         <div className={portfolio.contact.calendly ? "contact-actions contact-actions-paired" : "contact-actions"}>
-          <a className="contact-action magnetic scroll-layer" data-scroll-layer data-y="14,0,-24" data-opacity="0.35,1,0.4" data-phase="-0.03" href={`mailto:${portfolio.contact.email}`} onClick={() => analytics.track({name: "contact_click", kind: "email"})} data-cursor={portfolio.contact.cursor}>{`${portfolio.contact.email} `}<span aria-hidden="true">↗</span></a>
-          {portfolio.contact.calendly && portfolio.contact.booking && <a className="contact-action contact-booking magnetic scroll-layer" data-scroll-layer data-y="14,0,-24" data-opacity="0.35,1,0.4" data-phase="-0.03" href={portfolio.contact.calendly} target="_blank" rel="noopener noreferrer" aria-label={portfolio.contact.booking.accessibleLabel} onClick={() => analytics.track({name: "contact_click", kind: "calendly"})} data-cursor={portfolio.contact.cursor}><div>{portfolio.contact.booking.label}<small>{portfolio.contact.booking.detail}</small></div><span aria-hidden="true">↗</span></a>}
+          <a className="contact-action magnetic scroll-layer" data-scroll-layer data-y="16,0,-26" data-opacity="0.35,1,0.4" data-damping="0.22" data-phase="-0.03" href={`mailto:${portfolio.contact.email}`} onClick={() => analytics.track({name: "contact_click", kind: "email"})} data-cursor={portfolio.contact.cursor}>{`${portfolio.contact.email} `}<span aria-hidden="true">↗</span></a>
+          {portfolio.contact.calendly && portfolio.contact.booking && <a className="contact-action contact-booking magnetic scroll-layer" data-scroll-layer data-y="16,0,-26" data-opacity="0.35,1,0.4" data-damping="0.22" data-phase="-0.03" href={portfolio.contact.calendly} target="_blank" rel="noopener noreferrer" aria-label={portfolio.contact.booking.accessibleLabel} onClick={() => analytics.track({name: "contact_click", kind: "calendly"})} data-cursor={portfolio.contact.cursor}><div>{portfolio.contact.booking.label}<small>{portfolio.contact.booking.detail}</small></div><span aria-hidden="true">↗</span></a>}
         </div>
-        <div className="social-links reveal-meta scroll-layer" data-scroll-layer data-y="12,0,-26" data-opacity="0.4,1,0.5" data-phase="-0.04">{portfolio.contact.socials.map((link) => <a key={link.href} href={link.href} onClick={() => analytics.track({name: "contact_click", kind: "social"})}>{`${link.label} ↗`}</a>)}</div>
+        <div className="social-links reveal-meta scroll-layer" data-scroll-layer data-y="14,0,-28" data-opacity="0.4,1,0.5" data-damping="0.2" data-phase="-0.04">{portfolio.contact.socials.map((link) => <a key={link.href} href={link.href} onClick={() => analytics.track({name: "contact_click", kind: "social"})}>{`${link.label} ↗`}</a>)}</div>
       </div>
     </section>
   );
