@@ -1760,3 +1760,123 @@ stated to the user before any edit, per `AGENTS.md`'s "Before Modifying A Protec
 - Temporarily added `playwright` as a devDependency for this round's browser verification; reverted
   (`git checkout -- package.json pnpm-lock.yaml && pnpm install --frozen-lockfile`) before committing, same as
   every prior round this session that used it.
+
+## 2026-10-04 — Scroll: dampen extreme wheel/trackpad momentum, not everyday scrolling
+
+### Context
+
+The user asked to fix a narrow, specific problem: a very aggressive mouse-wheel or trackpad gesture can produce a
+native wheel event with a `deltaY` of 1000px+, letting the browser jump through several sections almost
+instantaneously. The explicit request was to preserve slow/normal/fast scrolling completely unchanged, never force
+section-by-section scrolling or scroll snapping, never hijack scrolling with a custom engine, never add artificial
+delays, and never interfere with keyboard navigation, Page Up/Down, scrollbar dragging, or touch — only
+progressively dampen the portion of input that is genuinely extreme, while still letting a sustained aggressive
+gesture reach the bottom of the page quickly. Explicitly scoped protected-system change under
+`AGENTS.md`/`CHANGE_PROTOCOL.md`'s "Explicit Override" clause (`CHANGE_PROTOCOL.md` line ~121): the codebase's own
+`MOTION_SYSTEM.md` rule ("preserve native browser wheel... scrolling. No scroll hijacking.") was read first, the
+conflict and regression risks were stated to the user before any edit, and the override is scoped to exactly the
+narrow case requested — nothing else about native scrolling changed.
+
+### Changed
+
+- **`src/useParallaxEngine.ts`** — added one `wheel` listener (`onWheel`), registered/cleaned up in
+  `useScrollSceneEngine` alongside every other input listener the engine already owns (pointer, resize, orientation,
+  scroll) — no second scheduler, no competing scroll engine. For any event at or under a 160px pass-through
+  threshold, the listener returns immediately and does nothing at all (not even `preventDefault()`) — slow, normal,
+  and deliberately fast scrolling are byte-for-byte native, untouched. Above that threshold, `event.preventDefault()`
+  is called and `window.scrollBy({top: dampenWheelDelta(raw), behavior: "instant"})` applies a compressed delta
+  instead. `dampenWheelDelta()` (exported, pure) compresses only the *excess* above the threshold through an
+  asymptotic curve — `160 + 420·(1 − e^(−excess/420))` — so damping grows progressively stronger for more extreme
+  input without ever hard-capping a single event's contribution (it approaches, but never fully reaches, ~580px).
+  Pinch-zoom (`event.ctrlKey`) and events inside the overlay's own `.overlay-scroll` container are explicitly
+  bypassed, since that scroll area is independent and self-contained. `normalizedWheelDelta()` handles the rarer
+  `deltaMode` line/page units so the threshold comparison is always in consistent pixel terms.
+- **`tests/stack-bricks.test.mjs`** — the existing regression test's blanket `assert.ok(!/lenis|locomotive
+  |scroll-snap|wheel/i.test(...))` ("native scrolling must stay untouched") was narrowed to drop only `wheel` from
+  the prohibited-word list (keeping the `lenis`/`locomotive`/`scroll-snap` prohibition fully enforced — no
+  scroll-jacking library or CSS scroll-snap was introduced), and a new dedicated test was added asserting the actual
+  invariants that replace it: pass-through below 160px (for both positive and negative deltas), genuine damping
+  above it (output always less than input), monotonically increasing output as input grows (no erratic jumps),
+  output never exceeding the asymptotic ceiling, sign preservation, meaningful (non-collapsing) contribution even at
+  very extreme input, and structural source checks confirming the listener is registered non-passive, bypasses
+  pinch-zoom and the overlay's own scroll container, and uses `behavior: "instant"` (never `"auto"`) for its
+  programmatic scroll. `wheelPassThrough`/`wheelSoftRange` were also exported so the test references the same
+  constants rather than duplicating magic numbers.
+
+### Preserved
+
+- Keyboard (arrows, Page Up/Down, Home, End), scrollbar dragging, and touch scrolling are categorically unaffected —
+  none of them dispatch `wheel` events, so this code never runs for them. Confirmed via isolated-page Playwright
+  checks for each input method (see Regression Testing below), not just by code inspection.
+- The overlay's independent nested scrolling (`.overlay-scroll`) and pinch-zoom are explicitly bypassed.
+- Every scroll-linked system (document progress, parallax, reveals, Experience's active index, Education's
+  crossfade) continues to read the same `window.scrollY` the engine's existing `scroll` listener already reacted to
+  — this change only affects how far a single wheel event moves that value, never how scroll position maps to
+  animation state, so nothing about scroll-linked synchronization changes.
+- `prefers-reduced-motion` behavior is unchanged: damping is not a CSS animation or transition, so it is
+  deliberately left active under reduced motion (see Notes), and the engine's existing reduced-motion neutralization
+  of `.scroll-layer` transforms was not touched.
+
+### Regression Testing
+
+- `pnpm exec tsc --noEmit`: passed, no errors.
+- `node --experimental-strip-types --test tests/*.test.mjs`: 40 of 40 passed, including the new wheel-damping test
+  and the narrowed native-scrolling test.
+- `PORTFOLIO_DATA_MODE=fixture node scripts/sync-github.ts && vite build`: succeeded.
+- **Browser verification, Playwright-driven Chromium against the dev server, real wheel events via
+  `page.mouse.wheel()` (which dispatches genuine wheel input through Chromium's input pipeline, not synthetic
+  DOM-only events), simulated input only, not a physical device:**
+  - Pass-through: single wheel events of 20/60/100/150px each produced exactly that much `scrollY` change — no
+    measurable difference from native behavior.
+  - Damping: single wheel events of 300/600/1200/2500px produced `scrollY` changes of 279/433/545/578px
+    respectively — each clearly less than the raw input, each still substantial, and consistent with
+    `dampenWheelDelta()`'s formula to within rounding, confirming the browser-level behavior matches the unit-tested
+    function exactly.
+  - Reach-the-bottom: a sustained sequence of extreme (1800–2000px) wheel events reached the exact bottom of the
+    page (`scrollY === scrollHeight - innerHeight`) in roughly 24 events — not a meaningfully slower path to the
+    bottom than before.
+  - Scroll-linked sync: after a large damped flick landing mid-Experience-section, `--progress` matched
+    `scrollY / pageMax` to four decimal places, and Experience's active year/company/period (selector and panel)
+    were mutually consistent once their own pre-existing CSS transition settled — confirming no desync was
+    introduced (an initial screenshot taken before that transition settled looked inconsistent; re-checked after
+    waiting for the transition, which is pre-existing, unrelated behavior).
+  - Keyboard/Page Up/Down/Home/End, each tested in an isolated page/context to avoid cross-test interference:
+    `ArrowDown` → 40px, `PageDown` → 787px (≈ viewport), `End` → exact `pageMax`, `Home` from 5000px eventually
+    settled to exactly `0` (the brief delay is the page's own pre-existing `scroll-behavior: smooth`, unrelated to
+    this change and unaffected by it), `PageUp` at the top stayed at `0` — all fully native, zero interaction with
+    the new listener.
+  - Pinch-zoom (`ctrlKey`) path and the overlay's `.overlay-scroll` bypass were confirmed directly from the
+    listener's own early-return checks (exercised by the structural source assertions in the new test) rather than
+    simulating an actual OS-level pinch gesture, which Playwright cannot reproduce faithfully.
+  - Touch: a mobile-emulated context (390×844, `hasTouch`) loaded with zero console errors and zero horizontal
+    overflow; touch scrolling is unaffected by construction (the listener only binds `wheel`), confirmed by code
+    inspection since Playwright's synthetic `TouchEvent` dispatch does not drive Chromium's native touch-scroll
+    compositor path in a way that would meaningfully exercise it further.
+  - Reduced motion: an extreme wheel(1200) event still produced `scrollY = 545`, matching the normal-motion result
+    exactly (damping deliberately stays active), while a `.scroll-layer` element's computed `transform` remained
+    `none`, confirming the engine's existing reduced-motion neutralization is untouched.
+  - No horizontal overflow at any point; zero console errors across every pass.
+- **Not performed:** physical trackpad/mouse/touch input, cross-browser/device certification, a measured
+  frame-rate/performance recording, the real authenticated GitHub sync/production build, and a live-site check.
+
+### Notes
+
+- **A bug was found and fixed during this round's own verification, before being considered done:** the first
+  implementation used `scrollBy({behavior: "auto"})` for the damped scroll, reasoning that `"auto"` meant "apply
+  immediately." It does not — per the CSSOM View spec, `"auto"` means "defer to the scrolling box's own
+  `scroll-behavior` CSS property," which on this page is `smooth`. The damped `scrollBy` was therefore being
+  animated over roughly 400–500ms, which both violated the task's explicit "do not use `scroll-behavior: smooth` as
+  the solution" constraint and produced inconsistent, timing-dependent `scrollY` readings during verification
+  (non-monotonic damping results that didn't match the formula) until root-caused. Fixed by using
+  `behavior: "instant"`, which forces an immediate jump regardless of the CSS property. Documented here because the
+  bug was real, present in the first commit of this round's work, and caught only by careful Playwright
+  verification rather than code review alone — exactly the kind of thing `AGENTS.md`'s "distinguish simulated input
+  from physical trackpad/mouse testing" and "a successful build... alone does not verify scrolling" guidance exists
+  to catch.
+- Reduced motion deliberately does **not** disable wheel damping. `prefers-reduced-motion` governs animated
+  transitions and scroll-linked visual effects; this feature adds no animation of any kind — it only changes how
+  many pixels a single extreme input event moves the page, instantly, which arguably supports the spirit of reduced
+  motion (fewer jarring jumps) rather than conflicting with it.
+- Temporarily added `playwright` as a devDependency for this round's browser verification; reverted
+  (`git checkout -- package.json pnpm-lock.yaml && pnpm install --frozen-lockfile`) before committing, same as
+  every prior round this session that used it.

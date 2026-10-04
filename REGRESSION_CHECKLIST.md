@@ -297,17 +297,26 @@ On touch/coarse-pointer devices and narrow layouts:
 - [ ] No scroll trapping/hijacking occurs; intentional modal body lock always releases after close.
 - [ ] Native scrollbar dragging and keyboard scrolling remain responsive.
 - [ ] Section boundaries remain coherent during repeated forward/backward crossings, including Experience and transitions into dark overlays/contact.
+- [ ] Slow, normal, and deliberately fast wheel/trackpad scrolling feel completely unchanged from native browser behavior (single wheel events at or under ~160px must produce exactly the native scroll amount).
+- [ ] An extremely aggressive single wheel/trackpad gesture no longer feels like a teleport through multiple sections, but a sustained sequence of aggressive gestures still reaches the bottom of the page quickly — not noticeably slower than before.
+- [ ] Pinch-zoom (`Ctrl`+wheel on a trackpad, or equivalent) is never intercepted or dampened.
+- [ ] The open detail overlay's own nested scrolling (`.overlay-scroll`) is never dampened or otherwise affected by the wheel-input change.
+- [ ] Keyboard arrows, Page Up/Down, Home/End, and scrollbar dragging are byte-for-byte native — none of them should be measurably affected by the wheel-input change, since none dispatch `wheel` events.
 
 Input stress matrix (record physical versus simulated testing):
 
 - [ ] Trackpad: small slow gestures through the whole page.
 - [ ] Trackpad: fast sustained gestures through major boundaries.
+- [ ] Trackpad: an aggressive fast flick — confirm it no longer blasts through multiple sections instantly.
 - [ ] Mouse wheel: one notch, pause, one notch.
 - [ ] Mouse wheel: rapid repeated notches across sections.
-- [ ] Rapid alternating scroll direction.
+- [ ] Mouse wheel: one extreme/aggressive spin — confirm the resulting jump is visibly smaller than the raw gesture would natively produce, while still moving meaningfully.
+- [ ] Rapid alternating scroll direction, including alternating extreme and gentle input.
 - [ ] Repeated upward/downward boundary crossings.
 - [ ] Project hover/pointer movement while scrolling.
-- [ ] Detail open/close while parallax is active, followed by nested detail scrolling.
+- [ ] Detail open/close while parallax is active, followed by nested detail scrolling (confirm the overlay's own scroll is unaffected by wheel dampening).
+- [ ] Keyboard (arrows, Page Up/Down, Home, End) and scrollbar dragging, each tested independently of wheel input.
+- [ ] Reduced motion: confirm extreme wheel input is still dampened (this is an input-shaping change, not a motion/animation effect) while every existing reduced-motion neutralization still holds.
 
 ## Responsive
 

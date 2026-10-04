@@ -22,6 +22,35 @@ This philosophy is a constraint on future work. The implementation details below
 
 **Configured versus effective opacity:** the engine writes `--scene-opacity` for layers, but later normal-motion CSS rules fix the own opacity of `.hero-grid` at `.24`, `.hero-art` at `.75` (`.45` at ≤800 px), `.contact-grid` at `.22`, and `.project-visual-backdrop` at `.3`. Those elements still consume scene transforms; their own opacity does not follow the generic scene expression. Parent opacity/masks may further affect appearance. Reduced-motion `!important` rules force their layer opacity to one. Treat the markup keyframes as configuration, not proof that the cascade applies every configured property.
 
+### Extreme wheel input dampening (2026-10-04; user-authorized narrow exception to native wheel scrolling)
+
+Unlike every other entry on this page, this is not a visual effect — it shapes the *input* that drives everything
+else. A single native wheel event can report a `deltaY` of 1000px+ during an aggressive mouse-wheel or trackpad
+flick, letting the browser jump through several sections almost instantly. This narrows that specific case without
+touching anything else about how the page scrolls.
+
+- **Trigger / element:** a single `wheel` listener on `window` (`{passive:false}`, registered/cleaned up in
+  `useScrollSceneEngine` alongside every other input listener — no second engine).
+- **Properties:** `dampenWheelDelta()` (`src/useParallaxEngine.ts`, exported and directly unit-tested) passes any
+  event at or under 160px straight through untouched — the listener does nothing at all in that case, not even
+  `preventDefault()`. Above 160px, only the excess is compressed through an asymptotic curve
+  (`160 + 420·(1 − e^(−excess/420))`), so damping grows progressively stronger for more extreme input without ever
+  hard-capping it (a single event's contribution approaches but never reaches ~580px). `event.preventDefault()` is
+  called only for the dampened case, followed by `scrollBy({top: dampened, behavior: "instant"})`.
+- **Timing/easing:** none — this is a per-event, instantaneous delta adjustment, not an animated transition. The
+  damped `scrollBy` deliberately uses `behavior: "instant"`, not `"auto"` (which would defer to the page's own
+  `scroll-behavior: smooth` and reintroduce an animated, laggy jump — exactly the problem this exists to avoid).
+- **Scope:** skipped entirely for pinch-zoom (`event.ctrlKey`) and for any event inside the overlay's own
+  `.overlay-scroll` container, which handles its scrolling independently. Keyboard (including Page Up/Down, Home,
+  End), scrollbar dragging, and touch scrolling never dispatch `wheel` events, so none of them pass through this
+  code at all — they remain exactly as native as before this change.
+- **Responsive:** unaffected by viewport width or the engine's own motion-strength attenuation; wheel input is a
+  desktop/trackpad concern independent of that scaling.
+- **Reduced motion:** unaffected and deliberately left active. Damping does not add or remove any CSS animation or
+  transition — it changes how many pixels a single extreme input event moves the page, which is orthogonal to
+  `prefers-reduced-motion`'s concern (transitions and scroll-linked visual effects). The engine's existing reduced-
+  motion neutralization of `.scroll-layer` transforms is untouched.
+
 ### Page scroll progress
 
 - **Trigger / element:** native document scrolling; `.scroll-progress`, a fixed 2 px bar.
@@ -276,6 +305,12 @@ Future scroll motion must:
 
 - Use the existing coordinated animation loop where appropriate; do not create independent per-component scroll loops.
 - Preserve native browser wheel, trackpad, touch, keyboard, scrollbar, and nested-overlay scrolling. No scroll hijacking.
+  **Narrow, explicit exception (2026-10-04, user-authorized):** a single `wheel` listener dampens only the portion
+  of a wheel event's delta that exceeds a fixed pass-through threshold (160px) — see "Extreme wheel input dampening"
+  below. Every wheel event at or under that threshold, and every non-wheel input (keyboard, Page Up/Down, Home/End,
+  scrollbar dragging, touch), remains fully native and untouched. This is not scroll hijacking: it never replaces
+  native scrolling with a custom engine, never adds artificial delay, and never forces section-by-section or
+  snapped scrolling.
 - Use cached stable geometry and native `window.scrollY`/root `scrollTop`; avoid transformed geometry as scene-progress truth and never create transform feedback loops.
 - Avoid continuously querying layout unnecessarily or doing expensive measurement inside wheel/scroll handlers.
 - Preserve read → calculate → write batching and geometry invalidation rather than mixing mutations and measurements.

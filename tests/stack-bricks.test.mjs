@@ -12,6 +12,7 @@ import { PortfolioStore } from "../src/app/application/PortfolioStore.ts";
 import { noAnalytics } from "../src/app/application/AnalyticsPort.ts";
 import * as stackLayout from "../src/stackLayout.ts";
 import * as educationMotion from "../src/educationMotion.ts";
+import { dampenWheelDelta, wheelPassThrough, wheelSoftRange } from "../src/useParallaxEngine.ts";
 
 // Engineering Stack brick wall: the layout is a pure function of the normalized technologies data, and the unchanged
 // component renders whatever that data contains. Motion-policy checks guard the reveal model against regressions.
@@ -24,6 +25,7 @@ const fixture = JSON.parse(read("fixtures/portfolio.fixture.json"));
 const realDocument = JSON.parse(read("portfolio.json"));
 const css = read("src/index.css");
 const appSource = read("src/App.tsx");
+const engineSource = read("src/useParallaxEngine.ts");
 
 const require = createRequire(import.meta.url);
 const compiled = ts.transpileModule(appSource.replaceAll("import.meta.env.BASE_URL", '"/"'), {compilerOptions: {module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX, target: ts.ScriptTarget.ES2022}}).outputText;
@@ -298,7 +300,7 @@ test("education chapter crossfade motion stays bounded, mirrors across the two c
 });
 
 test("reveals are enter-triggered once; reduced motion and the capability hold state are covered by the stylesheet", () => {
-  const engine = read("src/useParallaxEngine.ts");
+  const engine = engineSource;
   assert.match(engine, /reveals\.unobserve\(entry\.target\)/);
   assert.ok(!/classList\.remove\(["']is-visible["']\)/.test(engine + appSource), "a reveal must never be reversed");
   // Experience no longer participates in the shared enter-once `.reveal` system: it's a discrete, scroll-stepped
@@ -317,7 +319,47 @@ test("reveals are enter-triggered once; reduced motion and the capability hold s
   assert.equal(css.split(hide).length - 1, 2, "the reference is hidden at <=800px and in reduced motion with enough specificity");
   assert.ok(!css.replaceAll(hide, "").includes(".stack-tile-ref{display:none}"), "no hiding rule may use the bare, outranked selector");
   for (const forbidden of [/bounce|elastic|overshoot/i, /box-shadow/i, /border-radius:\s*(?!50%)\d/, /linear-gradient\([^)]*#[0-9a-f]{3,6}[^)]*(red|blue)/i]) assert.ok(!forbidden.test(css.slice(css.indexOf(".stack-field"), css.indexOf(".about {"))), `stack styles contain ${forbidden}`);
-  assert.ok(!/lenis|locomotive|scroll-snap|wheel/i.test(css + engine + appSource), "native scrolling must stay untouched");
+  // `wheel` itself is deliberately no longer in this prohibition: the engine now carries one narrow, pass-through-
+  // by-default wheel listener for extreme-input dampening (see "extreme wheel input is dampened, not hijacked"
+  // below for the invariants that replace this blanket ban). No scroll-jacking library or CSS scroll-snap exists.
+  assert.ok(!/lenis|locomotive|scroll-snap/i.test(css + engine + appSource), "no scroll-jacking library or CSS scroll-snap must be introduced");
+});
+
+test("extreme wheel input is dampened, not hijacked: pass-through below threshold, bounded and progressive above it", () => {
+  // Below the pass-through threshold, every wheel event must be numerically untouched -- slow/normal/fast scrolling
+  // stays byte-identical native behavior. This is the core guarantee replacing the old blanket "no wheel" ban.
+  for (const value of [0, 1, -1, 40, 159.9, 160, -160]) assert.equal(dampenWheelDelta(value), value, `${value}px must pass through unmodified`);
+  // Above the threshold, the output must shrink relative to the input (real damping), grow monotonically with the
+  // input (more extreme input never produces less scroll -- "progressive", not erratic), stay strictly below the
+  // asymptotic ceiling (never a hard cap, approached but not reached), and preserve direction.
+  const samples = [161, 200, 300, 500, 800, 1200, 2000, 5000, 20000];
+  let previous = wheelPassThrough;
+  for (const raw of samples) {
+    const dampened = dampenWheelDelta(raw);
+    assert.ok(dampened < raw, `${raw}px must be reduced, got ${dampened}`);
+    assert.ok(dampened > previous, `damping must grow monotonically with input (${raw}px gave ${dampened}, previous was ${previous})`);
+    assert.ok(dampened <= wheelPassThrough + wheelSoftRange, `${raw}px must never exceed the asymptotic ceiling`);
+    previous = dampened;
+    assert.equal(dampenWheelDelta(-raw), -dampened, `damping must be sign-preserving for ${raw}px`);
+  }
+  // Even extreme input must still contribute meaningful forward scroll (a user doing several aggressive flicks must
+  // still reach the bottom of the page quickly) -- never collapses toward zero.
+  assert.ok(dampenWheelDelta(5000) > wheelPassThrough * 2, "extreme input must still produce substantially more scroll than the pass-through threshold alone");
+  // Within any realistic wheel/trackpad range the curve is genuinely asymptotic (approached, never reached) -- the
+  // exact ceiling is only reachable at astronomical, physically-impossible input where float precision underflows.
+  assert.ok(dampenWheelDelta(5000) < wheelPassThrough + wheelSoftRange, "realistic extreme input must stay strictly below the ceiling, proving the curve is asymptotic, not a hard cap at a lower value");
+
+  // Structural checks on the listener itself: registered non-passive (required for preventDefault), bypasses
+  // pinch-zoom and the overlay's own nested scroll container, and never upgrades its programmatic scrollBy to the
+  // page's CSS smooth-scroll behavior (which would reintroduce the exact "doesn't solve continuous wheel momentum"
+  // problem this feature exists to fix).
+  assert.match(engineSource, /addEventListener\(["']wheel["'],\s*onWheel,\s*\{\s*passive:\s*false\s*\}\)/);
+  assert.match(engineSource, /event\.ctrlKey\)\s*return/);
+  assert.match(engineSource, /overlay-scroll/);
+  assert.match(engineSource, /scrollBy\(\{\s*top:\s*dampenWheelDelta\(raw\),\s*behavior:\s*["']instant["']\s*\}\)/);
+  // "auto" would silently defer to the page's own CSS scroll-behavior (smooth), reintroducing exactly the animated,
+  // laggy jump this feature exists to avoid -- "instant" is required, not merely conventional.
+  assert.ok(!/scrollBy\(\{[^}]*behavior:\s*["']auto["']/.test(engineSource), "the damped scrollBy must never use behavior: \"auto\", which defers to CSS scroll-behavior");
 });
 
 test("the capability row holds its inversion while its detail is open", () => {

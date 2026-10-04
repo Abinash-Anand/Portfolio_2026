@@ -52,6 +52,14 @@ Document progress and project chapter progress MUST remain distinct. New interac
 ## 3. Motion Stability
 
 - Scroll-linked motion MUST react to native document or nested-overlay scrolling, not replace browser scrolling or control wheel/touch input.
+  **Narrow, explicit exception (2026-10-04, user-authorized):** one `wheel` listener compresses only the portion of
+  a wheel event's delta above a fixed 160px pass-through threshold, so an extreme flick cannot jump through several
+  sections almost instantly. Every event at or under the threshold, and every non-wheel input (keyboard, Page
+  Up/Down, Home/End, scrollbar dragging, touch), is untouched. This does not replace or hijack scrolling — it is a
+  bounded, pass-through-by-default adjustment, not a custom scroll engine — and MUST remain scoped exactly that way;
+  widening it (lowering the threshold materially, applying it to other input types, adding delay, or forcing
+  section/snap behavior) is a new feature requiring its own explicit authorization, not a natural extension of this
+  clause.
 - Parallax progress MUST derive from scroll state and cached, transform-independent layout geometry. Previously rendered transforms MUST NOT become inputs to subsequent scene-progress calculations.
 - Preserve meaningful separation between existing internal layers and stable coordinate-reference containers. Do not remove depth or introduce visible corrections to accommodate a new feature.
 - Hover, pointer, reveal, and scroll motion MUST compose through existing ownership and CSS-variable patterns. Hovering while scrolling MUST NOT erase either interaction.

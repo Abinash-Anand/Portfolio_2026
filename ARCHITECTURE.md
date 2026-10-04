@@ -371,6 +371,27 @@ ResizeObserver, resize/orientation events, relevant child-list MutationObserver 
 
 The render's `getBoundingClientRect()` read is for an active pointer anchor, not scroll progress. CSS composes `--scene-*`, `--pointer-*`, `--project-*`, `--mag-*`, reveal, and hover variables on their existing owners. Whole-section layout references do not derive their next position from a previously transformed layer.
 
+### Extreme wheel input dampening
+
+A single `wheel` listener, registered and cleaned up in `useScrollSceneEngine` alongside every other input listener
+(pointer, resize, orientation, scroll), narrows one specific case: a native wheel/trackpad event reporting a very
+large `deltaY` (an aggressive flick can produce 1000px+ in one event), which would otherwise let the browser jump
+through several sections almost instantly. This is a user-authorized, explicitly narrow exception to this
+codebase's "preserve native wheel scrolling" rule (`MOTION_SYSTEM.md`'s Scroll Motion Rules), not a replacement of
+native scrolling: the vast majority of wheel input (anything at or under a 160px pass-through threshold — slow,
+normal, and deliberately fast scrolling) is never touched by this listener at all, not even `preventDefault()`.
+Only the portion of an event's delta above that threshold is compressed, through a pure, exported, directly
+unit-tested function (`dampenWheelDelta`, `src/useParallaxEngine.ts`) using an asymptotic curve: damping grows
+progressively stronger for more extreme input without ever hard-capping a single event's contribution, so a
+sustained aggressive gesture (many events) still reaches the bottom of the page quickly. The dampened case applies
+`scrollBy({behavior: "instant"})` — never `"auto"`, which would silently defer to the page's own
+`scroll-behavior: smooth` and reintroduce an animated, laggy jump. Keyboard (including Page Up/Down, Home, End),
+scrollbar dragging, and touch scrolling never dispatch `wheel` events, so this code never runs for them; pinch-zoom
+(`ctrlKey`) and the overlay's own `.overlay-scroll` container are explicitly bypassed. Because this only changes how
+far a single wheel event moves `window.scrollY`, and never how scroll position maps to scene/reveal state, every
+scroll-linked system (parallax, reveals, Experience's active index, Education's crossfade) stays exactly as
+synchronized as it already was — they all read the same `window.scrollY` regardless of what moved it.
+
 ## Responsive Architecture
 
 | Condition | Current behavior |

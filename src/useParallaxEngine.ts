@@ -42,6 +42,26 @@ function sample(values: Frames, progress: number) {
     : lerp(values[1], values[2], smoothstep((progress - 0.5) * 2));
 }
 
+// Extreme wheel/trackpad input dampening: a single native wheel event can report a deltaY of 1000px+ during an
+// aggressive flick, letting the browser jump several sections almost instantly. Below this threshold every wheel
+// event is left completely untouched (slow/normal/fast scrolling is unmodified native behavior). Above it, only the
+// excess is compressed through an asymptotic curve, so damping grows progressively stronger for more extreme input
+// without ever hard-capping it -- a sustained aggressive gesture (many events) still reaches the bottom quickly.
+export const wheelPassThrough = 160;
+export const wheelSoftRange = 420;
+export function dampenWheelDelta(raw: number): number {
+  const magnitude = Math.abs(raw);
+  if (magnitude <= wheelPassThrough) return raw;
+  const excess = magnitude - wheelPassThrough;
+  const compressed = wheelSoftRange * (1 - Math.exp(-excess / wheelSoftRange));
+  return Math.sign(raw) * (wheelPassThrough + compressed);
+}
+function normalizedWheelDelta(event: WheelEvent): number {
+  if (event.deltaMode === 1) return event.deltaY * 16; // DOM_DELTA_LINE
+  if (event.deltaMode === 2) return event.deltaY * innerHeight; // DOM_DELTA_PAGE
+  return event.deltaY;
+}
+
 function layoutTop(element: HTMLElement) {
   let top = 0;
   let ancestor: HTMLElement | null = element;
@@ -266,6 +286,17 @@ export function useScrollSceneEngine() {
       pointerTarget = null;
       requestRender();
     };
+    const onWheel = (event: WheelEvent) => {
+      if (event.ctrlKey) return; // pinch-zoom gesture, never intercept
+      if ((event.target as Element | null)?.closest?.(".overlay-scroll")) return; // the overlay's own nested scroll container handles itself
+      const raw = normalizedWheelDelta(event);
+      if (Math.abs(raw) <= wheelPassThrough) return; // slow/normal/fast scrolling: untouched, native handles it
+      event.preventDefault();
+      // "auto" defers to the page's own scroll-behavior CSS property (smooth here), which would silently reintroduce
+      // an animated, laggy jump -- "instant" is the one that actually applies the delta immediately, matching how
+      // the native wheel scroll this replaces would have felt.
+      scrollBy({ top: dampenWheelDelta(raw), behavior: "instant" });
+    };
     const mutations = new MutationObserver((records) => {
       const selector = "[data-scroll-scene], [data-scroll-layer], .reveal, .overlay-scroll";
       if (records.some((record) => [...record.addedNodes, ...record.removedNodes].some((node) =>
@@ -274,6 +305,7 @@ export function useScrollSceneEngine() {
     });
     mutations.observe(document.body, { childList: true, subtree: true });
     document.addEventListener("scroll", requestRender, { passive: true, capture: true });
+    addEventListener("wheel", onWheel, { passive: false });
     addEventListener("resize", invalidateGeometry);
     addEventListener("orientationchange", invalidateGeometry);
     addEventListener("pointermove", onPointer, { passive: true });
@@ -291,6 +323,7 @@ export function useScrollSceneEngine() {
       reveals.disconnect();
       mutations.disconnect();
       document.removeEventListener("scroll", requestRender, true);
+      removeEventListener("wheel", onWheel);
       removeEventListener("resize", invalidateGeometry);
       removeEventListener("orientationchange", invalidateGeometry);
       removeEventListener("pointermove", onPointer);
