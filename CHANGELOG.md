@@ -2087,3 +2087,56 @@ risk and test plan were stated to the user before any edit.
 - No `playwright` devDependency was added this round — verification used the copy already present at
   `/opt/node-tools/node_modules/playwright` in this environment, invoked directly from a scratch script; `git
   status` confirms `package.json`/`pnpm-lock.yaml` are untouched.
+
+## 2026-11-05 — Scroll-feel fix: compress the differential-depth damping range
+
+### Fixed
+
+- **User report:** scrolling "does not feel good" / not "buttery smooth," right after the 2026-10-04 differential
+  scroll choreography change. Scope of this task was explicitly limited to the scrolling feel only — no other
+  behavior was touched.
+- **Root cause, measured rather than assumed:** Playwright-driven profiling against the fixture dev server
+  (details below) ruled out raw JS/engine cost (the render callback's own execution time averaged 0.4–0.6ms, max
+  under 2ms — nowhere near expensive enough to cause jank) and ruled out the pre-existing wheel-input dampening
+  (typical wheel-notch magnitudes of 200–300px are reduced only 1–7% by `dampenWheelDelta`, far below a perceptible
+  threshold; it only meaningfully compresses genuinely extreme 800px+ flicks, its documented narrow purpose).
+  The actual cause was the 2026-10-04 change itself: it spread `data-damping` across `0.08`–`0.22`, and the lowest
+  values (`0.08`–`0.11`, applied to large-travel decorative layers like `.hero-grid` and `.contact-grid`, which
+  swing 130–170px) raised their settle time to ≈600ms (by the engine's own convergence formula), versus the
+  pre-existing ≈250ms baseline (default damping `0.18`) before that change. A ~2.4× longer settle time on
+  already-wide-swinging layers reads as "laggy"/"swimmy," not "smooth."
+- **Fix (`src/App.tsx` only — no engine, CSS, or other file changed):** compressed every `data-damping` value
+  introduced on 2026-10-04 into a `0.13`–`0.2` band (roughly half the previous `0.08`–`0.22` spread): decorative
+  layers (`hero-grid`, `contact-grid`, backing plates, project backdrop/overlay, scroll-cue, Education's chapter
+  crossfade) raised to `0.13`–`0.145`; main-content layers (body copy, project copy, contact actions/social links)
+  lowered slightly to `0.17`–`0.2`; large typography and portrait/metadata layers nudged to sit between the two.
+  The differential-depth feature itself (decorative measurably slower than content) is preserved — only the
+  magnitude of the slowest end's lag was corrected.
+
+### Regression Testing
+
+- `pnpm exec tsc --noEmit`: passed, zero errors. `pnpm test`: 39/39 applicable tests passed (1 pre-existing,
+  unrelated skip — "a built client bundle contains neither a token nor a GitHub API host" — requires a `dist/`
+  build, not present until a build is run; not a regression). `pnpm exec vite build`: succeeded.
+- **Playwright-driven Chromium against the fixture-mode dev server (this round's own measurement, simulated input,
+  not physical trackpad/mouse):**
+  - `requestAnimationFrame` callback-duration instrumentation during slow/normal/fast synthetic wheel scrolling:
+    avg 0.4–0.6ms, p99 ≤1.6ms, max 1.9ms — confirms the engine's per-frame JS cost was never the bottleneck, before
+    or after this fix.
+  - Settle-time measurement (poll `--scene-y` after a scroll-position jump until it stops changing): `.hero-grid`
+    settled in 384ms after the fix, matching the ≈357ms the new `0.13` damping predicts, versus the ≈600ms the
+    prior `0.08` value implied.
+  - Re-ran the Experience year-click, About principle-tab-click, reduced-motion (0 non-neutral `.scroll-layer`
+    transforms among 91), mobile-width (no horizontal overflow), and full-page-scroll (0 layers with non-finite
+    opacity) checks from the 2026-10-04 entry: all still pass identically after this change.
+- **Not performed:** physical trackpad/mouse/touch input, cross-browser/device certification, a measured
+  frame-rate recording on real hardware. The user is asked to confirm the feel directly; this round's verification
+  is simulated/headless plus the settle-time math, not a physical-device judgment call.
+
+### Notes
+
+- Raw rAF-interval frame timing (as opposed to the callback-duration instrumentation above) was tried first and
+  discarded as a signal: even `about:blank` with nothing running showed ~17ms average frame time and roughly half
+  of frames over 16.7ms in this sandboxed/headless environment, meaning that metric mostly reflects this
+  container's own vsync/compositor jitter, not the app. The callback-duration and settle-time measurements above
+  are the ones actually attributable to the app's own code.

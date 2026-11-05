@@ -79,41 +79,69 @@ The `.is-visible` state does not reset on leaving/re-entering. A separate scene'
 - **Responsive:** width strength attenuates keyframe deviations and opacity/blur responses. Desktop hero/contact have sticky interiors; project rows stick within tracks. At ≤800 px project sticking is removed; shorter hero/contact sticky tracks remain under normal motion.
 - **Reduced motion:** engine uses neutral scene targets and disables pointer motion; CSS removes layer transforms/blur and sets opacity to one. Extended sticky hero/contact tracks, project sticking, and the hero/project overlap are removed.
 
-### Differential parallax depth (2026-10-04, this change; user-requested refinement, no new engine)
+### Differential parallax depth (2026-10-04; compressed 2026-11-05 — see "Scroll-feel correction" below)
 
-Per-layer `data-damping` now follows an explicit role convention on top of the pre-existing per-layer keyframe/phase
+Per-layer `data-damping` follows an explicit role convention on top of the pre-existing per-layer keyframe/phase
 system, so the gap between layers reads as depth rather than every layer moving by the same relative amount. This
 only tunes existing `useScrollSceneEngine` inputs (`data-damping`, `data-phase`, and travel within each layer's
 already-established keyframe shape) — no new property, scheduler, or engine change.
 
 - **Decorative/background layers** (`.hero-grid`, `.contact-grid`, `.project-visual-backdrop`, `.project-overlay`,
-  `.scroll-cue`, the hero portrait's backing plates): lowered to `data-damping="0.08"`–`"0.1"` (from the previous
-  default `0.18` or unset). Lower damping means the rendered value converges toward its target more slowly each
-  frame — visually, the layer lags behind the scroll position, reading as "very slow" / detached background motion.
+  `.scroll-cue`, the hero portrait's backing plates, Education's chapter crossfade): `data-damping="0.13"`–`"0.145"`
+  (from the previous default `0.18` or unset; briefly `0.08`–`0.11` between 2026-10-04 and 2026-11-05 — see the
+  correction note below). Lower damping means the rendered value converges toward its target more slowly each
+  frame — visually, the layer lags behind the scroll position, reading as "slower" / detached background motion.
   Travel amounts on these decorative layers are unchanged; only their settle speed changed.
 - **Main structural content** (section note/body copy, hero summary, project copy, contact actions/social links):
-  raised to `data-damping="0.19"`–`"0.22"`, snappier convergence that tracks close to the native scroll position —
-  the "near-scroll-speed" register the request asked for. Their travel also increased modestly within the existing
+  `data-damping="0.17"`–`"0.2"`, snappier convergence that tracks close to the native scroll position — the
+  "near-scroll-speed" register the request asked for. Their travel also increased modestly within the existing
   enforced ≤60px structural ceiling (e.g. project-copy 12→16px, contact-action 14→16px) for more perceptible,
   still-restrained depth.
 - **Large typography** (`h1`/`h2` `.type-parallax` elements — hero title, every `SectionHeader` heading, contact
   heading): kept at an intermediate `data-damping` (`0.15`–`0.16`) distinct from both the surrounding body copy and
   the slower decorative layers, per "large typography should move slightly differently from surrounding content."
 - **Portraits/visual objects** (hero portrait image): travel widened from `[-18,0,24]` to `[-30,0,38]` (still inside
-  the ≤60px structural cap) for the "stronger independent movement" the request asked for; damping (`0.14`) kept
-  snappier than the backing plates so the portrait visibly separates from them, not just from the grid.
-- **Metadata** (`.hero-meta`, `.contact-meta`): its own distinct `data-damping` (`0.19`) and small phase offset,
-  different from both the copy above it and the portrait/grid beside it.
+  the ≤60px structural cap) for the "stronger independent movement" the request asked for; damping (`0.16`) kept
+  snappier than the backing plates (`0.14`/`0.145`) so the portrait visibly separates from them, not just from the
+  grid.
+- **Metadata** (`.hero-meta`, `.contact-meta`): its own distinct `data-damping` (`0.18`–`0.19`) and small phase
+  offset, different from both the copy above it and the portrait/grid beside it.
 - **Stack tile assembly** (`stackTileMotion` in `src/stackLayout.ts`) and **Education's chapter crossfade /
   indicator dot** (`educationChapterMotion`/`educationMarkerTravel` in `src/educationMotion.ts`): travel widened
   within their own existing ceilings (stack tiles still ≤60px per axis; Education chapters still ≤20px y, indicator
-  track still ≤220px) for more perceptible depth; Education's chapter layers additionally gained `data-damping`
-  (`0.11` chapters, `0.16` dot) for a more gradual crossfade. No shape, invariant, or mirrored-curve requirement
-  changed — `tests/stack-bricks.test.mjs` passes unmodified against the new values.
+  track still ≤220px) for more perceptible depth; the chapter layers and the tile-assembly layer use
+  `data-damping="0.14"`, the indicator dot `"0.16"`. No shape, invariant, or mirrored-curve requirement changed —
+  `tests/stack-bricks.test.mjs` passes unmodified against the new values.
 
 None of this raises the enforced structural ≤60px travel ceiling, adds scale/rotate to a structural layer, or
 changes the opacity floor/resting invariants — it only uses more of the existing headroom and widens the *relative*
 spread between layers' damping, which those tests do not (and should not) constrain.
+
+### Scroll-feel correction (2026-11-05; user-reported regression, fixed)
+
+The 2026-10-04 differential-depth pass above originally spread `data-damping` across `0.08`–`0.22`. The user
+reported the scrolling "does not feel good" / "buttery smooth" shortly after. Measurement (Playwright against the
+fixture dev server, this session) found:
+
+- The engine's own per-frame JS cost is trivial (`requestAnimationFrame` callback durations averaged 0.4–0.6ms,
+  max under 2ms across slow/normal/fast synthetic wheel input) — ruling out a raw compute/jank problem in
+  `useScrollSceneEngine` itself.
+- The *damping convergence time* at `0.08` (the lowest value introduced on 2026-10-04, applied to `.hero-grid` and
+  `.contact-grid` — both large-travel decorative layers swinging 130–170px total) is ≈600ms to settle within 5% of
+  a new target, by the engine's own formula (`amount = 1 - (1-damping)^(elapsed/frame)`); the pre-existing baseline
+  (before 2026-10-04) used `0.18` by default (≈250ms). Combining a ~2.4× longer settle time with already-wide
+  decorative travel is a credible, directly measured cause of a "laggy"/"swimmy" scroll feel, confirmed empirically
+  (`.hero-grid` took 384ms to settle after the fix below, vs. the ~600ms the unfixed `0.08` value implies).
+- The pre-existing wheel-dampening (`dampenWheelDelta`, documented separately below) was checked and ruled out as a
+  contributor: at typical wheel-notch magnitudes (200–300px), it reduces the event by only 1–7%, well below a
+  perceptible threshold; it only meaningfully compresses genuinely extreme flicks (800px+), which is its documented,
+  narrow, previously-authorized purpose. It was left untouched.
+
+**Fix:** every `data-damping` value introduced on 2026-10-04 was compressed into a `0.13`–`0.2` band (roughly half
+the previous `0.08`–`0.22` spread), per the per-role values listed above. This keeps the differential-depth feature
+(decorative still measurably slower than content) while cutting the slowest layers' settle time from ~600ms to
+~350ms — much closer to the original baseline feel. No travel values, phase values, or any other file changed; this
+was a `data-damping`-only correction in `src/App.tsx`.
 
 ### Project hover
 
@@ -398,16 +426,16 @@ Representative configured desktop values (before damping, additional reveal/hove
 
 | Layer | Existing travel / scale |
 | --- | --- |
-| Hero grid | y `[-45, 0, 85]` px; scale `[1.025, 1, .99]`; `data-damping="0.08"` (2026-10-04: slowed, travel unchanged) |
+| Hero grid | y `[-45, 0, 85]` px; scale `[1.025, 1, .99]`; `data-damping="0.13"` (2026-10-04: slowed, travel unchanged; compressed from `0.08` on 2026-11-05, see "Scroll-feel correction") |
 | Hero headline / summary | y `[0, 0, -48]` / `[0, 0, -60]` px (structural; headline widened from -40 to -48 on 2026-10-04; both reduced on 2026-10-02 from `[24, 0, -150]` / `[38, 0, -190]`) |
-| Hero portrait / plates / meta | portrait y `[-30, 0, 38]` px (2026-10-04: widened from `[-18, 0, 24]` for "stronger independent movement"), `data-damping="0.14"`; plates y `[-16,0,22]`/`[18,0,-14]` at `data-damping="0.09"`/`"0.1"` (slower, so they visibly lag the portrait); meta y `[0,0,-24]` at `data-damping="0.19"` |
+| Hero portrait / plates / meta | portrait y `[-30, 0, 38]` px (2026-10-04: widened from `[-18, 0, 24]` for "stronger independent movement"), `data-damping="0.16"`; plates y `[-16,0,22]`/`[18,0,-14]` at `data-damping="0.14"`/`"0.145"` (slower, so they visibly lag the portrait); meta y `[0,0,-24]` at `data-damping="0.18"` |
 | Project art | y `[±44]`, `[±52]`, `[±48]`, `[±58]` px by row, with middle zero; x `[22, 0, -18]`; scale `[1.1, 1.04, 1.1]`; `data-damping="0.16"` (2026-10-04) |
-| Project backdrop / foreground | y amplitude `0.35 ×` art travel, opposite direction / `1.35 ×` art travel; `data-damping="0.09"`/`"0.1"` (2026-10-04, slower/decorative) |
-| Contact grid / headline | y `[-80, 0, 90]` px (decorative, `data-damping="0.08"` as of 2026-10-04) / `[28, 0, -24]` px (structural, widened from `[24,0,-20]` on 2026-10-04; was `[145, 0, -105]` with scale and opacity before 2026-10-02) |
-| Other structural layers | section headings, kicker and note, project index/copy/meta, About and service labels: at most 18 px y as of 2026-10-04 (was 14px); service arrow: up to 8 px x; hero label 24 px y; contact meta/actions/links: up to 28 px y. Each role now also carries its own `data-damping` (≈0.12 for labels/kicker, ≈0.16 for headings, ≈0.19–0.22 for body copy) — see "Differential parallax depth" above. None scale, rotate or fade with scroll. Experience is excluded: it uses its own discrete, non-scene transition system, not this scroll-linked travel table. |
+| Project backdrop / foreground | y amplitude `0.35 ×` art travel, opposite direction / `1.35 ×` art travel; `data-damping="0.14"` (2026-10-04, slower/decorative; compressed from `0.09`/`0.1` on 2026-11-05) |
+| Contact grid / headline | y `[-80, 0, 90]` px (decorative, `data-damping="0.13"` as of 2026-11-05, was `0.08`) / `[28, 0, -24]` px (structural, widened from `[24,0,-20]` on 2026-10-04; was `[145, 0, -105]` with scale and opacity before 2026-10-02) |
+| Other structural layers | section headings, kicker and note, project index/copy/meta, About and service labels: at most 18 px y as of 2026-10-04 (was 14px); service arrow: up to 8 px x; hero label 24 px y; contact meta/actions/links: up to 28 px y. Each role now also carries its own `data-damping` (≈0.14 for labels/kicker, ≈0.16 for headings, ≈0.17–0.2 for body copy, compressed on 2026-11-05 from the original ≈0.12/0.16/0.19–0.22 spread) — see "Differential parallax depth" above. None scale, rotate or fade with scroll. Experience is excluded: it uses its own discrete, non-scene transition system, not this scroll-linked travel table. |
 | Detail art | y `[90, 0, -90]` px; scale `[1.08, 1, 1.06]` |
 
-**Maximum movement:** there is no global runtime travel cap. The largest absolute configured structural scroll y value is 60 px (hero summary) and x is 8 px; the largest decorative values are hero art (y 115 px, x 42 px) and the scroll cue (y 110 px). Before 2026-10-02 the largest structural values were 190 px (hero summary) and 34 px. Current configured rotation reaches 1.4 degrees and scale keyframes span `.94`–`1.1`; hover can additionally multiply project art by `1.04`. These describe this markup, not combined screen-space bounds or a new mandated limit. The 2026-10-04 differential-depth refinement widened several structural values toward this existing 60px ceiling (never past it) and introduced a `data-damping` role convention (`0.08`–`0.22`) across almost every layer in this table; see "Differential parallax depth" above for the full convention.
+**Maximum movement:** there is no global runtime travel cap. The largest absolute configured structural scroll y value is 60 px (hero summary) and x is 8 px; the largest decorative values are hero art (y 115 px, x 42 px) and the scroll cue (y 110 px). Before 2026-10-02 the largest structural values were 190 px (hero summary) and 34 px. Current configured rotation reaches 1.4 degrees and scale keyframes span `.94`–`1.1`; hover can additionally multiply project art by `1.04`. These describe this markup, not combined screen-space bounds or a new mandated limit. The 2026-10-04 differential-depth refinement widened several structural values toward this existing 60px ceiling (never past it) and introduced a `data-damping` role convention, originally `0.08`–`0.22` across almost every layer in this table and compressed to `0.13`–`0.2` on 2026-11-05 after a reported scroll-feel regression; see "Differential parallax depth" and "Scroll-feel correction" above for the full convention and its history.
 
 Within a project row, normalized pointer offsets are approximately ±5 px x and ±4 px y at row edges. Hero pointer amplitude 18 yields approximately ±9 px per viewport axis at full strength. Magnetic displacement is proportional, without a global clamp. Do not describe these as universal hard limits.
 
